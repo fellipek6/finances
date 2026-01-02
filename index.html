@@ -14,17 +14,30 @@
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         
         const firebaseConfig = {
-            apiKey: "AIzaSyBt4LmiSK0DamZSPPQcPpjgo0TaxavGQs8",
-            authDomain: "finances-aa335.firebaseapp.com",
-            projectId: "finances-aa335",
-            storageBucket: "finances-aa335.firebasestorage.app",
-            messagingSenderId: "892362100418",
-            appId: "1:892362100418:web:709a464121ae1d337c755b",
-            measurementId: "G-RCYS9Y0XJN"
-        };
+            apiKey: "AIzaSyBIjY5xbZ_sKGAslhvlFk5Sy3rCUgaMecE",
+            authDomain: "datacenter-999eb.firebaseapp.com",
+            databaseURL: "https://datacenter-999eb-default-rtdb.firebaseio.com",
+            projectId: "datacenter-999eb",
+            storageBucket: "datacenter-999eb.firebasestorage.app",
+            messagingSenderId: "988108686176",
+            appId: "1:988108686176:web:e29cf34c4a6b00a5415405",
+            measurementId: "G-ZNC6J5948W"
+            };
         
         window.firebaseApp = initializeApp(firebaseConfig);
         window.db = getFirestore(window.firebaseApp);
+        // Expor funções do Firestore no window para uso global
+        window.firebaseFirestore = {
+            doc: doc,
+            getDoc: getDoc,
+            setDoc: setDoc,
+            updateDoc: updateDoc,
+            deleteDoc: deleteDoc,
+            getDocs: getDocs,
+            collection: collection,
+            query: query,
+            where: where
+        };
         window.firebaseReady = true;
     </script>
     
@@ -524,7 +537,8 @@
                 <div class="nav-link" onclick="showTab('recurring')"><i class="fa-solid fa-repeat"></i> Recorrente</div>
                 <div class="nav-link" onclick="showTab('categories')"><i class="fa-solid fa-tags"></i> Categorias</div>
                 <div class="nav-link admin-only" onclick="showTab('users')" style="display: none;"><i class="fa-solid fa-user-gear"></i> Usuários</div>
-                <div class="nav-link admin-only" onclick="showTab('settings')" style="display: none;"><i class="fa-solid fa-gear"></i> Configurações</div>
+                <div class="nav-link admin-only" onclick="showTab('backup')" style="display: none;"><i class="fa-solid fa-download"></i> Backup</div>
+                <div class="nav-link" onclick="showTab('settings')"><i class="fa-solid fa-gear"></i> Configurações</div>
             </nav>
             <div class="nav-link" style="margin-top: auto; color: var(--danger);" onclick="logout()">
                 <i class="fa-solid fa-power-off"></i> Sair
@@ -960,6 +974,44 @@
                     </div>
                 </div>
             </div>
+
+            <div class="content-area hidden" id="backup-view">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3><i class="fa-solid fa-download"></i> Backup e Restauração</h3>
+                    </div>
+                    <div style="padding: 30px;">
+                        <div style="margin-bottom: 30px;">
+                            <h4 style="margin-bottom: 15px; color: var(--text-main);"><i class="fa-solid fa-database"></i> Exportar Dados</h4>
+                            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;">
+                                Faça o download de todos os dados do sistema em formato JSON compatível com Firebase Realtime Database.
+                            </p>
+                            <button class="btn btn-primary" onclick="exportBackup()" style="width: 100%;">
+                                <i class="fa-solid fa-download"></i> Baixar Backup Completo
+                            </button>
+                        </div>
+                        
+                        <div style="border-top: 1px solid var(--border); padding-top: 30px; margin-top: 30px;">
+                            <h4 style="margin-bottom: 15px; color: var(--text-main);"><i class="fa-solid fa-info-circle"></i> Informações do Backup</h4>
+                            <div style="background: var(--bg); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border);">
+                                <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6; margin-bottom: 10px;">
+                                    <strong>O que será exportado:</strong>
+                                </p>
+                                <ul style="color: var(--text-muted); font-size: 13px; line-height: 1.8; padding-left: 20px; margin-bottom: 15px;">
+                                    <li>Todas as transações de todos os usuários</li>
+                                    <li>Todas as categorias e subcategorias</li>
+                                    <li>Todos os registros recorrentes</li>
+                                    <li>Configurações de cada usuário</li>
+                                    <li>Lista de usuários com login e senha</li>
+                                </ul>
+                                <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6;">
+                                    <strong>Formato:</strong> JSON compatível com Firebase Realtime Database
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -1198,13 +1250,7 @@
             ];
             localStorage.setItem('fpro_users', JSON.stringify(users));
             
-            // Carregar configurações
-            const settings = JSON.parse(localStorage.getItem('fpro_settings')) || {
-                siteName: 'Finance PRO',
-                icon: 'fa-vault',
-                palette: 'blue'
-            };
-            applySettings(settings);
+            // Configurações padrão serão aplicadas após login
         }
         init();
 
@@ -1266,9 +1312,9 @@
             
             try {
                 const firebaseAvailable = await waitForFirebase();
-                if (firebaseAvailable) {
-                    const userDocRef = doc(window.db, 'users', currentUser.user);
-                    const userDoc = await getDoc(userDocRef);
+                if (firebaseAvailable && window.firebaseFirestore && window.db) {
+                    const userDocRef = window.firebaseFirestore.doc(window.db, 'users', currentUser.user);
+                    const userDoc = await window.firebaseFirestore.getDoc(userDocRef);
                     if (userDoc.exists()) {
                         const data = userDoc.data();
                         // Garantir propriedades
@@ -1285,8 +1331,13 @@
                     }
                 }
             } catch (error) {
-                console.error('Erro ao sincronizar com Firebase:', error);
-                // Não desabilitar Firebase completamente
+                // Ignorar erros de permissão, offline ou API não habilitada
+                if (error.code === 'permission-denied' || error.code === 'unavailable' || error.message?.includes('API has not been used')) {
+                    console.warn('Firebase não disponível ou sem permissão. Continuando com localStorage apenas.');
+                    useFirebase = false; // Desabilitar tentativas futuras
+                } else {
+                    console.error('Erro ao sincronizar com Firebase:', error);
+                }
             }
         }
 
@@ -1306,16 +1357,21 @@
             if (useFirebase) {
                 try {
                     const firebaseAvailable = await waitForFirebase();
-                    if (firebaseAvailable) {
-                        const userDocRef = doc(window.db, 'users', currentUser.user);
-                        await setDoc(userDocRef, data, { merge: true });
+                    if (firebaseAvailable && window.firebaseFirestore && window.db) {
+                        const userDocRef = window.firebaseFirestore.doc(window.db, 'users', currentUser.user);
+                        await window.firebaseFirestore.setDoc(userDocRef, data, { merge: true });
                         console.log('Dados salvos no Firebase com sucesso');
                     } else {
                         console.warn('Firebase não disponível, usando apenas localStorage');
                     }
                 } catch (error) {
-                    console.error('Erro ao salvar no Firebase:', error);
-                    // Não desabilitar Firebase completamente, apenas logar o erro
+                    // Ignorar erros de permissão, offline ou API não habilitada
+                    if (error.code === 'permission-denied' || error.code === 'unavailable' || error.message?.includes('API has not been used')) {
+                        console.warn('Firebase não disponível ou sem permissão. Usando localStorage apenas.');
+                        useFirebase = false; // Desabilitar tentativas futuras
+                    } else {
+                        console.error('Erro ao salvar no Firebase:', error);
+                    }
                 }
             }
         }
@@ -1348,8 +1404,9 @@
                     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
                 }
 
-                // Aplicar configurações após login
-                const settings = JSON.parse(localStorage.getItem('fpro_settings')) || {
+                // Aplicar configurações do usuário após login
+                const userDB = getUserDB();
+                const settings = userDB && userDB.settings ? userDB.settings : {
                     siteName: 'Finance PRO',
                     icon: 'fa-vault',
                     palette: 'blue'
@@ -2509,7 +2566,7 @@ function saveSettings() {
     };
 
     DB.settings = settings;
-    saveUserDB();
+    saveUserDB(DB);
     applySettings(settings);
     alert('Configurações salvas com sucesso!');
 }
@@ -3037,6 +3094,76 @@ function applySettings(settings) {
             });
         }
 
+        // BACKUP
+        function exportBackup() {
+            try {
+                // Coletar todos os dados
+                const backupData = {
+                    users: {},
+                    userAccounts: [], // Lista de usuários com login e senha
+                    exportDate: new Date().toISOString(),
+                    version: '1.0'
+                };
+
+                // Coletar dados de todos os usuários
+                const allUsers = JSON.parse(localStorage.getItem('fpro_users')) || [];
+                
+                // Incluir usuários com login e senha no backup
+                backupData.userAccounts = allUsers.map(user => ({
+                    user: user.user,
+                    pass: user.pass,
+                    name: user.name,
+                    role: user.role || 'user'
+                }));
+                
+                allUsers.forEach(user => {
+                    const userKey = `fpro_${user.user}`;
+                    const userData = localStorage.getItem(userKey);
+                    if (userData) {
+                        try {
+                            const parsedData = JSON.parse(userData);
+                            // Formato compatível com Firebase Realtime Database
+                            backupData.users[user.user] = {
+                                transactions: parsedData.transactions || [],
+                                recurring: parsedData.recurring || [],
+                                categories: parsedData.categories || [],
+                                settings: parsedData.settings || null
+                            };
+                        } catch (e) {
+                            console.error(`Erro ao processar dados do usuário ${user.user}:`, e);
+                        }
+                    } else {
+                        // Incluir usuário mesmo sem dados ainda
+                        backupData.users[user.user] = {
+                            transactions: [],
+                            recurring: [],
+                            categories: [],
+                            settings: null
+                        };
+                    }
+                });
+
+                // Converter para JSON formatado
+                const jsonString = JSON.stringify(backupData, null, 2);
+                
+                // Criar blob e fazer download
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `finance-pro-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert('Backup exportado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao exportar backup:', error);
+                alert('Erro ao exportar backup. Verifique o console para mais detalhes.');
+            }
+        }
+
         // INTERFACE
         function showTab(tab) {
     document.querySelectorAll('.content-area').forEach(c => c.classList.add('hidden'));
@@ -3050,6 +3177,7 @@ function applySettings(settings) {
             'categories': '<i class="fa-solid fa-tags"></i> Categorias',
             'recurring': '<i class="fa-solid fa-repeat"></i> Recorrentes',
             'users': '<i class="fa-solid fa-user-gear"></i> Usuários',
+            'backup': '<i class="fa-solid fa-download"></i> Backup',
             'settings': '<i class="fa-solid fa-gear"></i> Configurações'
         };
         const viewTitle = document.getElementById('view-title');
