@@ -403,6 +403,9 @@
         tr.alert { background: #fef3c7 !important; }
         tr.overdue { background: #fee2e2 !important; }
         
+        [data-theme="dark"] tr.alert { background: #78350f !important; color: #fef3c7 !important; }
+        [data-theme="dark"] tr.overdue { background: #7f1d1d !important; color: #fee2e2 !important; }
+        
         .badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
         .badge-income { background: #dcfce7; color: #15803d; }
         .badge-expense { background: #fee2e2; color: #b91c1c; }
@@ -414,6 +417,13 @@
         .badge-pending { background: #fef3c7; color: #92400e; }
         .badge-overdue { background: #fee2e2; color: #b91c1c; }
         .badge-unpaid { background: #fee2e2; color: #b91c1c; }
+        
+        [data-theme="dark"] .badge-paid { background: #14532d; color: #86efac; }
+        [data-theme="dark"] .badge-pending { background: #78350f; color: #fde68a; }
+        [data-theme="dark"] .badge-overdue { background: #7f1d1d; color: #fca5a5; }
+        [data-theme="dark"] .badge-unpaid { background: #7f1d1d; color: #fca5a5; }
+        [data-theme="dark"] .badge-income { background: #14532d; color: #86efac; }
+        [data-theme="dark"] .badge-expense { background: #7f1d1d; color: #fca5a5; }
 
         .action-btn { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; margin: 0 2px; transition: 0.2s; }
         .action-btn:hover { transform: scale(1.05); }
@@ -468,6 +478,16 @@
             .table-container { overflow-x: auto; }
             table { min-width: 800px; }
         }
+
+        /* CONFIGURAÇÕES */
+        .icon-option:hover, .color-palette:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .icon-option.selected, .color-palette.selected {
+            border-color: var(--accent) !important;
+            border-width: 3px !important;
+        }
     </style>
 </head>
 <body>
@@ -504,6 +524,7 @@
                 <div class="nav-link" onclick="showTab('recurring')"><i class="fa-solid fa-repeat"></i> Recorrente</div>
                 <div class="nav-link" onclick="showTab('categories')"><i class="fa-solid fa-tags"></i> Categorias</div>
                 <div class="nav-link admin-only" onclick="showTab('users')" style="display: none;"><i class="fa-solid fa-user-gear"></i> Usuários</div>
+                <div class="nav-link admin-only" onclick="showTab('settings')" style="display: none;"><i class="fa-solid fa-gear"></i> Configurações</div>
             </nav>
             <div class="nav-link" style="margin-top: auto; color: var(--danger);" onclick="logout()">
                 <i class="fa-solid fa-power-off"></i> Sair
@@ -514,7 +535,7 @@
             <header>
                 <div class="header-left">
                     <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
-                    <h2 id="view-title">Visão Geral</h2>
+                    <h2 id="view-title"><i class="fa-solid fa-chart-pie"></i> Visão Geral</h2>
                 </div>
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
@@ -532,7 +553,7 @@
                 <!-- FILTROS DO DASHBOARD -->
                 <div class="filter-bar">
                     <div class="filter-group">
-                        <label>Período</label>
+                        <label><i class="fa-solid fa-calendar-alt"></i> Período</label>
                         <select id="time-range-type" onchange="updateTimeRange()">
                             <option value="all">Todos</option>
                             <option value="month">Mês/Ano</option>
@@ -541,29 +562,37 @@
                         </select>
                     </div>
                     <div class="filter-group" id="filter-month-group">
-                        <label>Mês/Ano</label>
+                        <label><i class="fa-solid fa-calendar"></i> Mês/Ano</label>
                         <input type="month" id="filter-month" class="form-control" onchange="renderAll()">
                     </div>
                     <div class="filter-group" id="filter-year-group" style="display: none;">
-                        <label>Ano</label>
+                        <label><i class="fa-solid fa-calendar"></i> Ano</label>
                         <input type="number" id="filter-year" class="form-control" placeholder="Ano" onchange="renderAll()">
                     </div>
                     <div class="filter-group" id="filter-date-start-group" style="display: none;">
-                        <label>Data Inicial</label>
+                        <label><i class="fa-solid fa-calendar-day"></i> Data Inicial</label>
                         <input type="date" id="filter-date-start" class="form-control" onchange="renderAll()">
                     </div>
                     <div class="filter-group" id="filter-date-end-group" style="display: none;">
-                        <label>Data Final</label>
+                        <label><i class="fa-solid fa-calendar-day"></i> Data Final</label>
                         <input type="date" id="filter-date-end" class="form-control" onchange="renderAll()">
                     </div>
                     <div class="filter-group">
-                        <label>Categoria</label>
+                        <label><i class="fa-solid fa-filter"></i> Tipo</label>
+                        <select id="dashboard-filter-type" onchange="updateDashboardTypeFilter()">
+                            <option value="">Todos</option>
+                            <option value="expense">Despesa</option>
+                            <option value="income">Receita</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" id="dashboard-filter-category-group" style="display: none;">
+                        <label><i class="fa-solid fa-tags"></i> Categoria</label>
                         <select id="dashboard-filter-category" onchange="updateDashboardFilters()">
                             <option value="">Todas</option>
                         </select>
                     </div>
-                    <div class="filter-group">
-                        <label>Subcategoria</label>
+                    <div class="filter-group" id="dashboard-filter-subcategory-group" style="display: none;">
+                        <label><i class="fa-solid fa-tag"></i> Subcategoria</label>
                         <select id="dashboard-filter-subcategory" onchange="renderAll()">
                             <option value="">Todas</option>
                         </select>
@@ -641,20 +670,41 @@
                 <div class="charts-container" style="margin-top: 20px;">
                     <div class="chart-box">
                         <div class="chart-title">
-                            <i class="fa-solid fa-chart-doughnut"></i>
-                            Despesas Essenciais vs Não Essenciais
+                            <i class="fa-solid fa-chart-bar"></i>
+                            Distribuição por Categoria - Despesas
                         </div>
                         <div class="chart-wrapper">
-                            <canvas id="essentialChart"></canvas>
+                            <canvas id="categoryExpenseChart"></canvas>
                         </div>
                     </div>
                     <div class="chart-box">
                         <div class="chart-title">
                             <i class="fa-solid fa-chart-bar"></i>
-                            Distribuição por Categoria
+                            Distribuição por Categoria - Receitas
                         </div>
                         <div class="chart-wrapper">
-                            <canvas id="categoryChart"></canvas>
+                            <canvas id="categoryIncomeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-container" style="margin-top: 20px;">
+                    <div class="chart-box">
+                        <div class="chart-title">
+                            <i class="fa-solid fa-chart-line"></i>
+                            Despesas Essenciais vs Não Essenciais (Tempo)
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="essentialLineChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box">
+                        <div class="chart-title">
+                            <i class="fa-solid fa-chart-doughnut"></i>
+                            Despesas Essenciais vs Não Essenciais
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="essentialChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -673,7 +723,7 @@
             <div class="content-area hidden" id="transactions-view">
                 <div class="filter-bar">
                     <div class="filter-group">
-                        <label>Período</label>
+                        <label><i class="fa-solid fa-calendar-alt"></i> Período</label>
                         <select id="trans-time-range-type" onchange="updateTransactionTimeRange()">
                             <option value="all">Todos</option>
                             <option value="month">Mês/Ano</option>
@@ -682,23 +732,23 @@
                         </select>
                     </div>
                     <div class="filter-group" id="trans-filter-month-group" style="display: none;">
-                        <label>Mês/Ano</label>
+                        <label><i class="fa-solid fa-calendar"></i> Mês/Ano</label>
                         <input type="month" id="trans-filter-month" class="form-control" onchange="renderTransactions()">
                     </div>
                     <div class="filter-group" id="trans-filter-year-group" style="display: none;">
-                        <label>Ano</label>
+                        <label><i class="fa-solid fa-calendar"></i> Ano</label>
                         <input type="number" id="trans-filter-year" class="form-control" placeholder="Ano" onchange="renderTransactions()">
                     </div>
                     <div class="filter-group" id="trans-filter-date-start-group" style="display: none;">
-                        <label>Data Inicial</label>
+                        <label><i class="fa-solid fa-calendar-day"></i> Data Inicial</label>
                         <input type="date" id="trans-filter-date-start" class="form-control" onchange="renderTransactions()">
                     </div>
                     <div class="filter-group" id="trans-filter-date-end-group" style="display: none;">
-                        <label>Data Final</label>
+                        <label><i class="fa-solid fa-calendar-day"></i> Data Final</label>
                         <input type="date" id="trans-filter-date-end" class="form-control" onchange="renderTransactions()">
                     </div>
                     <div class="filter-group">
-                        <label>Tipo</label>
+                        <label><i class="fa-solid fa-filter"></i> Tipo</label>
                         <select id="filter-type" onchange="updateTransactionFilters()">
                             <option value="">Todos</option>
                             <option value="income">Receita</option>
@@ -706,19 +756,19 @@
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label>Categoria</label>
+                        <label><i class="fa-solid fa-tags"></i> Categoria</label>
                         <select id="filter-category" onchange="updateTransactionFilters()">
                             <option value="">Todas</option>
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label>Subcategoria</label>
+                        <label><i class="fa-solid fa-tag"></i> Subcategoria</label>
                         <select id="filter-subcategory" onchange="renderTransactions()">
                             <option value="">Todas</option>
                         </select>
                     </div>
                     <div class="filter-group" id="filter-paid-group" style="display: none;">
-                        <label>Status Pagamento</label>
+                        <label><i class="fa-solid fa-check-circle"></i> Status Pagamento</label>
                         <select id="filter-paid" onchange="renderTransactions()">
                             <option value="">Todos</option>
                             <option value="paid">Pagos</option>
@@ -729,7 +779,7 @@
 
                 <div class="table-container">
                     <div class="table-header">
-                        <h3>Transações</h3>
+                        <h3><i class="fa-solid fa-list-ul"></i> Transações</h3>
                         <button class="btn btn-primary" onclick="openTransactionModal()"><i class="fa-solid fa-plus"></i> Novo Registro</button>
                     </div>
                     <table>
@@ -755,7 +805,7 @@
             <div class="content-area hidden" id="categories-view">
                 <div class="table-container">
                     <div class="table-header">
-                        <h3>Gestão de Categorias</h3>
+                        <h3><i class="fa-solid fa-tags"></i> Gestão de Categorias</h3>
                         <button class="btn btn-primary" onclick="openCategoryModal()"><i class="fa-solid fa-plus"></i> Nova Categoria</button>
                     </div>
                     <table>
@@ -774,9 +824,19 @@
             </div>
 
             <div class="content-area hidden" id="recurring-view">
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label><i class="fa-solid fa-filter"></i> Tipo</label>
+                        <select id="recurring-filter-type" onchange="renderRecurring()">
+                            <option value="">Todos</option>
+                            <option value="expense">Despesa</option>
+                            <option value="income">Receita</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="table-container">
                     <div class="table-header">
-                        <h3>Registros Recorrentes</h3>
+                        <h3><i class="fa-solid fa-repeat"></i> Registros Recorrentes</h3>
                         <button class="btn btn-primary" onclick="openRecurringModal()"><i class="fa-solid fa-plus"></i> Novo Recorrente</button>
                     </div>
                     <table>
@@ -800,7 +860,7 @@
             <div class="content-area hidden" id="users-view">
                 <div class="table-container">
                     <div class="table-header">
-                        <h3>Gestão de Acessos</h3>
+                        <h3><i class="fa-solid fa-user-gear"></i> Gestão de Acessos</h3>
                         <button class="btn btn-primary" onclick="openUserModal()"><i class="fa-solid fa-plus"></i> Novo Usuário</button>
                     </div>
                     <table>
@@ -816,6 +876,90 @@
                     </table>
                 </div>
             </div>
+
+            <div class="content-area hidden" id="settings-view">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3><i class="fa-solid fa-gear"></i> Configurações do Sistema</h3>
+                    </div>
+                    <div style="padding: 30px;">
+                        <div class="form-group" style="margin-bottom: 25px;">
+                            <label><i class="fa-solid fa-signature"></i> Nome do Site</label>
+                            <input type="text" id="settings-site-name" class="form-control" placeholder="Finance PRO">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 25px;">
+                            <label><i class="fa-solid fa-icons"></i> Ícone do Site</label>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 15px; margin-top: 10px;">
+                                <div class="icon-option" data-icon="fa-vault" onclick="selectIcon('fa-vault')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <i class="fa-solid fa-vault" style="font-size: 24px; color: var(--accent);"></i>
+                                    <div style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Cofre</div>
+                                </div>
+                                <div class="icon-option" data-icon="fa-chart-line" onclick="selectIcon('fa-chart-line')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <i class="fa-solid fa-chart-line" style="font-size: 24px; color: var(--accent);"></i>
+                                    <div style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Gráfico</div>
+                                </div>
+                                <div class="icon-option" data-icon="fa-wallet" onclick="selectIcon('fa-wallet')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <i class="fa-solid fa-wallet" style="font-size: 24px; color: var(--accent);"></i>
+                                    <div style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Carteira</div>
+                                </div>
+                                <div class="icon-option" data-icon="fa-piggy-bank" onclick="selectIcon('fa-piggy-bank')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <i class="fa-solid fa-piggy-bank" style="font-size: 24px; color: var(--accent);"></i>
+                                    <div style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Porquinho</div>
+                                </div>
+                                <div class="icon-option" data-icon="fa-cat" onclick="selectIcon('fa-cat')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <i class="fa-solid fa-cat" style="font-size: 24px; color: var(--accent);"></i>
+                                    <div style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Gato</div>
+                                </div>
+                                <div class="icon-option" data-icon="fa-dog" onclick="selectIcon('fa-dog')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <i class="fa-solid fa-dog" style="font-size: 24px; color: var(--accent);"></i>
+                                    <div style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Cachorro</div>
+                                </div>
+                                <div class="icon-option" data-icon="fa-fish" onclick="selectIcon('fa-fish')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <i class="fa-solid fa-fish" style="font-size: 24px; color: var(--accent);"></i>
+                                    <div style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Peixe</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 25px;">
+                            <label><i class="fa-solid fa-palette"></i> Paleta de Cores</label>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; margin-top: 10px;">
+                                <div class="color-palette" data-palette="blue" onclick="selectPalette('blue')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); height: 80px; position: relative;">
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Azul</div>
+                                </div>
+                                <div class="color-palette" data-palette="green" onclick="selectPalette('green')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #10b981 0%, #059669 100%); height: 80px; position: relative;">
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Verde</div>
+                                </div>
+                                <div class="color-palette" data-palette="purple" onclick="selectPalette('purple')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); height: 80px; position: relative;">
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Roxo</div>
+                                </div>
+                                <div class="color-palette" data-palette="red" onclick="selectPalette('red')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); height: 80px; position: relative;">
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Vermelho</div>
+                                </div>
+                                <div class="color-palette" data-palette="orange" onclick="selectPalette('orange')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); height: 80px; position: relative;">
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Laranja</div>
+                                </div>
+                                <div class="color-palette" data-palette="pink" onclick="selectPalette('pink')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); height: 80px; position: relative;">
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Rosa</div>
+                                </div>
+                                <div class="color-palette" data-palette="cyan" onclick="selectPalette('cyan')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); height: 80px; position: relative;">
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Ciano</div>
+                                </div>
+                                <div class="color-palette" data-palette="teal" onclick="selectPalette('teal')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); height: 80px; position: relative;">
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Verde-água</div>
+                                </div>
+                                <div class="color-palette" data-palette="indigo" onclick="selectPalette('indigo')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); height: 80px; position: relative;">
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Anil</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 30px;">
+                            <button class="btn btn-primary" onclick="saveSettings()" style="width: 100%;">
+                                <i class="fa-solid fa-save"></i> Salvar Configurações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -824,16 +968,16 @@
         <div class="modal-content">
             <h3 style="margin-bottom: 20px;" id="transaction-modal-title">Nova Transação</h3>
             <div class="form-group">
-                <label>Descrição</label>
+                <label><i class="fa-solid fa-file-text"></i> Descrição</label>
                 <input type="text" id="f-desc" class="form-control">
             </div>
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
-                    <label>Valor</label>
+                    <label><i class="fa-solid fa-dollar-sign"></i> Valor</label>
                     <input type="number" id="f-val" class="form-control" step="0.01">
                 </div>
                 <div>
-                    <label>Tipo</label>
+                    <label><i class="fa-solid fa-exchange-alt"></i> Tipo</label>
                     <select id="f-type" class="form-control" onchange="updatePaymentField()">
                         <option value="income">Receita</option>
                         <option value="expense">Despesa</option>
@@ -842,20 +986,20 @@
             </div>
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
-                    <label>Categoria</label>
+                    <label><i class="fa-solid fa-tags"></i> Categoria</label>
                     <select id="f-cat" class="form-control" onchange="updateSubcategories()">
                         <option value="">Selecione...</option>
                     </select>
                 </div>
                 <div>
-                    <label>Subcategoria</label>
+                    <label><i class="fa-solid fa-tag"></i> Subcategoria</label>
                     <select id="f-subcat" class="form-control">
                         <option value="">Nenhuma</option>
                     </select>
                 </div>
             </div>
             <div class="form-group" id="payment-field" style="display: none;">
-                <label>Tipo de Pagamento</label>
+                <label><i class="fa-solid fa-credit-card"></i> Tipo de Pagamento</label>
                 <select id="f-payment" class="form-control">
                     <option value="pix">Pix</option>
                     <option value="credito">Crédito</option>
@@ -865,26 +1009,30 @@
             </div>
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
-                    <label>Data</label>
+                    <label><i class="fa-solid fa-calendar"></i> Data</label>
                     <input type="date" id="f-date" class="form-control">
                 </div>
                 <div id="due-date-field" style="display: none;">
-                    <label>Prazo de Vencimento</label>
+                    <label><i class="fa-solid fa-calendar-times"></i> Prazo de Vencimento</label>
                     <input type="date" id="f-due-date" class="form-control">
+                </div>
+                <div id="receipt-date-field" style="display: none;">
+                    <label><i class="fa-solid fa-calendar-check"></i> Prazo de Recebimento</label>
+                    <input type="date" id="f-receipt-date" class="form-control">
                 </div>
             </div>
             <div class="form-group" id="alert-days-field" style="display: none;">
-                <label>Dias de Alerta Antes do Vencimento</label>
-                <input type="number" id="f-alert-days" class="form-control" value="7" min="0">
+                <label><i class="fa-solid fa-bell"></i> Dias de Alerta Antes do Vencimento</label>
+                <input type="number" id="f-alert-days" class="form-control" value="" min="0" placeholder="Opcional">
             </div>
             <div class="form-group" id="paid-field" style="display: none;">
                 <div class="checkbox-wrapper">
                     <input type="checkbox" id="f-paid">
-                    <label for="f-paid" style="margin: 0; cursor: pointer;">Marcar como Pago</label>
+                    <label for="f-paid" style="margin: 0; cursor: pointer;"><i class="fa-solid fa-check-circle"></i> Marcar como Pago</label>
                 </div>
             </div>
             <div class="form-group">
-                <label>Comentário</label>
+                <label><i class="fa-solid fa-comment"></i> Comentário</label>
                 <textarea id="f-comment" class="form-control" placeholder="Observações adicionais..."></textarea>
             </div>
             <div style="margin-top: 25px; display: flex; gap: 10px;">
@@ -904,14 +1052,14 @@
             </div>
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
-                    <label>Tipo</label>
-                    <select id="cat-type" class="form-control">
+                    <label><i class="fa-solid fa-exchange-alt"></i> Tipo</label>
+                    <select id="cat-type" class="form-control" onchange="updateCategoryEssentialField()">
                         <option value="income">Receita</option>
                         <option value="expense">Despesa</option>
                     </select>
                 </div>
-                <div>
-                    <label>Essencial</label>
+                <div id="cat-essential-group">
+                    <label><i class="fa-solid fa-star"></i> Essencial</label>
                     <select id="cat-essential" class="form-control">
                         <option value="true">Sim</option>
                         <option value="false">Não</option>
@@ -987,8 +1135,8 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Dias de Alerta Antes do Vencimento</label>
-                <input type="number" id="r-alert-days" class="form-control" value="7" min="0">
+                <label><i class="fa-solid fa-bell"></i> Dias de Alerta Antes do Vencimento</label>
+                <input type="number" id="r-alert-days" class="form-control" value="" min="0" placeholder="Opcional">
             </div>
             <div class="form-group">
                 <label>Comentário</label>
@@ -1035,7 +1183,7 @@
         // ESTADO GLOBAL
         let attempts = 0;
         let isLocked = false;
-        let mainChart, pieChart, essentialChart, categoryChart, efficiencyChart;
+        let mainChart, pieChart, essentialChart, essentialLineChart, categoryExpenseChart, categoryIncomeChart, efficiencyChart;
         let currentUser = null;
         let editingTransactionId = null;
         let editingCategoryId = null;
@@ -1049,11 +1197,19 @@
                 {user: 'admin', pass: 'admin', name: 'Administrador Master', role: 'admin'}
             ];
             localStorage.setItem('fpro_users', JSON.stringify(users));
+            
+            // Carregar configurações
+            const settings = JSON.parse(localStorage.getItem('fpro_settings')) || {
+                siteName: 'Finance PRO',
+                icon: 'fa-vault',
+                palette: 'blue'
+            };
+            applySettings(settings);
         }
         init();
 
         // FIREBASE FUNCTIONS
-        let useFirebase = false;
+        let useFirebase = true; // Habilitar Firebase por padrão
         
         async function waitForFirebase() {
             let attempts = 0;
@@ -1067,7 +1223,7 @@
         function getUserDB() {
             if (!currentUser) return null;
             
-            // Fallback para localStorage (síncrono)
+            // Tentar carregar do localStorage primeiro (síncrono)
             const key = `fpro_${currentUser.user}`;
             const data = localStorage.getItem(key);
             const defaultDB = {
@@ -1095,10 +1251,16 @@
                     return defaultDB;
                 }
             }
+            
+            // Tentar sincronizar com Firebase em background
+            if (useFirebase) {
+                syncWithFirebase().catch(err => console.error('Erro ao sincronizar:', err));
+            }
+            
             return defaultDB;
         }
         
-        // Função assíncrona para tentar sincronizar com Firebase (opcional)
+        // Função assíncrona para tentar sincronizar com Firebase
         async function syncWithFirebase() {
             if (!currentUser || !useFirebase) return;
             
@@ -1116,15 +1278,19 @@
                         // Salvar no localStorage como backup
                         const key = `fpro_${currentUser.user}`;
                         localStorage.setItem(key, JSON.stringify(data));
+                        // Forçar atualização da interface
+                        if (typeof renderAll === 'function') {
+                            setTimeout(() => renderAll(), 100);
+                        }
                     }
                 }
             } catch (error) {
                 console.error('Erro ao sincronizar com Firebase:', error);
-                useFirebase = false;
+                // Não desabilitar Firebase completamente
             }
         }
 
-        function saveUserDB(data) {
+        async function saveUserDB(data) {
             if (!currentUser) return;
             
             // Garantir que todas as propriedades existam
@@ -1132,21 +1298,25 @@
             if (!data.recurring) data.recurring = [];
             if (!data.categories) data.categories = [];
             
-            // Salvar no localStorage (sempre)
+            // Salvar no localStorage (backup)
             const key = `fpro_${currentUser.user}`;
             localStorage.setItem(key, JSON.stringify(data));
             
-            // Tentar salvar no Firebase em background (opcional)
+            // Tentar salvar no Firebase (prioridade)
             if (useFirebase) {
-                waitForFirebase().then(firebaseAvailable => {
+                try {
+                    const firebaseAvailable = await waitForFirebase();
                     if (firebaseAvailable) {
                         const userDocRef = doc(window.db, 'users', currentUser.user);
-                        setDoc(userDocRef, data, { merge: true }).catch(error => {
-                            console.error('Erro ao salvar no Firebase:', error);
-                            useFirebase = false;
-                        });
+                        await setDoc(userDocRef, data, { merge: true });
+                        console.log('Dados salvos no Firebase com sucesso');
+                    } else {
+                        console.warn('Firebase não disponível, usando apenas localStorage');
                     }
-                });
+                } catch (error) {
+                    console.error('Erro ao salvar no Firebase:', error);
+                    // Não desabilitar Firebase completamente, apenas logar o erro
+                }
             }
         }
 
@@ -1178,11 +1348,33 @@
                     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
                 }
 
+                // Aplicar configurações após login
+                const settings = JSON.parse(localStorage.getItem('fpro_settings')) || {
+                    siteName: 'Finance PRO',
+                    icon: 'fa-vault',
+                    palette: 'blue'
+                };
+                applySettings(settings);
+
                 initCharts();
-                // Aguardar um pouco para garantir que os gráficos foram inicializados
-                setTimeout(() => {
-                    renderAll();
-                }, 100);
+                // Sincronizar com Firebase após login
+                if (useFirebase) {
+                    syncWithFirebase().then(() => {
+                        // Aguardar um pouco para garantir que os gráficos foram inicializados
+                        setTimeout(() => {
+                            renderAll();
+                        }, 100);
+                    }).catch(() => {
+                        setTimeout(() => {
+                            renderAll();
+                        }, 100);
+                    });
+                } else {
+                    // Aguardar um pouco para garantir que os gráficos foram inicializados
+                    setTimeout(() => {
+                        renderAll();
+                    }, 100);
+                }
             } else {
                 attempts++;
                 box.classList.add('shake');
@@ -1248,6 +1440,7 @@
             const fCat = document.getElementById('f-cat');
             const fSubcat = document.getElementById('f-subcat');
             const fDueDate = document.getElementById('f-due-date');
+            const fReceiptDate = document.getElementById('f-receipt-date');
             const fAlertDays = document.getElementById('f-alert-days');
             const fPaid = document.getElementById('f-paid');
             
@@ -1260,7 +1453,8 @@
             if(fCat) fCat.value = '';
             if(fSubcat) fSubcat.value = '';
             if(fDueDate) fDueDate.value = '';
-            if(fAlertDays) fAlertDays.value = '7';
+            if(fReceiptDate) fReceiptDate.value = '';
+            if(fAlertDays) fAlertDays.value = '';
             if(fPaid) fPaid.checked = false;
             
             updateCategoryOptions();
@@ -1274,16 +1468,42 @@
                     if(fDesc) fDesc.value = tx.desc || '';
                     if(fVal) fVal.value = tx.val || '';
                     if(fType) fType.value = tx.type || 'income';
-                    if(fDate) fDate.value = tx.date || '';
-                    if(fComment) fComment.value = tx.comment || '';
-                    if(fPayment) fPayment.value = tx.payment || 'pix';
-                    if(fCat) fCat.value = tx.cat || '';
-                    if(fDueDate) fDueDate.value = tx.dueDate || '';
-                    if(fAlertDays) fAlertDays.value = tx.alertDays || '7';
-                    if(fPaid) fPaid.checked = tx.paid || false;
-                    updateSubcategories();
-                    if(fSubcat) fSubcat.value = tx.subcat || '';
+                    // Atualizar categorias após definir o tipo
+                    updateCategoryOptions();
                     updatePaymentField();
+                    // Aguardar um pouco para garantir que as opções foram carregadas
+                    setTimeout(() => {
+                        const savedCat = tx.cat || '';
+                        if(fCat && savedCat) {
+                            // Verificar se a opção existe antes de definir
+                            const optionExists = Array.from(fCat.options).some(opt => opt.value === savedCat);
+                            if(optionExists) {
+                                fCat.value = savedCat;
+                            } else {
+                                // Se não existe, tentar novamente após mais um delay
+                                setTimeout(() => {
+                                    if(fCat) fCat.value = savedCat;
+                                    updateSubcategories();
+                                    setTimeout(() => {
+                                        if(fSubcat) fSubcat.value = tx.subcat || '';
+                                    }, 50);
+                                }, 50);
+                            }
+                        }
+                        if(fDate) fDate.value = tx.date || '';
+                        if(fComment) fComment.value = tx.comment || '';
+                        if(fPayment) fPayment.value = tx.payment || 'pix';
+                        if(fDueDate) fDueDate.value = tx.dueDate || '';
+                        if(fReceiptDate) fReceiptDate.value = tx.receiptDate || '';
+                        if(fAlertDays) fAlertDays.value = tx.alertDays || '';
+                        if(fPaid) fPaid.checked = tx.paid !== undefined ? tx.paid : false;
+                        if(fCat && fCat.value === savedCat) {
+                            updateSubcategories();
+                            setTimeout(() => {
+                                if(fSubcat) fSubcat.value = tx.subcat || '';
+                            }, 50);
+                        }
+                    }, 150);
                 }
             } else {
                 title.textContent = 'Nova Transação';
@@ -1299,8 +1519,10 @@
             const type = fType.value;
             const paymentField = document.getElementById('payment-field');
             const dueDateField = document.getElementById('due-date-field');
+            const receiptDateField = document.getElementById('receipt-date-field');
             const alertDaysField = document.getElementById('alert-days-field');
             const paidField = document.getElementById('paid-field');
+            const fPaid = document.getElementById('f-paid');
             
             // Atualizar categorias quando o tipo muda
             updateCategoryOptions();
@@ -1308,11 +1530,21 @@
             if(type === 'expense') {
                 if(paymentField) paymentField.style.display = 'block';
                 if(dueDateField) dueDateField.style.display = 'block';
+                if(receiptDateField) receiptDateField.style.display = 'none';
                 if(alertDaysField) alertDaysField.style.display = 'block';
                 if(paidField) paidField.style.display = 'block';
+                if(fPaid) fPaid.checked = false;
+            } else if(type === 'income') {
+                if(paymentField) paymentField.style.display = 'none';
+                if(dueDateField) dueDateField.style.display = 'none';
+                if(receiptDateField) receiptDateField.style.display = 'block';
+                if(alertDaysField) alertDaysField.style.display = 'block';
+                if(paidField) paidField.style.display = 'block';
+                if(fPaid) fPaid.checked = false; // Não obrigatório, deixar desmarcado por padrão
             } else {
                 if(paymentField) paymentField.style.display = 'none';
                 if(dueDateField) dueDateField.style.display = 'none';
+                if(receiptDateField) receiptDateField.style.display = 'none';
                 if(alertDaysField) alertDaysField.style.display = 'none';
                 if(paidField) paidField.style.display = 'none';
             }
@@ -1397,19 +1629,21 @@
             if(!DB.categories) DB.categories = [];
             if(!DB.recurring) DB.recurring = [];
             
+            const type = document.getElementById('f-type')?.value || 'income';
             const tx = {
                 id: editingTransactionId || Date.now(),
                 date: document.getElementById('f-date')?.value || '',
                 desc: document.getElementById('f-desc')?.value || '',
                 val: parseFloat(document.getElementById('f-val')?.value || 0),
-                type: document.getElementById('f-type')?.value || 'income',
+                type: type,
                 cat: document.getElementById('f-cat')?.value || '',
                 subcat: document.getElementById('f-subcat')?.value || null,
                 comment: document.getElementById('f-comment')?.value || null,
-                payment: document.getElementById('f-type')?.value === 'expense' ? (document.getElementById('f-payment')?.value || null) : null,
-                dueDate: document.getElementById('f-type')?.value === 'expense' ? (document.getElementById('f-due-date')?.value || null) : null,
-                alertDays: document.getElementById('f-type')?.value === 'expense' ? parseInt(document.getElementById('f-alert-days')?.value || 7) : null,
-                paid: document.getElementById('f-type')?.value === 'expense' ? (document.getElementById('f-paid')?.checked || false) : false
+                payment: type === 'expense' ? (document.getElementById('f-payment')?.value || null) : null,
+                dueDate: type === 'expense' ? (document.getElementById('f-due-date')?.value || null) : null,
+                receiptDate: type === 'income' ? (document.getElementById('f-receipt-date')?.value || null) : null,
+                alertDays: (type === 'expense' || type === 'income') ? (document.getElementById('f-alert-days')?.value ? parseInt(document.getElementById('f-alert-days')?.value) : null) : null,
+                paid: type === 'expense' ? (document.getElementById('f-paid')?.checked || false) : (type === 'income' ? (document.getElementById('f-paid')?.checked || false) : false)
             };
 
             if(!tx.desc || !tx.val || !tx.cat) {
@@ -1456,18 +1690,19 @@
         }
 
         function getTransactionStatus(tx) {
-            if(tx.type !== 'expense' || !tx.dueDate) return null;
+            if((tx.type !== 'expense' && tx.type !== 'income') || (!tx.dueDate && !tx.receiptDate)) return null;
             if(tx.paid) return 'paid';
             
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const dueDate = new Date(tx.dueDate);
-            dueDate.setHours(0, 0, 0, 0);
-            const diffDays = Math.floor((dueDate - today) / (1000 * 60 * 60 * 24));
-            const alertDays = tx.alertDays || 7;
+            const targetDate = tx.type === 'expense' ? new Date(tx.dueDate) : new Date(tx.receiptDate);
+            if(!targetDate || isNaN(targetDate.getTime())) return null;
+            targetDate.setHours(0, 0, 0, 0);
+            const diffDays = Math.floor((targetDate - today) / (1000 * 60 * 60 * 24));
+            const alertDays = tx.alertDays !== null && tx.alertDays !== undefined ? tx.alertDays : null;
             
             if(diffDays < 0) return 'overdue';
-            if(diffDays <= alertDays) return 'alert';
+            if(alertDays !== null && diffDays <= alertDays) return 'alert';
             return null;
         }
 
@@ -1497,7 +1732,7 @@
                 if(filterType && t.type !== filterType) return false;
                 if(filterCat && t.cat !== filterCat) return false;
                 if(filterSubcat && t.subcat !== filterSubcat) return false;
-                if(filterType === 'expense' && filterPaid) {
+                if((filterType === 'expense' || filterType === 'income') && filterPaid) {
                     if(filterPaid === 'paid' && !t.paid) return false;
                     if(filterPaid === 'unpaid' && t.paid) return false;
                 }
@@ -1521,9 +1756,19 @@
                     } else {
                         statusBadge = '<span class="badge badge-pending"><i class="fa-solid fa-hourglass-half"></i> Pendente</span>';
                     }
+                } else if(t.type === 'income') {
+                    if(status === 'paid' || t.paid) {
+                        statusBadge = '<span class="badge badge-paid"><i class="fa-solid fa-check"></i> Recebido</span>';
+                    } else if(status === 'overdue') {
+                        statusBadge = '<span class="badge badge-overdue"><i class="fa-solid fa-exclamation-triangle"></i> Atrasado</span>';
+                    } else if(status === 'alert') {
+                        statusBadge = '<span class="badge badge-pending"><i class="fa-solid fa-clock"></i> Pendente</span>';
+                    } else if(t.receiptDate) {
+                        statusBadge = '<span class="badge badge-pending"><i class="fa-solid fa-hourglass-half"></i> Pendente</span>';
+                    }
                 }
                 
-                const dueDateDisplay = t.dueDate ? t.dueDate.split('-').reverse().join('/') : '-';
+                const dueDateDisplay = t.type === 'expense' ? (t.dueDate ? t.dueDate.split('-').reverse().join('/') : '-') : (t.receiptDate ? t.receiptDate.split('-').reverse().join('/') : '-');
                 const paymentDisplay = t.payment ? `<i class="${getPaymentIcon(t.payment)} payment-icon"></i>${getPaymentLabel(t.payment)}` : '-';
                 
                 return `
@@ -1539,6 +1784,7 @@
                         <td>${statusBadge}</td>
                         <td>
                             ${t.type === 'expense' ? `<button class="action-btn ${t.paid ? 'btn-success' : 'btn-secondary'}" onclick="togglePaid(${t.id})" title="${t.paid ? 'Marcar como não pago' : 'Marcar como pago'}"><i class="fa-solid fa-${t.paid ? 'check' : 'clock'}"></i></button>` : ''}
+                            ${t.type === 'income' ? `<button class="action-btn ${t.paid ? 'btn-success' : 'btn-secondary'}" onclick="togglePaid(${t.id})" title="${t.paid ? 'Marcar como não recebida' : 'Marcar como recebida'}"><i class="fa-solid fa-${t.paid ? 'check-circle' : 'clock'}"></i></button>` : ''}
                             <button class="action-btn btn-edit" onclick="openTransactionModal(${t.id})"><i class="fa-solid fa-edit"></i></button>
                             <button class="action-btn btn-delete" onclick="deleteTransaction(${t.id})"><i class="fa-solid fa-trash"></i></button>
                         </td>
@@ -1552,7 +1798,7 @@
         function updateTransactionFilters() {
             const filterType = document.getElementById('filter-type').value;
             const filterPaidGroup = document.getElementById('filter-paid-group');
-            filterPaidGroup.style.display = filterType === 'expense' ? 'block' : 'none';
+            filterPaidGroup.style.display = (filterType === 'expense' || filterType === 'income' || filterType === '') ? 'block' : 'none';
             updateFilterCategories();
             renderTransactions();
         }
@@ -1625,7 +1871,7 @@
             if(rPayment) rPayment.value = 'pix';
             if(rPeriod) rPeriod.value = '30';
             if(rNextDate) rNextDate.value = new Date().toISOString().split('T')[0];
-            if(rAlertDays) rAlertDays.value = '7';
+            if(rAlertDays) rAlertDays.value = '';
             if(rComment) rComment.value = '';
             
             updateRecurringCategories();
@@ -1639,14 +1885,22 @@
                     if(rDesc) rDesc.value = rec.desc || '';
                     if(rVal) rVal.value = rec.val || '';
                     if(rType) rType.value = rec.type || 'expense';
-                    if(rCat) rCat.value = rec.cat || '';
-                    if(rPayment) rPayment.value = rec.payment || 'pix';
-                    if(rPeriod) rPeriod.value = rec.period || '30';
-                    if(rNextDate) rNextDate.value = rec.nextDate || '';
-                    if(rAlertDays) rAlertDays.value = rec.alertDays || '7';
-                    if(rComment) rComment.value = rec.comment || '';
-                    updateRecurringSubcategories();
-                    if(rSubcat) rSubcat.value = rec.subcat || '';
+                    // Atualizar categorias após definir o tipo
+                    updateRecurringCategories();
+                    updateRecurringPaymentField();
+                    // Aguardar um pouco para garantir que as opções foram carregadas
+                    setTimeout(() => {
+                        if(rCat) rCat.value = rec.cat || '';
+                        if(rPayment) rPayment.value = rec.payment || 'pix';
+                        if(rPeriod) rPeriod.value = rec.period || '30';
+                        if(rNextDate) rNextDate.value = rec.nextDate || '';
+                        if(rAlertDays) rAlertDays.value = rec.alertDays || '';
+                        if(rComment) rComment.value = rec.comment || '';
+                        updateRecurringSubcategories();
+                        setTimeout(() => {
+                            if(rSubcat) rSubcat.value = rec.subcat || '';
+                        }, 50);
+                    }, 50);
                 }
             } else {
                 title.textContent = 'Novo Registro Recorrente';
@@ -1726,7 +1980,7 @@
                 payment: document.getElementById('r-type')?.value === 'expense' ? (document.getElementById('r-payment')?.value || null) : null,
                 period: parseInt(document.getElementById('r-period')?.value || 30),
                 nextDate: document.getElementById('r-next-date')?.value || '',
-                alertDays: parseInt(document.getElementById('r-alert-days')?.value || 7),
+                alertDays: document.getElementById('r-alert-days')?.value ? parseInt(document.getElementById('r-alert-days')?.value) : null,
                 comment: document.getElementById('r-comment')?.value || null
             };
 
@@ -1768,6 +2022,34 @@
             const rec = (DB.recurring || []).find(r => r && r.id === id);
             if(!rec) return;
             
+            // Criar modal de confirmação
+            const confirmModal = document.createElement('div');
+            confirmModal.className = 'modal';
+            confirmModal.id = 'confirm-publish-modal';
+            confirmModal.style.display = 'flex';
+            confirmModal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px;">
+                    <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-question-circle"></i> Confirmar Publicação</h3>
+                    <p style="margin-bottom: 20px;">Deseja realmente publicar a transação recorrente "<strong>${rec.desc}</strong>" no valor de <strong>R$ ${rec.val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>?</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" style="flex: 1;" onclick="document.getElementById('confirm-publish-modal').remove()">Cancelar</button>
+                        <button class="btn btn-primary" style="flex: 1;" onclick="confirmPublishRecurring(${id})">Confirmar</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(confirmModal);
+        }
+
+        function confirmPublishRecurring(id) {
+            const DB = getUserDB();
+            if(!DB) return;
+            
+            if(!DB.transactions) DB.transactions = [];
+            if(!DB.recurring) DB.recurring = [];
+            
+            const rec = (DB.recurring || []).find(r => r && r.id === id);
+            if(!rec) return;
+            
             // Criar transação
             const tx = {
                 id: Date.now(),
@@ -1779,8 +2061,9 @@
                 subcat: rec.subcat || null,
                 payment: rec.payment || null,
                 dueDate: rec.type === 'expense' ? (rec.nextDate || null) : null,
-                alertDays: rec.alertDays || 7,
-                paid: false,
+                receiptDate: rec.type === 'income' ? (rec.nextDate || null) : null,
+                alertDays: rec.alertDays || null,
+                paid: rec.type === 'income' ? true : false, // Receitas sempre pago, despesas não
                 comment: rec.comment || null
             };
             DB.transactions.unshift(tx);
@@ -1794,6 +2077,10 @@
                 }
             }
             
+            // Remover modal de confirmação
+            const confirmModal = document.getElementById('confirm-publish-modal');
+            if(confirmModal) confirmModal.remove();
+            
             saveUserDB(DB);
             renderRecurring();
             renderAll();
@@ -1806,10 +2093,10 @@
             const nextDate = new Date(rec.nextDate);
             nextDate.setHours(0, 0, 0, 0);
             const diffDays = Math.floor((nextDate - today) / (1000 * 60 * 60 * 24));
-            const alertDays = rec.alertDays || 7;
+            const alertDays = rec.alertDays !== null && rec.alertDays !== undefined ? rec.alertDays : null;
             
             if(diffDays < 0) return 'overdue';
-            if(diffDays <= alertDays) return 'alert';
+            if(alertDays !== null && diffDays <= alertDays) return 'alert';
             return 'ok';
         }
 
@@ -1822,7 +2109,15 @@
             const body = document.getElementById('recurring-body');
             if(!body) return;
             
-            body.innerHTML = (DB.recurring || []).map(rec => {
+            const filterType = document.getElementById('recurring-filter-type')?.value || '';
+            
+            let filtered = (DB.recurring || []).filter(rec => {
+                if(!rec) return false;
+                if(filterType && rec.type !== filterType) return false;
+                return true;
+            });
+            
+            body.innerHTML = filtered.map(rec => {
                 if(!rec) return '';
                 const status = getRecurringStatus(rec);
                 const statusClass = status === 'alert' ? 'alert' : status === 'overdue' ? 'overdue' : '';
@@ -1849,6 +2144,21 @@
             }).filter(html => html).join('') || '<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted)">Nenhum registro recorrente encontrado</td></tr>';
         }
 
+        function updateCategoryEssentialField() {
+            const catType = document.getElementById('cat-type');
+            const essentialGroup = document.getElementById('cat-essential-group');
+            if(!catType || !essentialGroup) return;
+            
+            if(catType.value === 'income') {
+                essentialGroup.style.display = 'none';
+            } else {
+                essentialGroup.style.display = 'block';
+            }
+            
+            // Atualizar campos de subcategorias também
+            updateSubcategoryFields();
+        }
+
         // CATEGORIAS
         function openCategoryModal(id = null) {
             editingCategoryId = id;
@@ -1868,6 +2178,7 @@
             if(catEssential) catEssential.value = 'false';
             if(subcategoriesContainer) subcategoriesContainer.innerHTML = '';
             subcategoryCount = 0;
+            updateCategoryEssentialField();
 
             if(id && DB) {
                 if(!DB.categories) DB.categories = [];
@@ -1876,7 +2187,8 @@
                     title.textContent = 'Editar Categoria';
                     if(catName) catName.value = cat.name || '';
                     if(catType) catType.value = cat.type || 'expense';
-                    if(catEssential) catEssential.value = String(cat.essential || false);
+                    updateCategoryEssentialField();
+                    if(catEssential && cat.type === 'expense') catEssential.value = String(cat.essential || false);
                     
                     if(cat.subcategories && Array.isArray(cat.subcategories)) {
                         cat.subcategories.forEach(sub => {
@@ -1895,21 +2207,43 @@
 
         function addSubcategory(name = '', essential = false) {
             const container = document.getElementById('subcategories-container');
+            const catType = document.getElementById('cat-type')?.value || 'expense';
             const div = document.createElement('div');
             div.className = 'subcategory-item';
             div.id = `subcat-${subcategoryCount}`;
-            div.innerHTML = `
-                <input type="text" placeholder="Nome da subcategoria" value="${name}" id="subcat-name-${subcategoryCount}">
+            
+            // Não mostrar campo essencial para receitas
+            const essentialField = catType === 'expense' ? `
                 <select id="subcat-essential-${subcategoryCount}">
                     <option value="true" ${essential ? 'selected' : ''}>Essencial</option>
                     <option value="false" ${!essential ? 'selected' : ''}>Não Essencial</option>
                 </select>
+            ` : '';
+            
+            div.innerHTML = `
+                <input type="text" placeholder="Nome da subcategoria" value="${name}" id="subcat-name-${subcategoryCount}">
+                ${essentialField}
                 <button type="button" class="btn btn-danger" onclick="removeSubcategory(${subcategoryCount})" style="padding: 4px 8px;">
                     <i class="fa-solid fa-trash"></i>
                 </button>
             `;
             container.appendChild(div);
             subcategoryCount++;
+        }
+
+        // Atualizar subcategorias quando o tipo da categoria muda
+        function updateSubcategoryFields() {
+            const catType = document.getElementById('cat-type')?.value || 'expense';
+            document.querySelectorAll('.subcategory-item').forEach(item => {
+                const essentialSelect = item.querySelector('select[id^="subcat-essential-"]');
+                if(essentialSelect) {
+                    if(catType === 'expense') {
+                        essentialSelect.style.display = 'block';
+                    } else {
+                        essentialSelect.style.display = 'none';
+                    }
+                }
+            });
         }
 
         function removeSubcategory(id) {
@@ -1926,7 +2260,8 @@
             
             const name = document.getElementById('cat-name')?.value || '';
             const type = document.getElementById('cat-type')?.value || 'expense';
-            const essential = document.getElementById('cat-essential')?.value === 'true';
+            // Essencial só faz sentido para despesas
+            const essential = type === 'expense' ? (document.getElementById('cat-essential')?.value === 'true') : false;
             
             if(!name) {
                 alert("Nome da categoria é obrigatório");
@@ -1939,10 +2274,11 @@
                 if(subDiv) {
                     const subNameEl = document.getElementById(`subcat-name-${i}`);
                     const subEssentialEl = document.getElementById(`subcat-essential-${i}`);
-                    if(subNameEl && subEssentialEl) {
+                    if(subNameEl) {
                         const subName = subNameEl.value;
-                        const subEssential = subEssentialEl.value === 'true';
                         if(subName) {
+                            // Para receitas, não salvar essencial (sempre false)
+                            const subEssential = type === 'expense' && subEssentialEl ? (subEssentialEl.value === 'true') : false;
                             subcategories.push({name: subName, essential: subEssential});
                         }
                     }
@@ -2087,6 +2423,136 @@
             `).join('');
         }
 
+        // CONFIGURAÇÕES
+        function loadSettings() {
+    const DB = getUserDB();
+    if (!DB) return;
+
+    if (!DB.settings) DB.settings = {
+        siteName: 'Finance PRO',
+        icon: 'fa-vault',
+        palette: 'blue'
+    };
+
+    const settings = DB.settings;
+
+    const siteNameInput = document.getElementById('settings-site-name');
+    if (siteNameInput) siteNameInput.value = settings.siteName || 'Finance PRO';
+
+    // Selecionar ícone
+    document.querySelectorAll('.icon-option').forEach(el => {
+        el.style.borderColor = 'var(--border)';
+        el.style.borderWidth = '2px';
+        if (el.dataset.icon === settings.icon) {
+            el.style.borderColor = 'var(--accent)';
+            el.style.borderWidth = '3px';
+        }
+    });
+
+    // Selecionar paleta
+    document.querySelectorAll('.color-palette').forEach(el => {
+        el.style.borderColor = 'var(--border)';
+        el.style.borderWidth = '2px';
+        if (el.dataset.palette === settings.palette) {
+            el.style.borderColor = 'var(--accent)';
+            el.style.borderWidth = '3px';
+        }
+    });
+
+    // Aplicar configurações
+    applySettings(settings);
+}
+
+function selectIcon(icon) {
+    document.querySelectorAll('.icon-option').forEach(el => {
+        el.style.borderColor = 'var(--border)';
+        el.style.borderWidth = '2px';
+    });
+    const selected = document.querySelector(`.icon-option[data-icon="${icon}"]`);
+    if (selected) {
+        selected.style.borderColor = 'var(--accent)';
+        selected.style.borderWidth = '3px';
+    }
+}
+
+function selectPalette(palette) {
+    document.querySelectorAll('.color-palette').forEach(el => {
+        el.style.borderColor = 'var(--border)';
+        el.style.borderWidth = '2px';
+    });
+    const selected = document.querySelector(`.color-palette[data-palette="${palette}"]`);
+    if (selected) {
+        selected.style.borderColor = 'var(--accent)';
+        selected.style.borderWidth = '3px';
+    }
+}
+
+function saveSettings() {
+    const DB = getUserDB();
+    if (!DB) return;
+
+    const siteName = document.getElementById('settings-site-name')?.value || 'Finance PRO';
+    const selectedIconEl = Array.from(document.querySelectorAll('.icon-option')).find(el => 
+        el.style.borderWidth === '3px' || getComputedStyle(el).borderWidth.includes('3')
+    );
+    const selectedIcon = selectedIconEl?.dataset.icon || document.querySelector('.icon-option[data-icon]')?.dataset.icon || 'fa-vault';
+
+    const selectedPaletteEl = Array.from(document.querySelectorAll('.color-palette')).find(el => 
+        el.style.borderWidth === '3px' || getComputedStyle(el).borderWidth.includes('3')
+    );
+    const selectedPalette = selectedPaletteEl?.dataset.palette || document.querySelector('.color-palette[data-palette]')?.dataset.palette || 'blue';
+
+    const settings = {
+        siteName: siteName,
+        icon: selectedIcon,
+        palette: selectedPalette
+    };
+
+    DB.settings = settings;
+    saveUserDB();
+    applySettings(settings);
+    alert('Configurações salvas com sucesso!');
+}
+
+function applySettings(settings) {
+    // Aplicar nome do site
+    const logoSpan = document.querySelector('.logo span');
+    if (logoSpan) logoSpan.textContent = settings.siteName || 'Finance PRO';
+
+    // Aplicar ícone
+    const logoIcon = document.querySelector('.logo i');
+    if (logoIcon && settings.icon) {
+        logoIcon.className = `fa-solid ${settings.icon}`;
+    }
+
+    // Aplicar paleta de cores (apenas modo claro)
+    if (document.documentElement.getAttribute('data-theme') !== 'dark') {
+        const palettes = {
+            blue: { accent: '#2563eb', primary: '#0f172a' },
+            green: { accent: '#10b981', primary: '#0f172a' },
+            purple: { accent: '#8b5cf6', primary: '#0f172a' },
+            red: { accent: '#ef4444', primary: '#0f172a' },
+            orange: { accent: '#f59e0b', primary: '#0f172a' },
+            pink: { accent: '#ec4899', primary: '#0f172a' },
+            cyan: { accent: '#06b6d4', primary: '#0f172a' },
+            teal: { accent: '#14b8a6', primary: '#0f172a' },
+            indigo: { accent: '#6366f1', primary: '#0f172a' },
+            amber: { accent: '#f59e0b', primary: '#0f172a' },
+            black: { accent: '#000000', primary: '#0f172a' },
+            gray: { accent: '#6b7280', primary: '#0f172a' },
+            lime: { accent: '#84cc16', primary: '#0f172a' },
+            emerald: { accent: '#059669', primary: '#0f172a' },
+            violet: { accent: '#7c3aed', primary: '#0f172a' },
+            fuchsia: { accent: '#d946ef', primary: '#0f172a' },
+            sky: { accent: '#0ea5e9', primary: '#0f172a' },
+            rose: { accent: '#e11d48', primary: '#0f172a' }
+        };
+
+        const palette = palettes[settings.palette] || palettes.blue;
+        document.documentElement.style.setProperty('--accent', palette.accent);
+        document.documentElement.style.setProperty('--primary', palette.primary);
+    }
+}
         // DASHBOARD E RENDERIZAÇÃO
         function getTimeRange() {
             const timeRangeType = document.getElementById('time-range-type');
@@ -2237,6 +2703,37 @@
             return null;
         }
 
+        function updateDashboardTypeFilter() {
+            const filterType = document.getElementById('dashboard-filter-type')?.value || '';
+            const categoryGroup = document.getElementById('dashboard-filter-category-group');
+            const subcategoryGroup = document.getElementById('dashboard-filter-subcategory-group');
+            const categorySelect = document.getElementById('dashboard-filter-category');
+            const subcategorySelect = document.getElementById('dashboard-filter-subcategory');
+            
+            if(filterType) {
+                if(categoryGroup) categoryGroup.style.display = 'block';
+                if(categorySelect) {
+                    categorySelect.innerHTML = '<option value="">Todas</option>';
+                    const DB = getUserDB();
+                    if(DB && DB.categories) {
+                        (DB.categories || []).filter(c => c && c.type === filterType).forEach(cat => {
+                            const opt = document.createElement('option');
+                            opt.value = cat.name;
+                            opt.textContent = cat.name;
+                            categorySelect.appendChild(opt);
+                        });
+                    }
+                }
+            } else {
+                if(categoryGroup) categoryGroup.style.display = 'none';
+                if(subcategoryGroup) subcategoryGroup.style.display = 'none';
+                if(categorySelect) categorySelect.value = '';
+                if(subcategorySelect) subcategorySelect.value = '';
+            }
+            
+            updateDashboardFilters();
+        }
+
         function updateDashboardFilters() {
             const DB = getUserDB();
             if(!DB) return;
@@ -2245,11 +2742,13 @@
             
             const catName = document.getElementById('dashboard-filter-category')?.value;
             const subcatSelect = document.getElementById('dashboard-filter-subcategory');
+            const subcategoryGroup = document.getElementById('dashboard-filter-subcategory-group');
+            
             if(!subcatSelect) return;
             
-            subcatSelect.innerHTML = '<option value="">Todas</option>';
-            
             if(catName) {
+                if(subcategoryGroup) subcategoryGroup.style.display = 'block';
+                subcatSelect.innerHTML = '<option value="">Todas</option>';
                 const cat = (DB.categories || []).find(c => c && c.name === catName);
                 if(cat && cat.subcategories && Array.isArray(cat.subcategories)) {
                     cat.subcategories.forEach(sub => {
@@ -2261,6 +2760,9 @@
                         }
                     });
                 }
+            } else {
+                if(subcategoryGroup) subcategoryGroup.style.display = 'none';
+                subcatSelect.innerHTML = '<option value="">Todas</option>';
             }
             
             renderAll();
@@ -2401,6 +2903,33 @@
                 }
             });
 
+            const ctxEssentialLine = document.getElementById('essentialLineChart').getContext('2d');
+            essentialLineChart = new Chart(ctxEssentialLine, {
+                type: 'line',
+                data: { labels: [], datasets: [] },
+                options: { 
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    resizeDelay: 0,
+                    plugins: { 
+                        legend: { display: true, position: 'top' },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: { 
+                        y: { beginAtZero: true },
+                        x: { display: true }
+                    },
+                    layout: {
+                        padding: {
+                            top: 10,
+                            bottom: 10,
+                            left: 10,
+                            right: 10
+                        }
+                    }
+                }
+            });
+
             const ctxEssential = document.getElementById('essentialChart').getContext('2d');
             essentialChart = new Chart(ctxEssential, {
                 type: 'doughnut',
@@ -2424,8 +2953,36 @@
                 }
             });
 
-            const ctxCategory = document.getElementById('categoryChart').getContext('2d');
-            categoryChart = new Chart(ctxCategory, {
+            const ctxCategoryExpense = document.getElementById('categoryExpenseChart').getContext('2d');
+            categoryExpenseChart = new Chart(ctxCategoryExpense, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
+                options: { 
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    resizeDelay: 0,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { enabled: true }
+                    },
+                    scales: { 
+                        x: { beginAtZero: true },
+                        y: { display: true }
+                    },
+                    layout: {
+                        padding: {
+                            top: 10,
+                            bottom: 10,
+                            left: 10,
+                            right: 10
+                        }
+                    }
+                }
+            });
+
+            const ctxCategoryIncome = document.getElementById('categoryIncomeChart').getContext('2d');
+            categoryIncomeChart = new Chart(ctxCategoryIncome, {
                 type: 'bar',
                 data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
                 options: { 
@@ -2482,30 +3039,32 @@
 
         // INTERFACE
         function showTab(tab) {
-            document.querySelectorAll('.content-area').forEach(c => c.classList.add('hidden'));
-            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-            const view = document.getElementById(tab + '-view');
-            if(view) {
-                view.classList.remove('hidden');
-                const titles = {
-                    'dashboard': 'Visão Geral',
-                    'transactions': 'Transações',
-                    'categories': 'Categorias',
-                    'recurring': 'Recorrentes',
-                    'users': 'Usuários'
-                };
-                const viewTitle = document.getElementById('view-title');
-                if(viewTitle) viewTitle.textContent = titles[tab] || 'Visão Geral';
-            }
-            if(event && event.currentTarget) {
-                event.currentTarget.classList.add('active');
-            }
-            
-            if(tab === 'transactions') renderTransactions();
-            if(tab === 'categories') renderCategories();
-            if(tab === 'recurring') renderRecurring();
-            if(tab === 'users' && currentUser && currentUser.role === 'admin') renderUsers();
-        }
+    document.querySelectorAll('.content-area').forEach(c => c.classList.add('hidden'));
+    document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+    const view = document.getElementById(tab + '-view');
+    if (view) {
+        view.classList.remove('hidden');
+        const titles = {
+            'dashboard': '<i class="fa-solid fa-chart-pie"></i> Visão Geral',
+            'transactions': '<i class="fa-solid fa-list-ul"></i> Transações',
+            'categories': '<i class="fa-solid fa-tags"></i> Categorias',
+            'recurring': '<i class="fa-solid fa-repeat"></i> Recorrentes',
+            'users': '<i class="fa-solid fa-user-gear"></i> Usuários',
+            'settings': '<i class="fa-solid fa-gear"></i> Configurações'
+        };
+        const viewTitle = document.getElementById('view-title');
+        if (viewTitle) viewTitle.innerHTML = titles[tab] || '<i class="fa-solid fa-chart-pie"></i> Visão Geral';
+    }
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
+
+    if (tab === 'transactions') renderTransactions();
+    if (tab === 'categories') renderCategories();
+    if (tab === 'recurring') renderRecurring();
+    if (tab === 'users' && currentUser && currentUser.role === 'admin') renderUsers();
+    if (tab === 'settings') loadSettings();
+}
 
         function openModal(id) { 
             if(id === 'transaction') openTransactionModal();
@@ -2761,6 +3320,143 @@
                 pieChart.update('active');
             }
 
+            // Gráfico de linha essenciais/não essenciais (tempo)
+            const essentialLineData = [];
+            const nonessentialLineData = [];
+            const essentialLineLabels = [];
+            
+            // Usar a mesma lógica de tempo dos outros gráficos
+            const essentialTimeRangeTypeEl = document.getElementById('time-range-type');
+            const essentialTimeRangeType = essentialTimeRangeTypeEl ? essentialTimeRangeTypeEl.value : 'all';
+            const essentialMonthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            
+            if(essentialTimeRangeType === 'all') {
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                for(let m = 0; m < 12; m++) {
+                    essentialLineLabels.push(essentialMonthNames[m] + '/' + String(currentYear).slice(-2));
+                    let monthEssential = 0, monthNonessential = 0;
+                    const monthKey = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
+                    filtered.forEach(t => {
+                        if(!t || !t.date || t.type !== 'expense') return;
+                        const txMonth = t.date.substring(0, 7);
+                        if(txMonth === monthKey) {
+                            const cat = (DB.categories || []).find(c => c && c.name === t.cat);
+                            if(cat) {
+                                const isEssential = t.subcat ? 
+                                    ((cat.subcategories && cat.subcategories.find(s => s && s.name === t.subcat))?.essential ?? cat.essential) : 
+                                    cat.essential;
+                                if(isEssential) monthEssential += (parseFloat(t.val) || 0);
+                                else monthNonessential += (parseFloat(t.val) || 0);
+                            }
+                        }
+                    });
+                    essentialLineData.push(monthEssential);
+                    nonessentialLineData.push(monthNonessential);
+                }
+            } else if(essentialTimeRangeType === 'year') {
+                const year = start.getFullYear();
+                for(let m = 0; m < 12; m++) {
+                    essentialLineLabels.push(essentialMonthNames[m] + '/' + String(year).slice(-2));
+                    let monthEssential = 0, monthNonessential = 0;
+                    const monthKey = `${year}-${String(m + 1).padStart(2, '0')}`;
+                    filtered.forEach(t => {
+                        if(!t || !t.date || t.type !== 'expense') return;
+                        const txMonth = t.date.substring(0, 7);
+                        if(txMonth === monthKey) {
+                            const cat = (DB.categories || []).find(c => c && c.name === t.cat);
+                            if(cat) {
+                                const isEssential = t.subcat ? 
+                                    ((cat.subcategories && cat.subcategories.find(s => s && s.name === t.subcat))?.essential ?? cat.essential) : 
+                                    cat.essential;
+                                if(isEssential) monthEssential += (parseFloat(t.val) || 0);
+                                else monthNonessential += (parseFloat(t.val) || 0);
+                            }
+                        }
+                    });
+                    essentialLineData.push(monthEssential);
+                    nonessentialLineData.push(monthNonessential);
+                }
+            } else if(essentialTimeRangeType === 'month') {
+                const essentialYear = start.getFullYear();
+                const essentialMonth = start.getMonth();
+                const daysInMonth = new Date(essentialYear, essentialMonth + 1, 0).getDate();
+                for(let d = 1; d <= daysInMonth; d++) {
+                    essentialLineLabels.push(String(d).padStart(2, '0'));
+                    let dayEssential = 0, dayNonessential = 0;
+                    const dayKey = `${essentialYear}-${String(essentialMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    filtered.forEach(t => {
+                        if(!t || !t.date || t.type !== 'expense') return;
+                        if(t.date === dayKey) {
+                            const cat = (DB.categories || []).find(c => c && c.name === t.cat);
+                            if(cat) {
+                                const isEssential = t.subcat ? 
+                                    ((cat.subcategories && cat.subcategories.find(s => s && s.name === t.subcat))?.essential ?? cat.essential) : 
+                                    cat.essential;
+                                if(isEssential) dayEssential += (parseFloat(t.val) || 0);
+                                else dayNonessential += (parseFloat(t.val) || 0);
+                            }
+                        }
+                    });
+                    essentialLineData.push(dayEssential);
+                    nonessentialLineData.push(dayNonessential);
+                }
+            } else if(essentialTimeRangeType === 'custom') {
+                const essentialCurrent = new Date(start);
+                essentialCurrent.setHours(0, 0, 0, 0);
+                const essentialEndDate = new Date(end);
+                essentialEndDate.setHours(23, 59, 59, 999);
+                
+                while(essentialCurrent <= essentialEndDate) {
+                    essentialLineLabels.push(String(essentialCurrent.getDate()).padStart(2, '0') + '/' + String(essentialCurrent.getMonth() + 1).padStart(2, '0'));
+                    const dayKey = essentialCurrent.toISOString().split('T')[0];
+                    let dayEssential = 0, dayNonessential = 0;
+                    filtered.forEach(t => {
+                        if(!t || !t.date || t.type !== 'expense') return;
+                        if(t.date === dayKey) {
+                            const cat = (DB.categories || []).find(c => c && c.name === t.cat);
+                            if(cat) {
+                                const isEssential = t.subcat ? 
+                                    ((cat.subcategories && cat.subcategories.find(s => s && s.name === t.subcat))?.essential ?? cat.essential) : 
+                                    cat.essential;
+                                if(isEssential) dayEssential += (parseFloat(t.val) || 0);
+                                else dayNonessential += (parseFloat(t.val) || 0);
+                            }
+                        }
+                    });
+                    essentialLineData.push(dayEssential);
+                    nonessentialLineData.push(dayNonessential);
+                    essentialCurrent.setDate(essentialCurrent.getDate() + 1);
+                }
+            }
+            
+            if(essentialLineChart) {
+                essentialLineChart.data.labels = essentialLineLabels.length > 0 ? essentialLineLabels : ['Sem dados'];
+                essentialLineChart.data.datasets = [
+                    { 
+                        label: 'Essenciais', 
+                        data: essentialLineData.length > 0 ? essentialLineData : [0], 
+                        borderColor: '#f59e0b', 
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)', 
+                        tension: 0.4, 
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    },
+                    { 
+                        label: 'Não Essenciais', 
+                        data: nonessentialLineData.length > 0 ? nonessentialLineData : [0], 
+                        borderColor: '#ef4444', 
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)', 
+                        tension: 0.4, 
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }
+                ];
+                essentialLineChart.update('active');
+            }
+
             // Gráfico essenciais/não essenciais (pizza) com % e quantidade
             let essential = 0, nonessential = 0;
             filtered.forEach(t => {
@@ -2786,33 +3482,61 @@
                 essentialChart.update('active');
             }
 
-            // Gráfico de distribuição por categoria/subcategoria (barra horizontal)
-            const categoryData = {};
+            // Gráfico de distribuição por categoria/subcategoria - DESPESAS (barra horizontal)
+            const categoryExpenseData = {};
             filtered.forEach(t => {
-                if(!t || !t.cat) return;
+                if(!t || !t.cat || t.type !== 'expense') return;
                 const key = filterCat && filterSubcat && t.subcat ? t.subcat : filterCat ? t.cat : t.cat;
                 if(key) {
-                    categoryData[key] = (categoryData[key] || 0) + (parseFloat(t.val) || 0);
+                    categoryExpenseData[key] = (categoryExpenseData[key] || 0) + (parseFloat(t.val) || 0);
                 }
             });
 
-            const catLabels = Object.keys(categoryData);
-            const catData = Object.values(categoryData);
-            const totalCat = catData.reduce((a, b) => a + b, 0);
+            const expenseCatLabels = Object.keys(categoryExpenseData);
+            const expenseCatData = Object.values(categoryExpenseData);
+            const totalExpense = expenseCatData.reduce((a, b) => a + b, 0);
             const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
             
-            if(categoryChart) {
+            if(categoryExpenseChart) {
                 // Adicionar % e quantidade nos labels
-                const categoryLabels = catLabels.map((label, i) => {
-                    const value = catData[i];
-                    const percent = totalCat > 0 ? Math.round((value/totalCat)*100) : 0;
+                const categoryLabels = expenseCatLabels.map((label, i) => {
+                    const value = expenseCatData[i];
+                    const percent = totalExpense > 0 ? Math.round((value/totalExpense)*100) : 0;
                     return `${label}: R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})} (${percent}%)`;
                 });
                 
-                categoryChart.data.labels = categoryLabels.length > 0 ? categoryLabels : ['Sem dados'];
-                categoryChart.data.datasets[0].data = catData.length > 0 ? catData : [0];
-                categoryChart.data.datasets[0].backgroundColor = catLabels.length > 0 ? catLabels.map((_, i) => colors[i % colors.length]) : colors;
-                categoryChart.update('active');
+                categoryExpenseChart.data.labels = categoryLabels.length > 0 ? categoryLabels : ['Sem dados'];
+                categoryExpenseChart.data.datasets[0].data = expenseCatData.length > 0 ? expenseCatData : [0];
+                categoryExpenseChart.data.datasets[0].backgroundColor = expenseCatLabels.length > 0 ? expenseCatLabels.map((_, i) => colors[i % colors.length]) : colors;
+                categoryExpenseChart.update('active');
+            }
+
+            // Gráfico de distribuição por categoria/subcategoria - RECEITAS (barra horizontal)
+            const categoryIncomeData = {};
+            filtered.forEach(t => {
+                if(!t || !t.cat || t.type !== 'income') return;
+                const key = filterCat && filterSubcat && t.subcat ? t.subcat : filterCat ? t.cat : t.cat;
+                if(key) {
+                    categoryIncomeData[key] = (categoryIncomeData[key] || 0) + (parseFloat(t.val) || 0);
+                }
+            });
+
+            const incomeCatLabels = Object.keys(categoryIncomeData);
+            const incomeCatData = Object.values(categoryIncomeData);
+            const totalIncome = incomeCatData.reduce((a, b) => a + b, 0);
+            
+            if(categoryIncomeChart) {
+                // Adicionar % e quantidade nos labels
+                const categoryLabels = incomeCatLabels.map((label, i) => {
+                    const value = incomeCatData[i];
+                    const percent = totalIncome > 0 ? Math.round((value/totalIncome)*100) : 0;
+                    return `${label}: R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})} (${percent}%)`;
+                });
+                
+                categoryIncomeChart.data.labels = categoryLabels.length > 0 ? categoryLabels : ['Sem dados'];
+                categoryIncomeChart.data.datasets[0].data = incomeCatData.length > 0 ? incomeCatData : [0];
+                categoryIncomeChart.data.datasets[0].backgroundColor = incomeCatLabels.length > 0 ? incomeCatLabels.map((_, i) => colors[i % colors.length]) : colors;
+                categoryIncomeChart.update('active');
             }
         }
 
@@ -2843,8 +3567,10 @@
                 resizeTimeout = setTimeout(function() {
                     if(mainChart) mainChart.resize();
                     if(pieChart) pieChart.resize();
+                    if(essentialLineChart) essentialLineChart.resize();
                     if(essentialChart) essentialChart.resize();
-                    if(categoryChart) categoryChart.resize();
+                    if(categoryExpenseChart) categoryExpenseChart.resize();
+                    if(categoryIncomeChart) categoryIncomeChart.resize();
                     if(efficiencyChart) efficiencyChart.resize();
                 }, 250);
             });
