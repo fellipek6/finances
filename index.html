@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finance PRO | Intelligence Suite</title>
-    <link rel="icon" type="image/png" href="https://i.imgur.com/42Ojs7U.png">
+    <link rel="icon" type="image/png" href="https://i.imgur.com/xXj8Zdo.png">
     <link rel="manifest" href="https://raw.githubusercontent.com/fellipek6/finances/refs/heads/main/manifest.json">
     <meta name="theme-color" content="#3f0000">    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -54,7 +54,7 @@
             --primary: #0f172a;
             --accent: #2563eb;
             --success: #10b981;
-            --danger: #ef4444;
+            --danger: #E0115F;
             --warning: #f59e0b;
             --bg: #f1f5f9;
             --sidebar: #ffffff;
@@ -101,6 +101,11 @@
         .login-card:hover { transform: translateY(-2px); }
 
         .login-card i { font-size: 40px; color: var(--accent); margin-bottom: 20px; }
+        #login-screen .btn-primary { background: var(--accent); }
+        #login-screen .btn-primary:hover { 
+            background: var(--accent); 
+            filter: brightness(0.85);
+        }
         .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes shake {
             10%, 90% { transform: translate3d(-1px, 0, 0); }
@@ -284,8 +289,9 @@
         @media (max-width: 768px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
         }
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
             .stats-grid { grid-template-columns: 1fr; }
+            .stats-grid[style*="grid-template-columns: repeat(4"] { grid-template-columns: 1fr !important; }
         }
 
         .charts-container { 
@@ -416,6 +422,9 @@
 
         /* TABLES */
         .table-container { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
+        .table-container table { min-width: 100%; }
+        #transactions-view .table-container,
+        #recurring-view .table-container { overflow-x: auto; }
         .table-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         table { width: 100%; border-collapse: collapse; }
         th { background: var(--bg); padding: 14px 20px; font-size: 11px; text-transform: uppercase; color: var(--text-muted); text-align: left; font-weight: 600; }
@@ -461,7 +470,7 @@
         }
 
         /* FORMS & MODAL */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 3000; }
         .modal-content { background: var(--card); padding: 30px; border-radius: 16px; width: 500px; max-height: 90vh; overflow-y: auto; }
         
         @media (max-width: 768px) {
@@ -477,10 +486,15 @@
         .btn { padding: 12px 24px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-align: center; position: relative; overflow: hidden; }
         .btn::before { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(255,255,255,0.2); transform: translate(-50%, -50%); transition: width 0.6s, height 0.6s; }
         .btn:hover::before { width: 300px; height: 300px; }
-        .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3); }
-        .btn-primary:hover { background: #1d4ed8; box-shadow: 0 6px 12px rgba(37, 99, 235, 0.4); transform: translateY(-2px); }
-        .btn-danger { background: var(--danger); color: white; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3); }
-        .btn-danger:hover { background: #dc2626; box-shadow: 0 6px 12px rgba(239, 68, 68, 0.4); transform: translateY(-2px); }
+        .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); }
+        .btn-primary:hover { 
+            background: var(--accent); 
+            filter: brightness(0.85);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); 
+            transform: translateY(-2px); 
+        }
+        .btn-danger { background: var(--danger); color: white; box-shadow: 0 4px 6px rgba(224, 17, 95, 0.3); }
+        .btn-danger:hover { background: #B80E4D; box-shadow: 0 6px 12px rgba(224, 17, 95, 0.4); transform: translateY(-2px); }
         .btn-success { background: var(--success); color: white; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); }
         .btn-success:hover { background: #059669; box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4); transform: translateY(-2px); }
         .btn-secondary { background: var(--border); color: var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -515,8 +529,8 @@
 
     <div id="login-screen">
         <div class="login-card" id="login-box">
-            <i class="fa-solid fa-shield-halved"></i>
-            <h2 style="margin-bottom: 10px;">Finance PRO</h2>
+            <i id="login-icon" class="fa-solid fa-shield-halved"></i>
+            <h2 id="login-title" style="margin-bottom: 10px;">Finance PRO</h2>
             <p style="color: var(--text-muted); margin-bottom: 30px;">Entre com suas credenciais</p>
             
             <div id="lockout-msg" style="color: var(--danger); font-size: 13px; margin-bottom: 15px; display: none;">
@@ -526,7 +540,8 @@
             <input type="text" id="user-input" class="form-control" placeholder="Usuário" style="margin-bottom: 15px;" onkeypress="if(event.key==='Enter') handleLogin()">
             <input type="password" id="pass-input" class="form-control" placeholder="Senha" style="margin-bottom: 25px;" onkeypress="if(event.key==='Enter') handleLogin()">
             
-            <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="handleLogin()">Acessar Sistema</button>
+            <button class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 10px;" onclick="handleLogin()">Acessar Sistema</button>
+            <button class="btn btn-secondary" style="width: 100%; justify-content: center;" onclick="openCreateAccountModal()">Criar Nova Conta</button>
         </div>
     </div>
 
@@ -731,13 +746,24 @@
                     </div>
                 </div>
 
-                <div class="chart-box" style="margin-top: 20px;">
-                    <div class="chart-title">
-                        <i class="fa-solid fa-percent"></i>
-                        Eficiência (%)
+                <div class="charts-container" style="margin-top: 20px;">
+                    <div class="chart-box">
+                        <div class="chart-title">
+                            <i class="fa-solid fa-percent"></i>
+                            Eficiência (%)
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="efficiencyChart"></canvas>
+                        </div>
                     </div>
-                    <div class="chart-wrapper">
-                        <canvas id="efficiencyChart"></canvas>
+                    <div class="chart-box">
+                        <div class="chart-title">
+                            <i class="fa-solid fa-credit-card"></i>
+                            Formas de Pagamento
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="paymentChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -940,6 +966,10 @@
                                     <i class="fa-solid fa-fish" style="font-size: 24px; color: var(--accent);"></i>
                                     <div style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Peixe</div>
                                 </div>
+                                <div class="icon-option" data-icon="fa-coins" onclick="selectIcon('fa-coins')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <i class="fa-solid fa-coins" style="font-size: 24px; color: var(--accent);"></i>
+                                    <div style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Moedas</div>
+                                </div>
                             </div>
                         </div>
                         <div class="form-group" style="margin-bottom: 25px;">
@@ -954,8 +984,8 @@
                                 <div class="color-palette" data-palette="purple" onclick="selectPalette('purple')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); height: 80px; position: relative;">
                                     <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Roxo</div>
                                 </div>
-                                <div class="color-palette" data-palette="red" onclick="selectPalette('red')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); height: 80px; position: relative;">
-                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Vermelho</div>
+                                <div class="color-palette" data-palette="ruby" onclick="selectPalette('ruby')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #E0115F 0%, #B80E4D 100%); height: 80px; position: relative;">
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Rubi</div>
                                 </div>
                                 <div class="color-palette" data-palette="orange" onclick="selectPalette('orange')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); height: 80px; position: relative;">
                                     <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Laranja</div>
@@ -975,8 +1005,14 @@
                             </div>
                         </div>
                         <div style="margin-top: 30px;">
-                            <button class="btn btn-primary" onclick="saveSettings()" style="width: 100%;">
+                            <button class="btn btn-primary" onclick="saveSettings()" style="width: 100%; margin-bottom: 15px;">
                                 <i class="fa-solid fa-save"></i> Salvar Configurações
+                            </button>
+                            <button class="btn btn-secondary" onclick="openChangePasswordModal()" style="width: 100%;">
+                                <i class="fa-solid fa-key"></i> Alterar Minha Senha
+                            </button>
+                            <button class="btn btn-secondary" onclick="openDeleteAccountModal()" style="background: #ff7373; margin-top: 10px;width: 100%;">
+                                <i class="fa-solid fa-user-slash"></i> Apagar Minha Conta
                             </button>
                         </div>
                     </div>
@@ -1209,6 +1245,52 @@
         </div>
     </div>
 
+    <!-- MODAL CRIAR CONTA -->
+    <div class="modal" id="modal-create-account">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px;">Criar Nova Conta</h3>
+            <div class="form-group">
+                <label>Nome Completo</label>
+                <input type="text" id="create-name" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Login</label>
+                <input type="text" id="create-login" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="create-pass" class="form-control">
+            </div>
+            <div style="margin-top: 25px; display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal()">Cancelar</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="saveCreateAccount()">Criar Conta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ALTERAR SENHA -->
+    <div class="modal" id="modal-change-password">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-key"></i> Alterar Senha</h3>
+            <div class="form-group">
+                <label>Senha Atual</label>
+                <input type="password" id="current-pass" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Nova Senha</label>
+                <input type="password" id="new-pass" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Confirmar Nova Senha</label>
+                <input type="password" id="confirm-pass" class="form-control">
+            </div>
+            <div style="margin-top: 25px; display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal()">Cancelar</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="saveChangePassword()">Alterar Senha</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL USUÁRIO -->
     <div class="modal" id="modal-user">
         <div class="modal-content">
@@ -1239,11 +1321,54 @@
         </div>
     </div>
 
+    <div class="modal" id="modal-delete-account">
+        <div class="modal-content" style="max-width: 450px; border: none; padding: 40px; text-align: center; overflow: hidden;">
+            
+            <div style="margin-bottom: 25px;">
+                <div style="width: 80px; height: 80px; background: rgba(224, 17, 95, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 2px solid rgba(224, 17, 95, 0.2);">
+                    <i class="fa-solid fa-user-xmark" style="font-size: 32px; color: #E0115F;"></i>
+                </div>
+            </div>
+    
+            <h3 style="color: var(--text-main); font-size: 24px; font-weight: 700; margin-bottom: 12px;">Excluir Conta</h3>
+            
+            <p style="color: var(--text-muted); font-size: 15px; line-height: 1.6; margin-bottom: 25px;">
+                Essa ação removerá permanentemente todos os seus dados financeiros. Esta operação <strong>não pode ser desfeita</strong>.
+            </p>
+    
+            <div style="text-align: left; margin-bottom: 25px;">
+                <label style="font-size: 12px; font-weight: 700; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block;">
+                    Confirme sua senha
+                </label>
+                <input type="password" id="confirm-delete-password" 
+                       placeholder="Digite sua senha atual" 
+                       class="form-control" 
+                       style="height: 50px; border-radius: 12px; border: 2px solid var(--border); transition: 0.3s; width: 100%;">
+            </div>
+    
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn" onclick="confirmDeleteAccount()" 
+                        style="background: #E0115F; color: white; height: 52px; font-weight: 700; border-radius: 12px; box-shadow: 0 4px 15px rgba(224, 17, 95, 0.3);">
+                    Sim, excluir minha conta
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal()" 
+                        style="background: transparent; border: 2px solid var(--border); height: 52px; color: var(--text-main); font-weight: 600; border-radius: 12px;">
+                    Não, manter minha conta
+                </button>
+            </div>
+    
+            <div style="margin-top: 20px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <i class="fa-solid fa-lock" style="font-size: 10px;"></i>
+                Processamento de exclusão seguro
+            </div>
+        </div>
+    </div>
+
     <script>
         // ESTADO GLOBAL
         let attempts = 0;
         let isLocked = false;
-        let mainChart, pieChart, essentialChart, essentialLineChart, categoryExpenseChart, categoryIncomeChart, efficiencyChart;
+        let mainChart, pieChart, essentialChart, essentialLineChart, categoryExpenseChart, categoryIncomeChart, efficiencyChart, paymentChart;
         let currentUser = null;
         let editingTransactionId = null;
         let editingCategoryId = null;
@@ -1260,7 +1385,13 @@
             } catch (error) {
                 console.warn('Erro ao carregar usuários na inicialização:', error);
             }
-            // Configurações padrão serão aplicadas após login
+            // Aplicar cores padrão na tela de login
+            const defaultSettings = {
+                siteName: 'Finance PRO',
+                icon: 'fa-vault',
+                palette: 'ruby'
+            };
+            applySettings(defaultSettings);
         }
         init();
 
@@ -1496,7 +1627,7 @@
                 const settings = userDB && userDB.settings ? userDB.settings : {
                     siteName: 'Finance PRO',
                     icon: 'fa-vault',
-                    palette: 'blue'
+                    palette: 'ruby'
                 };
                 applySettings(settings);
 
@@ -2472,12 +2603,13 @@
             
             body.innerHTML = (DB.categories || []).map(cat => {
                 if(!cat) return '';
+                const subcategories = cat.subcategories || [];
                 return `
                 <tr>
                     <td style="font-weight:600">${cat.name}</td>
                     <td><span class="badge ${cat.type === 'income' ? 'badge-income' : 'badge-expense'}">${cat.type === 'income' ? 'Receita' : 'Despesa'}</span></td>
                     <td>${cat.type === 'income' ? ' - ' : `<span class="badge ${cat.essential ? 'badge-essential' : 'badge-nonessential'}">${cat.essential ? 'Essencial' : 'Não Essencial'}</span>`}</td>
-                    <td>${cat.subcategories.length > 0 ? cat.subcategories.map(s => s.name).join(', ') : '-'}</td>
+                    <td>${subcategories.length > 0 ? subcategories.map(s => s && s.name ? s.name : '').filter(n => n).join(', ') : '-'}</td>
                     <td>
                         <button class="action-btn btn-edit" onclick="openCategoryModal(${cat.id})"><i class="fa-solid fa-edit"></i></button>
                         <button class="action-btn btn-delete" onclick="deleteCategory(${cat.id})"><i class="fa-solid fa-trash"></i></button>
@@ -2648,6 +2780,162 @@
             renderUsers();
         }
 
+        // CRIAR NOVA CONTA (apenas usuário)
+        function openCreateAccountModal() {
+            const modal = document.getElementById('modal-create-account');
+            document.getElementById('create-name').value = '';
+            document.getElementById('create-login').value = '';
+            document.getElementById('create-pass').value = '';
+            if(modal) modal.style.display = 'flex';
+        }
+
+        async function saveCreateAccount() {
+            const name = document.getElementById('create-name').value;
+            const login = document.getElementById('create-login').value;
+            const pass = document.getElementById('create-pass').value;
+
+            if(!name || !login || !pass) {
+                return alert("Todos os campos são obrigatórios");
+            }
+
+            if(pass.length < 4) {
+                return alert("A senha deve ter pelo menos 4 caracteres");
+            }
+
+            // Carregar usuários existentes
+            let users = [];
+            try {
+                users = await loadUsersFromFirebase();
+            } catch (error) {
+                users = JSON.parse(localStorage.getItem('fpro_users')) || [];
+            }
+
+            // Verificar se login já existe
+            if(users.find(u => u.user === login)) {
+                return alert("Login já existe. Escolha outro login.");
+            }
+
+            const userData = {
+                user: login,
+                pass: pass,
+                name: name,
+                role: 'user' // Sempre criar como usuário
+            };
+
+            users.push(userData);
+            localStorage.setItem('fpro_users', JSON.stringify(users));
+
+            // Salvar no Firebase
+            if (useFirebase) {
+                try {
+                    const firebaseAvailable = await waitForFirebase();
+                    if (firebaseAvailable && window.firebaseDatabase && window.db) {
+                        const userAccountsRef = window.firebaseDatabase.ref(window.db, 'userAccounts');
+                        const snapshot = await window.firebaseDatabase.get(userAccountsRef);
+                        
+                        let userAccounts = [];
+                        if (snapshot.exists()) {
+                            const data = snapshot.val();
+                            if (Array.isArray(data)) {
+                                userAccounts = data;
+                            } else if (typeof data === 'object') {
+                                userAccounts = Object.values(data);
+                            }
+                        }
+                        
+                        userAccounts.push(userData);
+                        await window.firebaseDatabase.set(userAccountsRef, userAccounts);
+                        console.log('Conta criada no Firebase com sucesso');
+                    }
+                } catch (error) {
+                    console.error('Erro ao salvar conta no Firebase:', error);
+                }
+            }
+
+            alert('Conta criada com sucesso! Você já pode fazer login.');
+            closeModal();
+        }
+
+        // ALTERAR SENHA DO PRÓPRIO USUÁRIO
+        function openChangePasswordModal() {
+            const modal = document.getElementById('modal-change-password');
+            document.getElementById('current-pass').value = '';
+            document.getElementById('new-pass').value = '';
+            document.getElementById('confirm-pass').value = '';
+            if(modal) modal.style.display = 'flex';
+        }
+
+        async function saveChangePassword() {
+            if(!currentUser) {
+                return alert("Você precisa estar logado para alterar a senha");
+            }
+
+            const currentPass = document.getElementById('current-pass').value;
+            const newPass = document.getElementById('new-pass').value;
+            const confirmPass = document.getElementById('confirm-pass').value;
+
+            if(!currentPass || !newPass || !confirmPass) {
+                return alert("Todos os campos são obrigatórios");
+            }
+
+            // Verificar senha atual
+            const users = JSON.parse(localStorage.getItem('fpro_users')) || [];
+            const user = users.find(u => u.user === currentUser.user);
+            
+            if(!user || user.pass !== currentPass) {
+                return alert("Senha atual incorreta");
+            }
+
+            if(newPass.length < 4) {
+                return alert("A nova senha deve ter pelo menos 4 caracteres");
+            }
+
+            if(newPass !== confirmPass) {
+                return alert("As senhas não coincidem");
+            }
+
+            // Atualizar senha
+            user.pass = newPass;
+            const userIndex = users.findIndex(u => u.user === currentUser.user);
+            if(userIndex !== -1) {
+                users[userIndex] = user;
+            }
+            localStorage.setItem('fpro_users', JSON.stringify(users));
+
+            // Atualizar no Firebase
+            if (useFirebase) {
+                try {
+                    const firebaseAvailable = await waitForFirebase();
+                    if (firebaseAvailable && window.firebaseDatabase && window.db) {
+                        const userAccountsRef = window.firebaseDatabase.ref(window.db, 'userAccounts');
+                        const snapshot = await window.firebaseDatabase.get(userAccountsRef);
+                        
+                        let userAccounts = [];
+                        if (snapshot.exists()) {
+                            const data = snapshot.val();
+                            if (Array.isArray(data)) {
+                                userAccounts = data;
+                            } else if (typeof data === 'object') {
+                                userAccounts = Object.values(data);
+                            }
+                        }
+                        
+                        const userIndexFirebase = userAccounts.findIndex(u => u.user === currentUser.user);
+                        if(userIndexFirebase !== -1) {
+                            userAccounts[userIndexFirebase].pass = newPass;
+                            await window.firebaseDatabase.set(userAccountsRef, userAccounts);
+                            console.log('Senha atualizada no Firebase com sucesso');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao atualizar senha no Firebase:', error);
+                }
+            }
+
+            alert('Senha alterada com sucesso!');
+            closeModal();
+        }
+
         function renderUsers() {
             const users = JSON.parse(localStorage.getItem('fpro_users')) || [];
             const uList = document.getElementById('users-list');
@@ -2672,7 +2960,7 @@
     if (!DB.settings) DB.settings = {
         siteName: 'Finance PRO',
         icon: 'fa-vault',
-        palette: 'blue'
+        palette: 'ruby'
     };
 
     const settings = DB.settings;
@@ -2741,7 +3029,7 @@ function saveSettings() {
     const selectedPaletteEl = Array.from(document.querySelectorAll('.color-palette')).find(el => 
         el.style.borderWidth === '3px' || getComputedStyle(el).borderWidth.includes('3')
     );
-    const selectedPalette = selectedPaletteEl?.dataset.palette || document.querySelector('.color-palette[data-palette]')?.dataset.palette || 'blue';
+    const selectedPalette = selectedPaletteEl?.dataset.palette || document.querySelector('.color-palette[data-palette]')?.dataset.palette || 'ruby';
 
     const settings = {
         siteName: siteName,
@@ -2765,6 +3053,16 @@ function applySettings(settings) {
     if (logoIcon && settings.icon) {
         logoIcon.className = `fa-solid ${settings.icon}`;
     }
+    
+    // Aplicar nome e ícone na tela de login
+    const loginIcon = document.getElementById('login-icon');
+    const loginTitle = document.getElementById('login-title');
+    if (loginIcon && settings.icon) {
+        loginIcon.className = `fa-solid ${settings.icon}`;
+    }
+    if (loginTitle) {
+        loginTitle.textContent = settings.siteName || 'Finance PRO';
+    }
 
     // Aplicar paleta de cores (apenas modo claro)
     if (document.documentElement.getAttribute('data-theme') !== 'dark') {
@@ -2772,7 +3070,7 @@ function applySettings(settings) {
             blue: { accent: '#2563eb', primary: '#0f172a' },
             green: { accent: '#10b981', primary: '#0f172a' },
             purple: { accent: '#8b5cf6', primary: '#0f172a' },
-            red: { accent: '#ef4444', primary: '#0f172a' },
+            ruby: { accent: '#E0115F', primary: '#0f172a' },
             orange: { accent: '#f59e0b', primary: '#0f172a' },
             pink: { accent: '#ec4899', primary: '#0f172a' },
             cyan: { accent: '#06b6d4', primary: '#0f172a' },
@@ -2789,7 +3087,7 @@ function applySettings(settings) {
             rose: { accent: '#e11d48', primary: '#0f172a' }
         };
 
-        const palette = palettes[settings.palette] || palettes.blue;
+        const palette = palettes[settings.palette] || palettes.ruby;
         document.documentElement.style.setProperty('--accent', palette.accent);
         document.documentElement.style.setProperty('--primary', palette.primary);
     }
@@ -3124,7 +3422,7 @@ function applySettings(settings) {
             const ctxPie = document.getElementById('pieChart').getContext('2d');
             pieChart = new Chart(ctxPie, {
                 type: 'doughnut',
-                data: { labels: ['Entradas', 'Saídas'], datasets: [{ data: [0, 0], backgroundColor: ['#10b981', '#ef4444'] }] },
+                data: { labels: ['Entradas', 'Saídas'], datasets: [{ data: [0, 0], backgroundColor: ['#10b981', '#E0115F'] }] },
                 options: { 
                     maintainAspectRatio: false,
                     responsive: true,
@@ -3174,7 +3472,7 @@ function applySettings(settings) {
             const ctxEssential = document.getElementById('essentialChart').getContext('2d');
             essentialChart = new Chart(ctxEssential, {
                 type: 'doughnut',
-                data: { labels: ['Essenciais', 'Não Essenciais'], datasets: [{ data: [0, 0], backgroundColor: ['#f59e0b', '#ef4444'] }] },
+                data: { labels: ['Essenciais', 'Não Essenciais'], datasets: [{ data: [0, 0], backgroundColor: ['#f59e0b', '#E0115F'] }] },
                 options: { 
                     maintainAspectRatio: false,
                     responsive: true,
@@ -3265,6 +3563,29 @@ function applySettings(settings) {
                     scales: { 
                         y: { beginAtZero: true },
                         x: { display: true }
+                    },
+                    layout: {
+                        padding: {
+                            top: 10,
+                            bottom: 10,
+                            left: 10,
+                            right: 10
+                        }
+                    }
+                }
+            });
+
+            const ctxPayment = document.getElementById('paymentChart').getContext('2d');
+            paymentChart = new Chart(ctxPayment, {
+                type: 'pie',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
+                options: { 
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    resizeDelay: 0,
+                    plugins: { 
+                        legend: { display: true, position: 'bottom' },
+                        tooltip: { enabled: true }
                     },
                     layout: {
                         padding: {
@@ -3577,8 +3898,8 @@ function applySettings(settings) {
                     { 
                         label: 'Despesas', 
                         data: expenseData.length > 0 ? expenseData : [0], 
-                        borderColor: '#ef4444', 
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)', 
+                        borderColor: '#E0115F', 
+                        backgroundColor: 'rgba(224, 17, 95, 0.1)', 
                         tension: 0.4, 
                         fill: true,
                         pointRadius: 4,
@@ -3610,6 +3931,54 @@ function applySettings(settings) {
                     pointHoverRadius: 6
                 }];
                 efficiencyChart.update('active');
+            }
+
+            // Gráfico de Formas de Pagamento (pizza)
+            const paymentData = { pix: 0, credito: 0, debito: 0 };
+            filtered.forEach(t => {
+                if(t && t.type === 'expense' && t.payment) {
+                    const payment = t.payment.toLowerCase();
+                    if(paymentData.hasOwnProperty(payment)) {
+                        paymentData[payment] += (parseFloat(t.val) || 0);
+                    }
+                }
+            });
+            
+            const paymentLabels = [];
+            const paymentValues = [];
+            const paymentColors = ['#10b981', '#2563eb', '#f59e0b']; // Verde para Pix, Azul para Crédito, Laranja para Débito
+            
+            if(paymentData.pix > 0) {
+                paymentLabels.push('Pix');
+                paymentValues.push(paymentData.pix);
+            }
+            if(paymentData.credito > 0) {
+                paymentLabels.push('Crédito');
+                paymentValues.push(paymentData.credito);
+            }
+            if(paymentData.debito > 0) {
+                paymentLabels.push('Débito');
+                paymentValues.push(paymentData.debito);
+            }
+            
+            const totalPayment = paymentValues.reduce((a, b) => a + b, 0);
+            
+            if(paymentChart) {
+                if(paymentLabels.length > 0) {
+                    const labelsWithPercent = paymentLabels.map((label, i) => {
+                        const value = paymentValues[i];
+                        const percent = totalPayment > 0 ? Math.round((value/totalPayment)*100) : 0;
+                        return `${label}: R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})} (${percent}%)`;
+                    });
+                    paymentChart.data.labels = labelsWithPercent;
+                    paymentChart.data.datasets[0].data = paymentValues;
+                    paymentChart.data.datasets[0].backgroundColor = paymentLabels.map((_, i) => paymentColors[i % paymentColors.length]);
+                } else {
+                    paymentChart.data.labels = ['Sem dados'];
+                    paymentChart.data.datasets[0].data = [0];
+                    paymentChart.data.datasets[0].backgroundColor = ['#e2e8f0'];
+                }
+                paymentChart.update('active');
             }
 
             // Gráfico de pizza receitas/despesas com % e quantidade
@@ -3758,8 +4127,8 @@ function applySettings(settings) {
                     { 
                         label: 'Não Essenciais', 
                         data: nonessentialLineData.length > 0 ? nonessentialLineData : [0], 
-                        borderColor: '#ef4444', 
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)', 
+                        borderColor: '#E0115F', 
+                        backgroundColor: 'rgba(224, 17, 95, 0.1)', 
                         tension: 0.4, 
                         fill: true,
                         pointRadius: 4,
@@ -3807,7 +4176,7 @@ function applySettings(settings) {
             const expenseCatLabels = Object.keys(categoryExpenseData);
             const expenseCatData = Object.values(categoryExpenseData);
             const totalExpense = expenseCatData.reduce((a, b) => a + b, 0);
-            const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+            const colors = ['#2563eb', '#10b981', '#f59e0b', '#E0115F', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
             
             if(categoryExpenseChart) {
                 // Adicionar % e quantidade nos labels
@@ -3884,6 +4253,7 @@ function applySettings(settings) {
                     if(categoryExpenseChart) categoryExpenseChart.resize();
                     if(categoryIncomeChart) categoryIncomeChart.resize();
                     if(efficiencyChart) efficiencyChart.resize();
+                    if(paymentChart) paymentChart.resize();
                 }, 250);
             });
         });
@@ -3978,6 +4348,47 @@ function applySettings(settings) {
                 installPromptShown = true;
             });
         }
+        function openDeleteAccountModal() {
+    document.getElementById('confirm-delete-password').value = '';
+    document.getElementById('modal-delete-account').style.display = 'flex';
+}
+
+async function confirmDeleteAccount() {
+    const passwordInput = document.getElementById('confirm-delete-password').value;
+    
+    if (!currentUser) return;
+    if (passwordInput !== currentUser.pass) {
+        alert("Senha incorreta!");
+        return;
+    }
+
+    // DEBUG: Verifica se o banco está pronto antes de tentar deletar
+    if (!window.db || !window.firebaseDatabase) {
+        console.error("Firebase não inicializado corretamente.");
+        alert("Erro de conexão: O banco de dados ainda não está pronto. Aguarde um instante.");
+        return;
+    }
+
+    if (confirm("Deseja realmente apagar sua conta?")) {
+        try {
+            // Referência exata conforme seu esquema no index.html
+            const userPath = `users/${currentUser.user}`;
+            const userRef = window.firebaseDatabase.ref(window.db, userPath);
+            
+            await window.firebaseDatabase.remove(userRef);
+            
+            // Sucesso: Limpar e Redirecionar
+            localStorage.removeItem('fpro_user');
+            alert("Conta removida com sucesso.");
+            location.reload(); // Forma mais limpa de resetar o app para o login
+            
+        } catch (error) {
+            console.error("Erro detalhado:", error);
+            // Se cair aqui, o erro é de permissão (Regras) ou API desativada
+            alert("Erro de permissão: Verifique se a API do Firestore/Realtime está ativada no console do Google.");
+        }
+    }
+}
     </script>
 </body>
 </html>
