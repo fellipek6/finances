@@ -7,12 +7,12 @@
   "theme_color": "#001f3f",
   "icons": [
     {
-      "src": "https://i.imgur.com/42Ojs7U.png",
+      "src": "https://i.imgur.com/Bpnt3IB.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://i.imgur.com/42Ojs7U.png",
+      "src": "https://i.imgur.com/Bpnt3IB.png",
       "sizes": "512x512",
       "type": "image/png"
     }
@@ -20,4 +20,5 @@
   "description": "Aplicativo para gestao financeira",
   "scope": "/"
 }
+
 
