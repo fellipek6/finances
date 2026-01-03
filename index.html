@@ -240,12 +240,18 @@
         @media (max-width: 768px) {
             header { padding: 15px 20px; }
             .menu-toggle { display: block; }
+            header .header-left ~ div { display: none !important; }
+            .user-info-mobile { display: block !important; }
         }
         
         .content-area { padding: 30px 40px; max-width: 1400px; margin: 0 auto; }
         
         /* ESTATÍSTICAS */
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 20px; margin-bottom: 30px; }
+        
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+        }
         .stat-card { background: var(--card); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; position: relative; }
         .stat-card:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(0,0,0,0.15); }
         .stat-card .label { font-size: 13px; color: var(--text-muted); font-weight: 600; }
@@ -289,9 +295,10 @@
         @media (max-width: 768px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
         }
-        @media (max-width: 768px) {
+        @media (max-width: 480px) {
             .stats-grid { grid-template-columns: 1fr; }
-            .stats-grid[style*="grid-template-columns: repeat(4"] { grid-template-columns: 1fr !important; }
+            .stats-grid[style*="grid-template-columns: repeat(6"] { grid-template-columns: 1fr !important; }
+            .stats-grid[style*="grid-template-columns: repeat(3"] { grid-template-columns: 1fr !important; }
         }
 
         .charts-container { 
@@ -563,6 +570,10 @@
                 <div class="nav-link admin-only" onclick="showTab('backup')" style="display: none;"><i class="fa-solid fa-download"></i> Backup</div>
                 <div class="nav-link" onclick="showTab('settings')"><i class="fa-solid fa-gear"></i> Configurações</div>
             </nav>
+            <div class="user-info-mobile" style="margin-top: auto; padding: 15px; border-top: 1px solid var(--border); display: none;">
+                <div style="font-weight: 700; font-size: 14px; margin-bottom: 5px;" id="admin-name-mobile">Admin</div>
+                <div style="font-size: 11px; color: var(--success);">● Online</div>
+            </div>
             <div class="nav-link" style="margin-top: auto; color: var(--danger);" onclick="logout()">
                 <i class="fa-solid fa-power-off"></i> Sair
             </div>
@@ -636,7 +647,7 @@
                     </div>
                 </div>
 
-                <div class="stats-grid">
+                <div class="stats-grid" style="grid-template-columns: repeat(6, 1fr);">
                     <div class="stat-card" title="Saldo total atual (Receitas - Despesas)">
                         <div class="tooltip">Saldo total atual (Receitas - Despesas)</div>
                         <div class="label">SALDO ATUAL</div>
@@ -647,6 +658,16 @@
                         <div class="tooltip">Total de receitas no período</div>
                         <div class="label">RECEITAS</div>
                         <div class="value" style="color: var(--success);" id="stat-income">R$ 0,00</div>
+                    </div>
+                    <div class="stat-card" title="Saldo do período (Receitas - Despesas)">
+                        <div class="tooltip">Saldo do período (Receitas - Despesas)</div>
+                        <div class="label">SALDO</div>
+                        <div class="value" id="stat-period-balance">R$ 0,00</div>
+                    </div>
+                    <div class="stat-card" title="Média mensal de gastos">
+                        <div class="tooltip">Média mensal de gastos</div>
+                        <div class="label">MÉDIA DE GASTOS</div>
+                        <div class="value" style="color: var(--warning);" id="stat-avg-expense">R$ 0,00</div>
                     </div>
                     <div class="stat-card" title="Total de despesas no período">
                         <div class="tooltip">Total de despesas no período</div>
@@ -766,6 +787,18 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="charts-container" style="margin-top: 20px;">
+                    <div class="chart-box">
+                        <div class="chart-title">
+                            <i class="fa-solid fa-chart-line"></i>
+                            Saldo ao Longo do Tempo
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="balanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="content-area hidden" id="transactions-view">
@@ -823,6 +856,13 @@
                             <option value="unpaid">Não Pagos</option>
                         </select>
                     </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label><i class="fa-solid fa-search"></i> Buscar</label>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="text" id="transactions-search" class="form-control" placeholder="Buscar..." onkeyup="renderTransactions()" style="margin: 0;">
+                            <button class="btn btn-secondary" onclick="document.getElementById('transactions-search').value=''; renderTransactions();" style="padding: 10px; min-width: auto;"><i class="fa-solid fa-times"></i></button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="table-container">
@@ -875,11 +915,30 @@
                 <div class="filter-bar">
                     <div class="filter-group">
                         <label><i class="fa-solid fa-filter"></i> Tipo</label>
-                        <select id="recurring-filter-type" onchange="renderRecurring()">
+                        <select id="recurring-filter-type" onchange="updateRecurringFilters()">
                             <option value="">Todos</option>
                             <option value="expense">Despesa</option>
                             <option value="income">Receita</option>
                         </select>
+                    </div>
+                    <div class="filter-group" id="recurring-filter-category-group" style="display: none;">
+                        <label><i class="fa-solid fa-tags"></i> Categoria</label>
+                        <select id="recurring-filter-category" onchange="updateRecurringSubcategoryFilters(); renderRecurring();">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" id="recurring-filter-subcategory-group" style="display: none;">
+                        <label><i class="fa-solid fa-tag"></i> Subcategoria</label>
+                        <select id="recurring-filter-subcategory" onchange="renderRecurring()">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label><i class="fa-solid fa-search"></i> Buscar</label>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="text" id="recurring-search" class="form-control" placeholder="Buscar..." onkeyup="renderRecurring()" style="margin: 0;">
+                            <button class="btn btn-secondary" onclick="document.getElementById('recurring-search').value=''; renderRecurring();" style="padding: 10px; min-width: auto;"><i class="fa-solid fa-times"></i></button>
+                        </div>
                     </div>
                 </div>
                 <div class="table-container">
@@ -1067,10 +1126,14 @@
                 <label><i class="fa-solid fa-file-text"></i> Descrição</label>
                 <input type="text" id="f-desc" class="form-control">
             </div>
-            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
                 <div>
                     <label><i class="fa-solid fa-dollar-sign"></i> Valor</label>
                     <input type="number" id="f-val" class="form-control" step="0.01">
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-hashtag"></i> Quantidade</label>
+                    <input type="number" id="f-quantity" class="form-control" value="1" min="1" step="1" onchange="updateTransactionTotal()">
                 </div>
                 <div>
                     <label><i class="fa-solid fa-exchange-alt"></i> Tipo</label>
@@ -1079,6 +1142,10 @@
                         <option value="expense">Despesa</option>
                     </select>
                 </div>
+            </div>
+            <div class="form-group" style="background: var(--bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+                <label style="font-size: 12px; color: var(--text-muted);">Valor Total:</label>
+                <div id="transaction-total" style="font-size: 18px; font-weight: 700; color: var(--accent);">R$ 0,00</div>
             </div>
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
@@ -1184,10 +1251,14 @@
                 <label>Descrição</label>
                 <input type="text" id="r-desc" class="form-control">
             </div>
-            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
                 <div>
                     <label>Valor</label>
-                    <input type="number" id="r-val" class="form-control" step="0.01">
+                    <input type="number" id="r-val" class="form-control" step="0.01" onchange="updateRecurringTotal()">
+                </div>
+                <div>
+                    <label>Quantidade</label>
+                    <input type="number" id="r-quantity" class="form-control" value="1" min="1" step="1" onchange="updateRecurringTotal()">
                 </div>
                 <div>
                     <label>Tipo</label>
@@ -1196,6 +1267,10 @@
                         <option value="expense">Despesa</option>
                     </select>
                 </div>
+            </div>
+            <div class="form-group" style="background: var(--bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+                <label style="font-size: 12px; color: var(--text-muted);">Valor Total:</label>
+                <div id="recurring-total" style="font-size: 18px; font-weight: 700; color: var(--accent);">R$ 0,00</div>
             </div>
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
@@ -1222,12 +1297,12 @@
             </div>
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
-                    <label>Periodicidade (dias)</label>
-                    <input type="number" id="r-period" class="form-control" value="30" min="1">
+                    <label>Periodicidade (dias) <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(Opcional)</span></label>
+                    <input type="number" id="r-period" class="form-control" value="" min="1" placeholder="Opcional">
                 </div>
                 <div>
-                    <label>Próxima Data</label>
-                    <input type="date" id="r-next-date" class="form-control">
+                    <label>Próxima Data <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(Opcional)</span></label>
+                    <input type="date" id="r-next-date" class="form-control" placeholder="Opcional">
                 </div>
             </div>
             <div class="form-group">
@@ -1368,7 +1443,7 @@
         // ESTADO GLOBAL
         let attempts = 0;
         let isLocked = false;
-        let mainChart, pieChart, essentialChart, essentialLineChart, categoryExpenseChart, categoryIncomeChart, efficiencyChart, paymentChart;
+        let mainChart, pieChart, essentialChart, essentialLineChart, categoryExpenseChart, categoryIncomeChart, efficiencyChart, paymentChart, balanceChart;
         let currentUser = null;
         let editingTransactionId = null;
         let editingCategoryId = null;
@@ -1615,6 +1690,8 @@
                 }
                 const adminName = document.getElementById('admin-name');
                 if(adminName) adminName.textContent = user.name;
+                const adminNameMobile = document.getElementById('admin-name-mobile');
+                if(adminNameMobile) adminNameMobile.textContent = user.name;
                 
                 if(user.role === 'admin') {
                     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
@@ -1708,6 +1785,7 @@
             
             const fDesc = document.getElementById('f-desc');
             const fVal = document.getElementById('f-val');
+            const fQuantity = document.getElementById('f-quantity');
             const fType = document.getElementById('f-type');
             const fDate = document.getElementById('f-date');
             const fComment = document.getElementById('f-comment');
@@ -1721,6 +1799,7 @@
             
             if(fDesc) fDesc.value = '';
             if(fVal) fVal.value = '';
+            if(fQuantity) fQuantity.value = '1';
             if(fType) fType.value = 'income';
             if(fDate) fDate.value = new Date().toISOString().split('T')[0];
             if(fComment) fComment.value = '';
@@ -1734,14 +1813,20 @@
             
             updateCategoryOptions();
             updatePaymentField();
+            updateTransactionTotal();
             
             if(id && DB) {
                 if(!DB.transactions) DB.transactions = [];
                 const tx = (DB.transactions || []).find(t => t && t.id === id);
-                if(tx) {
+                    if(tx) {
                     title.textContent = 'Editar Transação';
                     if(fDesc) fDesc.value = tx.desc || '';
-                    if(fVal) fVal.value = tx.val || '';
+                    if(fVal) {
+                        // Calcular valor unitário se houver quantidade
+                        const quantity = tx.quantity || 1;
+                        fVal.value = quantity > 1 ? (tx.val / quantity).toFixed(2) : (tx.val || '');
+                    }
+                    if(fQuantity) fQuantity.value = tx.quantity || 1;
                     if(fType) fType.value = tx.type || 'income';
                     // Atualizar categorias após definir o tipo
                     updateCategoryOptions();
@@ -1905,11 +1990,15 @@
             if(!DB.recurring) DB.recurring = [];
             
             const type = document.getElementById('f-type')?.value || 'income';
+            const quantity = parseInt(document.getElementById('f-quantity')?.value || 1);
+            const unitValue = parseFloat(document.getElementById('f-val')?.value || 0);
+            const totalValue = unitValue * quantity;
             const tx = {
                 id: editingTransactionId || Date.now(),
                 date: document.getElementById('f-date')?.value || '',
                 desc: document.getElementById('f-desc')?.value || '',
-                val: parseFloat(document.getElementById('f-val')?.value || 0),
+                val: totalValue,
+                quantity: quantity,
                 type: type,
                 cat: document.getElementById('f-cat')?.value || '',
                 subcat: document.getElementById('f-subcat')?.value || null,
@@ -1921,7 +2010,7 @@
                 paid: type === 'expense' ? (document.getElementById('f-paid')?.checked || false) : (type === 'income' ? (document.getElementById('f-paid')?.checked || false) : false)
             };
 
-            if(!tx.desc || !tx.val || !tx.cat) {
+            if(!tx.desc || !unitValue || !tx.cat) {
                 alert("Preencha todos os campos obrigatórios");
                 return;
             }
@@ -1997,6 +2086,7 @@
             const filterSubcat = document.getElementById('filter-subcategory')?.value || '';
             const filterPaid = document.getElementById('filter-paid')?.value || '';
             const timeRange = getTransactionTimeRange();
+            const searchText = normalizeText(document.getElementById('transactions-search')?.value || '');
 
             let filtered = (DB.transactions || []).filter(t => {
                 if(!t || !t.date) return false;
@@ -2010,6 +2100,10 @@
                 if((filterType === 'expense' || filterType === 'income') && filterPaid) {
                     if(filterPaid === 'paid' && !t.paid) return false;
                     if(filterPaid === 'unpaid' && t.paid) return false;
+                }
+                if(searchText) {
+                    const searchIn = normalizeText(t.desc) + ' ' + normalizeText(t.cat) + ' ' + normalizeText(t.subcat || '');
+                    if(!searchIn.includes(searchText)) return false;
                 }
                 return true;
             });
@@ -2129,6 +2223,7 @@
             
             const rDesc = document.getElementById('r-desc');
             const rVal = document.getElementById('r-val');
+            const rQuantity = document.getElementById('r-quantity');
             const rType = document.getElementById('r-type');
             const rCat = document.getElementById('r-cat');
             const rSubcat = document.getElementById('r-subcat');
@@ -2140,6 +2235,7 @@
             
             if(rDesc) rDesc.value = '';
             if(rVal) rVal.value = '';
+            if(rQuantity) rQuantity.value = '1';
             if(rType) rType.value = 'expense';
             if(rCat) rCat.value = '';
             if(rSubcat) rSubcat.value = '';
@@ -2151,6 +2247,7 @@
             
             updateRecurringCategories();
             updateRecurringPaymentField();
+            updateRecurringTotal();
             
             if(id && DB) {
                 if(!DB.recurring) DB.recurring = [];
@@ -2158,28 +2255,38 @@
                 if(rec) {
                     title.textContent = 'Editar Registro Recorrente';
                     if(rDesc) rDesc.value = rec.desc || '';
-                    if(rVal) rVal.value = rec.val || '';
+                    if(rVal) {
+                        // Calcular valor unitário se houver quantidade
+                        const quantity = rec.quantity || 1;
+                        rVal.value = quantity > 1 ? (rec.val / quantity).toFixed(2) : (rec.val || '');
+                    }
+                    if(rQuantity) rQuantity.value = rec.quantity || 1;
                     if(rType) rType.value = rec.type || 'expense';
                     // Atualizar categorias após definir o tipo
                     updateRecurringCategories();
                     updateRecurringPaymentField();
                     // Aguardar um pouco para garantir que as opções foram carregadas
                     setTimeout(() => {
-                        if(rCat) rCat.value = rec.cat || '';
-                        if(rPayment) rPayment.value = rec.payment || 'pix';
-                        if(rPeriod) rPeriod.value = rec.period || '30';
-                        if(rNextDate) rNextDate.value = rec.nextDate || '';
+                    if(rCat) rCat.value = rec.cat || '';
+                    if(rPayment) rPayment.value = rec.payment || 'pix';
+                    if(rPeriod) rPeriod.value = rec.period || '';
+                    if(rNextDate) rNextDate.value = rec.nextDate || '';
                         if(rAlertDays) rAlertDays.value = rec.alertDays || '';
                         if(rComment) rComment.value = rec.comment || '';
                         updateRecurringSubcategories();
                         setTimeout(() => {
                             if(rSubcat) rSubcat.value = rec.subcat || '';
+                            updateRecurringTotal();
                         }, 50);
                     }, 50);
                 }
             } else {
                 title.textContent = 'Novo Registro Recorrente';
             }
+            
+            // Adicionar event listeners para atualizar total
+            if(rVal) rVal.addEventListener('input', updateRecurringTotal);
+            if(rQuantity) rQuantity.addEventListener('input', updateRecurringTotal);
             
             modal.style.display = 'flex';
         }
@@ -2245,21 +2352,25 @@
             if(!DB.categories) DB.categories = [];
             if(!DB.recurring) DB.recurring = [];
             
+            const quantity = parseInt(document.getElementById('r-quantity')?.value || 1);
+            const unitValue = parseFloat(document.getElementById('r-val')?.value || 0);
+            const totalValue = unitValue * quantity;
             const rec = {
                 id: editingRecurringId || Date.now(),
                 desc: document.getElementById('r-desc')?.value || '',
-                val: parseFloat(document.getElementById('r-val')?.value || 0),
+                val: totalValue,
+                quantity: quantity,
                 type: document.getElementById('r-type')?.value || 'expense',
                 cat: document.getElementById('r-cat')?.value || '',
                 subcat: document.getElementById('r-subcat')?.value || null,
                 payment: document.getElementById('r-type')?.value === 'expense' ? (document.getElementById('r-payment')?.value || null) : null,
-                period: parseInt(document.getElementById('r-period')?.value || 30),
-                nextDate: document.getElementById('r-next-date')?.value || '',
+                period: document.getElementById('r-period')?.value ? parseInt(document.getElementById('r-period')?.value) : null,
+                nextDate: document.getElementById('r-next-date')?.value || null,
                 alertDays: document.getElementById('r-alert-days')?.value ? parseInt(document.getElementById('r-alert-days')?.value) : null,
                 comment: document.getElementById('r-comment')?.value || null
             };
 
-            if(!rec.desc || !rec.val || !rec.cat) {
+            if(!rec.desc || !unitValue || !rec.cat) {
                 alert("Preencha todos os campos obrigatórios");
                 return;
             }
@@ -2325,31 +2436,38 @@
             const rec = (DB.recurring || []).find(r => r && r.id === id);
             if(!rec) return;
             
-            // Criar transação
+            // Criar transação com data de hoje
+            const today = new Date().toISOString().split('T')[0];
             const tx = {
                 id: Date.now(),
-                date: rec.nextDate || new Date().toISOString().split('T')[0],
+                date: today,
                 desc: rec.desc || '',
                 val: parseFloat(rec.val) || 0,
+                quantity: rec.quantity || 1,
                 type: rec.type || 'expense',
                 cat: rec.cat || '',
                 subcat: rec.subcat || null,
                 payment: rec.payment || null,
-                dueDate: rec.type === 'expense' ? (rec.nextDate || null) : null,
-                receiptDate: rec.type === 'income' ? (rec.nextDate || null) : null,
+                dueDate: rec.type === 'expense' ? today : null,
+                receiptDate: rec.type === 'income' ? today : null,
                 alertDays: rec.alertDays || null,
                 paid: rec.type === 'income' ? true : false, // Receitas sempre pago, despesas não
                 comment: rec.comment || null
             };
             DB.transactions.unshift(tx);
             
-            // Atualizar próxima data
-            if(rec.nextDate) {
+            // Atualizar próxima data apenas se houver periodicidade e próxima data definida
+            if(rec.nextDate && rec.period) {
                 const nextDate = new Date(rec.nextDate);
                 if(!isNaN(nextDate.getTime())) {
-                    nextDate.setDate(nextDate.getDate() + (parseInt(rec.period) || 30));
+                    nextDate.setDate(nextDate.getDate() + parseInt(rec.period));
                     rec.nextDate = nextDate.toISOString().split('T')[0];
                 }
+            } else if(rec.period) {
+                // Se só tem periodicidade, calcular a partir de hoje
+                const nextDate = new Date();
+                nextDate.setDate(nextDate.getDate() + parseInt(rec.period));
+                rec.nextDate = nextDate.toISOString().split('T')[0];
             }
             
             // Remover modal de confirmação
@@ -2363,9 +2481,11 @@
         }
 
         function getRecurringStatus(rec) {
+            if(!rec.nextDate) return 'ok';
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const nextDate = new Date(rec.nextDate);
+            if(isNaN(nextDate.getTime())) return 'ok';
             nextDate.setHours(0, 0, 0, 0);
             const diffDays = Math.floor((nextDate - today) / (1000 * 60 * 60 * 24));
             const alertDays = rec.alertDays !== null && rec.alertDays !== undefined ? rec.alertDays : null;
@@ -2373,6 +2493,112 @@
             if(diffDays < 0) return 'overdue';
             if(alertDays !== null && diffDays <= alertDays) return 'alert';
             return 'ok';
+        }
+
+        // Função para normalizar texto para busca (remove acentos, converte para minúsculas)
+        function normalizeText(text) {
+            if(!text) return '';
+            return text.toString()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/ç/g, 'c')
+                .replace(/ñ/g, 'n');
+        }
+
+        // Função para atualizar total da transação
+        function updateTransactionTotal() {
+            const val = parseFloat(document.getElementById('f-val')?.value || 0);
+            const quantity = parseInt(document.getElementById('f-quantity')?.value || 1);
+            const total = val * quantity;
+            const totalEl = document.getElementById('transaction-total');
+            if(totalEl) {
+                totalEl.textContent = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            }
+        }
+
+        // Função para atualizar total do recorrente
+        function updateRecurringTotal() {
+            const val = parseFloat(document.getElementById('r-val')?.value || 0);
+            const quantity = parseInt(document.getElementById('r-quantity')?.value || 1);
+            const total = val * quantity;
+            const totalEl = document.getElementById('recurring-total');
+            if(totalEl) {
+                totalEl.textContent = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            }
+        }
+
+        // Função para atualizar filtros de recorrentes
+        function updateRecurringFilters() {
+            const DB = getUserDB();
+            if(!DB) return;
+            
+            if(!DB.categories) DB.categories = [];
+            
+            const filterType = document.getElementById('recurring-filter-type')?.value || '';
+            const categoryGroup = document.getElementById('recurring-filter-category-group');
+            const subcategoryGroup = document.getElementById('recurring-filter-subcategory-group');
+            const categorySelect = document.getElementById('recurring-filter-category');
+            const subcategorySelect = document.getElementById('recurring-filter-subcategory');
+            
+            if(filterType) {
+                if(categoryGroup) categoryGroup.style.display = 'block';
+                if(categorySelect) {
+                    const currentCat = categorySelect.value;
+                    categorySelect.innerHTML = '<option value="">Todas</option>';
+                    (DB.categories || []).filter(c => c && c.type === filterType).forEach(cat => {
+                        const opt = document.createElement('option');
+                        opt.value = cat.name;
+                        opt.textContent = cat.name;
+                        if(opt.value === currentCat) opt.selected = true;
+                        categorySelect.appendChild(opt);
+                    });
+                    
+                    // Atualizar subcategorias
+                    updateRecurringSubcategoryFilters();
+                }
+            } else {
+                if(categoryGroup) categoryGroup.style.display = 'none';
+                if(subcategoryGroup) subcategoryGroup.style.display = 'none';
+                if(categorySelect) categorySelect.value = '';
+                if(subcategorySelect) subcategorySelect.value = '';
+            }
+            
+            renderRecurring();
+        }
+
+        function updateRecurringSubcategoryFilters() {
+            const DB = getUserDB();
+            if(!DB) return;
+            
+            if(!DB.categories) DB.categories = [];
+            
+            const catName = document.getElementById('recurring-filter-category')?.value;
+            const subcatSelect = document.getElementById('recurring-filter-subcategory');
+            const subcategoryGroup = document.getElementById('recurring-filter-subcategory-group');
+            
+            if(!subcatSelect) return;
+            
+            if(catName) {
+                if(subcategoryGroup) subcategoryGroup.style.display = 'block';
+                const currentSubcat = subcatSelect.value;
+                subcatSelect.innerHTML = '<option value="">Todas</option>';
+                const cat = (DB.categories || []).find(c => c && c.name === catName);
+                if(cat && cat.subcategories && Array.isArray(cat.subcategories)) {
+                    cat.subcategories.forEach(sub => {
+                        if(sub && sub.name) {
+                            const opt = document.createElement('option');
+                            opt.value = sub.name;
+                            opt.textContent = sub.name;
+                            if(opt.value === currentSubcat) opt.selected = true;
+                            subcatSelect.appendChild(opt);
+                        }
+                    });
+                }
+            } else {
+                if(subcategoryGroup) subcategoryGroup.style.display = 'none';
+                subcatSelect.innerHTML = '<option value="">Todas</option>';
+            }
         }
 
         function renderRecurring() {
@@ -2385,11 +2611,30 @@
             if(!body) return;
             
             const filterType = document.getElementById('recurring-filter-type')?.value || '';
+            const filterCat = document.getElementById('recurring-filter-category')?.value || '';
+            const filterSubcat = document.getElementById('recurring-filter-subcategory')?.value || '';
+            const searchText = normalizeText(document.getElementById('recurring-search')?.value || '');
             
             let filtered = (DB.recurring || []).filter(rec => {
                 if(!rec) return false;
                 if(filterType && rec.type !== filterType) return false;
+                if(filterCat && rec.cat !== filterCat) return false;
+                if(filterSubcat && rec.subcat !== filterSubcat) return false;
+                if(searchText) {
+                    const searchIn = normalizeText(rec.desc) + ' ' + normalizeText(rec.cat) + ' ' + normalizeText(rec.subcat || '');
+                    if(!searchIn.includes(searchText)) return false;
+                }
                 return true;
+            });
+            
+            // Ordenar por próxima data (mais próximo primeiro, depois os sem data)
+            filtered.sort((a, b) => {
+                if(!a.nextDate && !b.nextDate) return 0;
+                if(!a.nextDate) return 1; // Sem data vai para o final
+                if(!b.nextDate) return -1; // Sem data vai para o final
+                const dateA = new Date(a.nextDate);
+                const dateB = new Date(b.nextDate);
+                return dateA - dateB;
             });
             
             body.innerHTML = filtered.map(rec => {
@@ -2400,14 +2645,17 @@
                                    status === 'alert' ? '<span class="badge" style="background:#fef3c7;color:#92400e;"><i class="fa-solid fa-clock"></i> Alerta</span>' : 
                                    '<span class="badge badge-income"><i class="fa-solid fa-check"></i> OK</span>';
                 
+                const periodDisplay = rec.period ? `${rec.period} dias` : '-';
+                const nextDateDisplay = rec.nextDate ? rec.nextDate.split('-').reverse().join('/') : '-';
+                
                 return `
                     <tr class="${statusClass}">
                         <td style="font-weight:600">${rec.desc}</td>
                         <td><span class="badge ${rec.type === 'income' ? 'badge-income' : 'badge-expense'}">${rec.type === 'income' ? 'Receita' : 'Despesa'}</span></td>
                         <td>${rec.cat}</td>
                         <td style="font-weight:700">R$ ${rec.val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td>${rec.period} dias</td>
-                        <td>${rec.nextDate.split('-').reverse().join('/')}</td>
+                        <td>${periodDisplay}</td>
+                        <td>${nextDateDisplay}</td>
                         <td>${statusBadge}</td>
                         <td>
                             <button class="action-btn btn-publish" onclick="publishRecurring(${rec.id})" title="Publicar transação"><i class="fa-solid fa-paper-plane"></i></button>
@@ -3358,8 +3606,33 @@ function applySettings(settings) {
                 else pending += (parseFloat(t.val) || 0);
             });
 
-            document.getElementById('stat-balance').textContent = `R$ ${(inc - exp).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            // Calcular saldo total (todas as transações)
+            let totalInc = 0, totalExp = 0;
+            (DB.transactions || []).forEach(t => {
+                if(t && t.type === 'income') totalInc += t.val;
+                else if(t && t.type === 'expense') totalExp += t.val;
+            });
+            const totalBalance = totalInc - totalExp;
+            
+            // Calcular média mensal de gastos (baseado em todas as despesas)
+            const allExpenses = (DB.transactions || []).filter(t => t && t.type === 'expense');
+            let monthlyExpenses = {};
+            allExpenses.forEach(t => {
+                if(t && t.date) {
+                    const monthKey = t.date.substring(0, 7); // YYYY-MM
+                    monthlyExpenses[monthKey] = (monthlyExpenses[monthKey] || 0) + t.val;
+                }
+            });
+            const monthCount = Object.keys(monthlyExpenses).length;
+            const avgExpense = monthCount > 0 ? Object.values(monthlyExpenses).reduce((a, b) => a + b, 0) / monthCount : 0;
+            
+            // Saldo do período filtrado
+            const periodBalance = inc - exp;
+            
+            document.getElementById('stat-balance').textContent = `R$ ${totalBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('stat-income').textContent = `R$ ${inc.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('stat-period-balance').textContent = `R$ ${periodBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('stat-avg-expense').textContent = `R$ ${avgExpense.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('stat-expense').textContent = `R$ ${exp.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('stat-essential').textContent = `R$ ${essential.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('stat-nonessential').textContent = `R$ ${nonessential.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
@@ -3597,6 +3870,33 @@ function applySettings(settings) {
                     }
                 }
             });
+
+            const ctxBalance = document.getElementById('balanceChart').getContext('2d');
+            balanceChart = new Chart(ctxBalance, {
+                type: 'line',
+                data: { labels: [], datasets: [] },
+                options: { 
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    resizeDelay: 0,
+                    plugins: { 
+                        legend: { display: true, position: 'top' },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: { 
+                        y: { beginAtZero: false },
+                        x: { display: true }
+                    },
+                    layout: {
+                        padding: {
+                            top: 10,
+                            bottom: 10,
+                            left: 10,
+                            right: 10
+                        }
+                    }
+                }
+            });
         }
 
         // BACKUP
@@ -3793,13 +4093,30 @@ function applySettings(settings) {
             // Lógica de tempo para gráficos
             const start = new Date(range.start);
             const end = new Date(range.end);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
             const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
             const diffMonths = Math.ceil(diffDays / 30);
             
             let labels = [];
             const incomeData = [];
             const expenseData = [];
+            const balanceData = [];
             const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            
+            // Função para verificar se uma data é futura
+            function isFutureDate(year, month, day) {
+                if(day) {
+                    const checkDate = new Date(year, month - 1, day);
+                    checkDate.setHours(0, 0, 0, 0);
+                    return checkDate > today;
+                } else {
+                    const checkDate = new Date(year, month - 1, 1);
+                    checkDate.setHours(0, 0, 0, 0);
+                    const lastDay = new Date(year, month, 0);
+                    return lastDay > today;
+                }
+            }
             
             // Determinar período baseado no filtro
             if(timeRangeType === 'all') {
@@ -3810,16 +4127,25 @@ function applySettings(settings) {
                     labels.push(monthNames[m] + '/' + String(currentYear).slice(-2));
                     let monthInc = 0, monthExp = 0;
                     const monthKey = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
-                    filtered.forEach(t => {
-                        if(!t || !t.date) return;
-                        const txMonth = t.date.substring(0, 7);
-                        if(txMonth === monthKey) {
-                            if(t.type === 'income') monthInc += (parseFloat(t.val) || 0);
-                            else if(t.type === 'expense') monthExp += (parseFloat(t.val) || 0);
-                        }
-                    });
-                    incomeData.push(monthInc);
-                    expenseData.push(monthExp);
+                    const isFuture = isFutureDate(currentYear, m + 1);
+                    
+                    if(isFuture) {
+                        incomeData.push(null);
+                        expenseData.push(null);
+                        balanceData.push(null);
+                    } else {
+                        filtered.forEach(t => {
+                            if(!t || !t.date) return;
+                            const txMonth = t.date.substring(0, 7);
+                            if(txMonth === monthKey) {
+                                if(t.type === 'income') monthInc += (parseFloat(t.val) || 0);
+                                else if(t.type === 'expense') monthExp += (parseFloat(t.val) || 0);
+                            }
+                        });
+                        incomeData.push(monthInc);
+                        expenseData.push(monthExp);
+                        balanceData.push(monthInc - monthExp);
+                    }
                 }
             } else if(timeRangeType === 'year') {
                 // Janeiro a dezembro do ano selecionado
@@ -3828,16 +4154,25 @@ function applySettings(settings) {
                     labels.push(monthNames[m] + '/' + String(year).slice(-2));
                     let monthInc = 0, monthExp = 0;
                     const monthKey = `${year}-${String(m + 1).padStart(2, '0')}`;
-                    filtered.forEach(t => {
-                        if(!t || !t.date) return;
-                        const txMonth = t.date.substring(0, 7);
-                        if(txMonth === monthKey) {
-                            if(t.type === 'income') monthInc += (parseFloat(t.val) || 0);
-                            else if(t.type === 'expense') monthExp += (parseFloat(t.val) || 0);
-                        }
-                    });
-                    incomeData.push(monthInc);
-                    expenseData.push(monthExp);
+                    const isFuture = isFutureDate(year, m + 1);
+                    
+                    if(isFuture) {
+                        incomeData.push(null);
+                        expenseData.push(null);
+                        balanceData.push(null);
+                    } else {
+                        filtered.forEach(t => {
+                            if(!t || !t.date) return;
+                            const txMonth = t.date.substring(0, 7);
+                            if(txMonth === monthKey) {
+                                if(t.type === 'income') monthInc += (parseFloat(t.val) || 0);
+                                else if(t.type === 'expense') monthExp += (parseFloat(t.val) || 0);
+                            }
+                        });
+                        incomeData.push(monthInc);
+                        expenseData.push(monthExp);
+                        balanceData.push(monthInc - monthExp);
+                    }
                 }
             } else if(timeRangeType === 'month') {
                 // Dias do mês
@@ -3848,15 +4183,24 @@ function applySettings(settings) {
                     labels.push(String(d).padStart(2, '0'));
                     let dayInc = 0, dayExp = 0;
                     const dayKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                    filtered.forEach(t => {
-                        if(!t || !t.date) return;
-                        if(t.date === dayKey) {
-                            if(t.type === 'income') dayInc += (parseFloat(t.val) || 0);
-                            else if(t.type === 'expense') dayExp += (parseFloat(t.val) || 0);
-                        }
-                    });
-                    incomeData.push(dayInc);
-                    expenseData.push(dayExp);
+                    const isFuture = isFutureDate(year, month + 1, d);
+                    
+                    if(isFuture) {
+                        incomeData.push(null);
+                        expenseData.push(null);
+                        balanceData.push(null);
+                    } else {
+                        filtered.forEach(t => {
+                            if(!t || !t.date) return;
+                            if(t.date === dayKey) {
+                                if(t.type === 'income') dayInc += (parseFloat(t.val) || 0);
+                                else if(t.type === 'expense') dayExp += (parseFloat(t.val) || 0);
+                            }
+                        });
+                        incomeData.push(dayInc);
+                        expenseData.push(dayExp);
+                        balanceData.push(dayInc - dayExp);
+                    }
                 }
             } else if(timeRangeType === 'custom') {
                 // Sempre mostrar dias quando for personalizado
@@ -3868,16 +4212,27 @@ function applySettings(settings) {
                 while(current <= endDate) {
                     labels.push(String(current.getDate()).padStart(2, '0') + '/' + String(current.getMonth() + 1).padStart(2, '0'));
                     const dayKey = current.toISOString().split('T')[0];
-                    let dayInc = 0, dayExp = 0;
-                    filtered.forEach(t => {
-                        if(!t || !t.date) return;
-                        if(t.date === dayKey) {
-                            if(t.type === 'income') dayInc += (parseFloat(t.val) || 0);
-                            else if(t.type === 'expense') dayExp += (parseFloat(t.val) || 0);
-                        }
-                    });
-                    incomeData.push(dayInc);
-                    expenseData.push(dayExp);
+                    const currentDateCopy = new Date(current);
+                    currentDateCopy.setHours(0, 0, 0, 0);
+                    const isFuture = currentDateCopy > today;
+                    
+                    if(isFuture) {
+                        incomeData.push(null);
+                        expenseData.push(null);
+                        balanceData.push(null);
+                    } else {
+                        let dayInc = 0, dayExp = 0;
+                        filtered.forEach(t => {
+                            if(!t || !t.date) return;
+                            if(t.date === dayKey) {
+                                if(t.type === 'income') dayInc += (parseFloat(t.val) || 0);
+                                else if(t.type === 'expense') dayExp += (parseFloat(t.val) || 0);
+                            }
+                        });
+                        incomeData.push(dayInc);
+                        expenseData.push(dayExp);
+                        balanceData.push(dayInc - dayExp);
+                    }
                     current.setDate(current.getDate() + 1);
                 }
             }
@@ -3893,7 +4248,8 @@ function applySettings(settings) {
                         tension: 0.4, 
                         fill: true,
                         pointRadius: 4,
-                        pointHoverRadius: 6
+                        pointHoverRadius: 6,
+                        spanGaps: true
                     },
                     { 
                         label: 'Despesas', 
@@ -3903,7 +4259,8 @@ function applySettings(settings) {
                         tension: 0.4, 
                         fill: true,
                         pointRadius: 4,
-                        pointHoverRadius: 6
+                        pointHoverRadius: 6,
+                        spanGaps: true
                     }
                 ];
                 mainChart.update('active');
@@ -3928,9 +4285,27 @@ function applySettings(settings) {
                     tension: 0.4,
                     fill: true,
                     pointRadius: 4,
-                    pointHoverRadius: 6
+                    pointHoverRadius: 6,
+                    spanGaps: true
                 }];
                 efficiencyChart.update('active');
+            }
+
+            // Gráfico de Saldo
+            if(balanceChart) {
+                balanceChart.data.labels = labels.length > 0 ? labels : ['Sem dados'];
+                balanceChart.data.datasets = [{
+                    label: 'Saldo',
+                    data: balanceData.length > 0 ? balanceData : [0],
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    spanGaps: true
+                }];
+                balanceChart.update('active');
             }
 
             // Gráfico de Formas de Pagamento (pizza)
@@ -4018,22 +4393,29 @@ function applySettings(settings) {
                     essentialLineLabels.push(essentialMonthNames[m] + '/' + String(currentYear).slice(-2));
                     let monthEssential = 0, monthNonessential = 0;
                     const monthKey = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
-                    filtered.forEach(t => {
-                        if(!t || !t.date || t.type !== 'expense') return;
-                        const txMonth = t.date.substring(0, 7);
-                        if(txMonth === monthKey) {
-                            const cat = (DB.categories || []).find(c => c && c.name === t.cat);
-                            if(cat) {
-                                const isEssential = t.subcat ? 
-                                    ((cat.subcategories && cat.subcategories.find(s => s && s.name === t.subcat))?.essential ?? cat.essential) : 
-                                    cat.essential;
-                                if(isEssential) monthEssential += (parseFloat(t.val) || 0);
-                                else monthNonessential += (parseFloat(t.val) || 0);
+                    const isFuture = isFutureDate(currentYear, m + 1);
+                    
+                    if(isFuture) {
+                        essentialLineData.push(null);
+                        nonessentialLineData.push(null);
+                    } else {
+                        filtered.forEach(t => {
+                            if(!t || !t.date || t.type !== 'expense') return;
+                            const txMonth = t.date.substring(0, 7);
+                            if(txMonth === monthKey) {
+                                const cat = (DB.categories || []).find(c => c && c.name === t.cat);
+                                if(cat) {
+                                    const isEssential = t.subcat ? 
+                                        ((cat.subcategories && cat.subcategories.find(s => s && s.name === t.subcat))?.essential ?? cat.essential) : 
+                                        cat.essential;
+                                    if(isEssential) monthEssential += (parseFloat(t.val) || 0);
+                                    else monthNonessential += (parseFloat(t.val) || 0);
+                                }
                             }
-                        }
-                    });
-                    essentialLineData.push(monthEssential);
-                    nonessentialLineData.push(monthNonessential);
+                        });
+                        essentialLineData.push(monthEssential);
+                        nonessentialLineData.push(monthNonessential);
+                    }
                 }
             } else if(essentialTimeRangeType === 'year') {
                 const year = start.getFullYear();
@@ -4041,22 +4423,29 @@ function applySettings(settings) {
                     essentialLineLabels.push(essentialMonthNames[m] + '/' + String(year).slice(-2));
                     let monthEssential = 0, monthNonessential = 0;
                     const monthKey = `${year}-${String(m + 1).padStart(2, '0')}`;
-                    filtered.forEach(t => {
-                        if(!t || !t.date || t.type !== 'expense') return;
-                        const txMonth = t.date.substring(0, 7);
-                        if(txMonth === monthKey) {
-                            const cat = (DB.categories || []).find(c => c && c.name === t.cat);
-                            if(cat) {
-                                const isEssential = t.subcat ? 
-                                    ((cat.subcategories && cat.subcategories.find(s => s && s.name === t.subcat))?.essential ?? cat.essential) : 
-                                    cat.essential;
-                                if(isEssential) monthEssential += (parseFloat(t.val) || 0);
-                                else monthNonessential += (parseFloat(t.val) || 0);
+                    const isFuture = isFutureDate(year, m + 1);
+                    
+                    if(isFuture) {
+                        essentialLineData.push(null);
+                        nonessentialLineData.push(null);
+                    } else {
+                        filtered.forEach(t => {
+                            if(!t || !t.date || t.type !== 'expense') return;
+                            const txMonth = t.date.substring(0, 7);
+                            if(txMonth === monthKey) {
+                                const cat = (DB.categories || []).find(c => c && c.name === t.cat);
+                                if(cat) {
+                                    const isEssential = t.subcat ? 
+                                        ((cat.subcategories && cat.subcategories.find(s => s && s.name === t.subcat))?.essential ?? cat.essential) : 
+                                        cat.essential;
+                                    if(isEssential) monthEssential += (parseFloat(t.val) || 0);
+                                    else monthNonessential += (parseFloat(t.val) || 0);
+                                }
                             }
-                        }
-                    });
-                    essentialLineData.push(monthEssential);
-                    nonessentialLineData.push(monthNonessential);
+                        });
+                        essentialLineData.push(monthEssential);
+                        nonessentialLineData.push(monthNonessential);
+                    }
                 }
             } else if(essentialTimeRangeType === 'month') {
                 const essentialYear = start.getFullYear();
@@ -4066,21 +4455,28 @@ function applySettings(settings) {
                     essentialLineLabels.push(String(d).padStart(2, '0'));
                     let dayEssential = 0, dayNonessential = 0;
                     const dayKey = `${essentialYear}-${String(essentialMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                    filtered.forEach(t => {
-                        if(!t || !t.date || t.type !== 'expense') return;
-                        if(t.date === dayKey) {
-                            const cat = (DB.categories || []).find(c => c && c.name === t.cat);
-                            if(cat) {
-                                const isEssential = t.subcat ? 
-                                    ((cat.subcategories && cat.subcategories.find(s => s && s.name === t.subcat))?.essential ?? cat.essential) : 
-                                    cat.essential;
-                                if(isEssential) dayEssential += (parseFloat(t.val) || 0);
-                                else dayNonessential += (parseFloat(t.val) || 0);
+                    const isFuture = isFutureDate(essentialYear, essentialMonth + 1, d);
+                    
+                    if(isFuture) {
+                        essentialLineData.push(null);
+                        nonessentialLineData.push(null);
+                    } else {
+                        filtered.forEach(t => {
+                            if(!t || !t.date || t.type !== 'expense') return;
+                            if(t.date === dayKey) {
+                                const cat = (DB.categories || []).find(c => c && c.name === t.cat);
+                                if(cat) {
+                                    const isEssential = t.subcat ? 
+                                        ((cat.subcategories && cat.subcategories.find(s => s && s.name === t.subcat))?.essential ?? cat.essential) : 
+                                        cat.essential;
+                                    if(isEssential) dayEssential += (parseFloat(t.val) || 0);
+                                    else dayNonessential += (parseFloat(t.val) || 0);
+                                }
                             }
-                        }
-                    });
-                    essentialLineData.push(dayEssential);
-                    nonessentialLineData.push(dayNonessential);
+                        });
+                        essentialLineData.push(dayEssential);
+                        nonessentialLineData.push(dayNonessential);
+                    }
                 }
             } else if(essentialTimeRangeType === 'custom') {
                 const essentialCurrent = new Date(start);
@@ -4091,22 +4487,31 @@ function applySettings(settings) {
                 while(essentialCurrent <= essentialEndDate) {
                     essentialLineLabels.push(String(essentialCurrent.getDate()).padStart(2, '0') + '/' + String(essentialCurrent.getMonth() + 1).padStart(2, '0'));
                     const dayKey = essentialCurrent.toISOString().split('T')[0];
-                    let dayEssential = 0, dayNonessential = 0;
-                    filtered.forEach(t => {
-                        if(!t || !t.date || t.type !== 'expense') return;
-                        if(t.date === dayKey) {
-                            const cat = (DB.categories || []).find(c => c && c.name === t.cat);
-                            if(cat) {
-                                const isEssential = t.subcat ? 
-                                    ((cat.subcategories && cat.subcategories.find(s => s && s.name === t.subcat))?.essential ?? cat.essential) : 
-                                    cat.essential;
-                                if(isEssential) dayEssential += (parseFloat(t.val) || 0);
-                                else dayNonessential += (parseFloat(t.val) || 0);
+                    const currentDateCopy = new Date(essentialCurrent);
+                    currentDateCopy.setHours(0, 0, 0, 0);
+                    const isFuture = currentDateCopy > today;
+                    
+                    if(isFuture) {
+                        essentialLineData.push(null);
+                        nonessentialLineData.push(null);
+                    } else {
+                        let dayEssential = 0, dayNonessential = 0;
+                        filtered.forEach(t => {
+                            if(!t || !t.date || t.type !== 'expense') return;
+                            if(t.date === dayKey) {
+                                const cat = (DB.categories || []).find(c => c && c.name === t.cat);
+                                if(cat) {
+                                    const isEssential = t.subcat ? 
+                                        ((cat.subcategories && cat.subcategories.find(s => s && s.name === t.subcat))?.essential ?? cat.essential) : 
+                                        cat.essential;
+                                    if(isEssential) dayEssential += (parseFloat(t.val) || 0);
+                                    else dayNonessential += (parseFloat(t.val) || 0);
+                                }
                             }
-                        }
-                    });
-                    essentialLineData.push(dayEssential);
-                    nonessentialLineData.push(dayNonessential);
+                        });
+                        essentialLineData.push(dayEssential);
+                        nonessentialLineData.push(dayNonessential);
+                    }
                     essentialCurrent.setDate(essentialCurrent.getDate() + 1);
                 }
             }
@@ -4122,7 +4527,8 @@ function applySettings(settings) {
                         tension: 0.4, 
                         fill: true,
                         pointRadius: 4,
-                        pointHoverRadius: 6
+                        pointHoverRadius: 6,
+                        spanGaps: true
                     },
                     { 
                         label: 'Não Essenciais', 
@@ -4132,7 +4538,8 @@ function applySettings(settings) {
                         tension: 0.4, 
                         fill: true,
                         pointRadius: 4,
-                        pointHoverRadius: 6
+                        pointHoverRadius: 6,
+                        spanGaps: true
                     }
                 ];
                 essentialLineChart.update('active');
@@ -4254,6 +4661,7 @@ function applySettings(settings) {
                     if(categoryIncomeChart) categoryIncomeChart.resize();
                     if(efficiencyChart) efficiencyChart.resize();
                     if(paymentChart) paymentChart.resize();
+                    if(balanceChart) balanceChart.resize();
                 }, 250);
             });
         });
