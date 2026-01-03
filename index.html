@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finance PRO | Intelligence Suite</title>
+    <link rel="manifest" href="https://raw.githubusercontent.com/fellipek6/finances/refs/heads/main/manifest.json">
+    <meta name="theme-color" content="#3f0000">
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -14,31 +16,39 @@
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         
         const firebaseConfig = {
-            apiKey: "AIzaSyBIjY5xbZ_sKGAslhvlFk5Sy3rCUgaMecE",
-            authDomain: "datacenter-999eb.firebaseapp.com",
-            databaseURL: "https://datacenter-999eb-default-rtdb.firebaseio.com",
-            projectId: "datacenter-999eb",
-            storageBucket: "datacenter-999eb.firebasestorage.app",
-            messagingSenderId: "988108686176",
-            appId: "1:988108686176:web:e29cf34c4a6b00a5415405",
-            measurementId: "G-ZNC6J5948W"
-            };
+  apiKey: "AIzaSyBt4LmiSK0DamZSPPQcPpjgo0TaxavGQs8",
+  authDomain: "finances-aa335.firebaseapp.com",
+  databaseURL: "https://finances-aa335-default-rtdb.firebaseio.com",
+  projectId: "finances-aa335",
+  storageBucket: "finances-aa335.firebasestorage.app",
+  messagingSenderId: "892362100418",
+  appId: "1:892362100418:web:709a464121ae1d337c755b",
+  measurementId: "G-RCYS9Y0XJN"
+};
+
         
-        window.firebaseApp = initializeApp(firebaseConfig);
-        window.db = getFirestore(window.firebaseApp);
-        // Expor funções do Firestore no window para uso global
-        window.firebaseFirestore = {
-            doc: doc,
-            getDoc: getDoc,
-            setDoc: setDoc,
-            updateDoc: updateDoc,
-            deleteDoc: deleteDoc,
-            getDocs: getDocs,
-            collection: collection,
-            query: query,
-            where: where
-        };
-        window.firebaseReady = true;
+        try {
+            window.firebaseApp = initializeApp(firebaseConfig);
+            window.db = getFirestore(window.firebaseApp);
+            // Expor funções do Firestore no window para uso global
+            window.firebaseFirestore = {
+                doc: doc,
+                getDoc: getDoc,
+                setDoc: setDoc,
+                updateDoc: updateDoc,
+                deleteDoc: deleteDoc,
+                getDocs: getDocs,
+                collection: collection,
+                query: query,
+                where: where
+            };
+            window.firebaseReady = true;
+            console.log('Firebase inicializado com sucesso');
+        } catch (error) {
+            console.error('Erro ao inicializar Firebase:', error);
+            window.firebaseReady = false;
+            window.db = null;
+        }
     </script>
     
     <style>
@@ -108,7 +118,7 @@
         aside.hidden { transform: translateX(-100%); }
         aside.collapsed { width: 60px; padding: 24px 8px; overflow: visible; }
         aside.collapsed .logo span,
-        aside.collapsed .logo > i.fa-vault,
+        aside.collapsed .logo > i,
         aside.collapsed nav,
         aside.collapsed .nav-link:not(.logo) { 
             opacity: 0; 
@@ -1110,7 +1120,7 @@
                         <option value="expense">Despesa</option>
                     </select>
                 </div>
-                <div id="cat-essential-group">
+                <div id="cat-essential-group" style="display: none;">
                     <label><i class="fa-solid fa-star"></i> Essencial</label>
                     <select id="cat-essential" class="form-control">
                         <option value="true">Sim</option>
@@ -1244,12 +1254,14 @@
         let subcategoryCount = 0;
 
         // INICIALIZAÇÃO
-        function init() {
-            const users = JSON.parse(localStorage.getItem('fpro_users')) || [
-                {user: 'admin', pass: 'admin', name: 'Administrador Master', role: 'admin'}
-            ];
-            localStorage.setItem('fpro_users', JSON.stringify(users));
-            
+        async function init() {
+            // Não inicializar dados pré-cadastrados - carregar do Firebase
+            // Carregar usuários do Firebase na inicialização
+            try {
+                await loadUsersFromFirebase();
+            } catch (error) {
+                console.warn('Erro ao carregar usuários na inicialização:', error);
+            }
             // Configurações padrão serão aplicadas após login
         }
         init();
@@ -1266,6 +1278,64 @@
             return window.firebaseReady && window.db;
         }
 
+        // Carregar usuários/acessos do Firebase
+        async function loadUsersFromFirebase() {
+            try {
+                const firebaseAvailable = await waitForFirebase();
+                if (firebaseAvailable && window.firebaseFirestore && window.db) {
+                    // Tentar carregar da coleção 'acessos' primeiro, depois 'users'
+                    let usersCollection = null;
+                    let usersSnapshot = null;
+                    
+                    try {
+                        usersCollection = window.firebaseFirestore.collection(window.db, 'acessos');
+                        usersSnapshot = await window.firebaseFirestore.getDocs(usersCollection);
+                    } catch (e) {
+                        // Se não encontrar 'acessos', tentar 'users'
+                        try {
+                            usersCollection = window.firebaseFirestore.collection(window.db, 'users');
+                            usersSnapshot = await window.firebaseFirestore.getDocs(usersCollection);
+                        } catch (e2) {
+                            console.warn('Coleções "acessos" e "users" não encontradas no Firestore');
+                            return [];
+                        }
+                    }
+                    
+                    const users = [];
+                    usersSnapshot.forEach(doc => {
+                        const userData = doc.data();
+                        // Verificar se o documento tem campos de acesso (user/login, pass/senha, name/nome, role/nivel)
+                        const login = userData.user || userData.login || doc.id;
+                        const pass = userData.pass || userData.senha || '';
+                        const name = userData.name || userData.nome || login;
+                        const role = userData.role || userData.nivel || 'user';
+                        
+                        if (login && pass) {
+                            users.push({
+                                user: login,
+                                pass: pass,
+                                name: name,
+                                role: role
+                            });
+                        }
+                    });
+                    
+                    // Salvar no localStorage como backup
+                    if (users.length > 0) {
+                        localStorage.setItem('fpro_users', JSON.stringify(users));
+                    }
+                    
+                    return users;
+                }
+            } catch (error) {
+                console.warn('Erro ao carregar usuários do Firebase:', error);
+                // Se houver erro, tentar usar localStorage como fallback
+                const localUsers = JSON.parse(localStorage.getItem('fpro_users')) || [];
+                return localUsers;
+            }
+            return [];
+        }
+
         function getUserDB() {
             if (!currentUser) return null;
             
@@ -1275,13 +1345,7 @@
             const defaultDB = {
                 transactions: [],
                 recurring: [],
-                categories: [
-                    {id: 1, name: 'Vendas', type: 'income', essential: false, subcategories: []},
-                    {id: 2, name: 'Serviços', type: 'income', essential: false, subcategories: []},
-                    {id: 3, name: 'Infraestrutura', type: 'expense', essential: true, subcategories: []},
-                    {id: 4, name: 'Marketing', type: 'expense', essential: false, subcategories: []},
-                    {id: 5, name: 'Salários', type: 'expense', essential: true, subcategories: []}
-                ]
+                categories: []
             };
             
             if (data) {
@@ -1332,7 +1396,15 @@
                 }
             } catch (error) {
                 // Ignorar erros de permissão, offline ou API não habilitada
-                if (error.code === 'permission-denied' || error.code === 'unavailable' || error.message?.includes('API has not been used')) {
+                const errorMessage = error.message || '';
+                const errorCode = error.code || '';
+                
+                if (errorCode === 'permission-denied' || 
+                    errorCode === 'unavailable' || 
+                    errorMessage.includes('API has not been used') ||
+                    errorMessage.includes('not been used in project') ||
+                    errorMessage.includes('is disabled') ||
+                    errorMessage.includes('Could not reach Cloud Firestore')) {
                     console.warn('Firebase não disponível ou sem permissão. Continuando com localStorage apenas.');
                     useFirebase = false; // Desabilitar tentativas futuras
                 } else {
@@ -1366,7 +1438,15 @@
                     }
                 } catch (error) {
                     // Ignorar erros de permissão, offline ou API não habilitada
-                    if (error.code === 'permission-denied' || error.code === 'unavailable' || error.message?.includes('API has not been used')) {
+                    const errorMessage = error.message || '';
+                    const errorCode = error.code || '';
+                    
+                    if (errorCode === 'permission-denied' || 
+                        errorCode === 'unavailable' || 
+                        errorMessage.includes('API has not been used') ||
+                        errorMessage.includes('not been used in project') ||
+                        errorMessage.includes('is disabled') ||
+                        errorMessage.includes('Could not reach Cloud Firestore')) {
                         console.warn('Firebase não disponível ou sem permissão. Usando localStorage apenas.');
                         useFirebase = false; // Desabilitar tentativas futuras
                     } else {
@@ -1377,14 +1457,27 @@
         }
 
         // LOGIN
-        function handleLogin() {
+        async function handleLogin() {
             if(isLocked) return;
 
             const u = document.getElementById('user-input').value;
             const p = document.getElementById('pass-input').value;
             const box = document.getElementById('login-box');
 
-            const users = JSON.parse(localStorage.getItem('fpro_users')) || [];
+            // Carregar usuários do Firebase primeiro
+            let users = [];
+            try {
+                users = await loadUsersFromFirebase();
+            } catch (error) {
+                console.warn('Erro ao carregar usuários do Firebase, usando localStorage:', error);
+                users = JSON.parse(localStorage.getItem('fpro_users')) || [];
+            }
+            
+            // Se não houver usuários do Firebase, usar localStorage
+            if (users.length === 0) {
+                users = JSON.parse(localStorage.getItem('fpro_users')) || [];
+            }
+            
             const user = users.find(usr => usr.user === u && usr.pass === p);
 
             if(user) {
@@ -2389,7 +2482,7 @@
                 <tr>
                     <td style="font-weight:600">${cat.name}</td>
                     <td><span class="badge ${cat.type === 'income' ? 'badge-income' : 'badge-expense'}">${cat.type === 'income' ? 'Receita' : 'Despesa'}</span></td>
-                    <td><span class="badge ${cat.essential ? 'badge-essential' : 'badge-nonessential'}">${cat.essential ? 'Essencial' : 'Não Essencial'}</span></td>
+                    <td>${cat.type === 'income' ? ' - ' : `<span class="badge ${cat.essential ? 'badge-essential' : 'badge-nonessential'}">${cat.essential ? 'Essencial' : 'Não Essencial'}</span>`}</td>
                     <td>${cat.subcategories.length > 0 ? cat.subcategories.map(s => s.name).join(', ') : '-'}</td>
                     <td>
                         <button class="action-btn btn-edit" onclick="openCategoryModal(${cat.id})"><i class="fa-solid fa-edit"></i></button>
@@ -3703,6 +3796,97 @@ function applySettings(settings) {
                 }, 250);
             });
         });
+
+        // SERVICE WORKER REGISTRATION
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('https://raw.githubusercontent.com/fellipek6/finances/refs/heads/main/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado com sucesso:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Falha ao registrar o Service Worker:', error);
+                    });
+            });
+        }
+
+        // INSTALL PROMPT - Aparece apenas uma vez
+        let deferredPrompt;
+        let installPromptShown = localStorage.getItem('installPromptShown') === 'true';
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Mostrar prompt apenas se ainda não foi mostrado
+            if (!installPromptShown) {
+                showInstallPrompt();
+            }
+        });
+
+        function showInstallPrompt() {
+            // Verificar se já foi instalado
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                return;
+            }
+
+            const installBanner = document.createElement('div');
+            installBanner.id = 'install-banner';
+            installBanner.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: var(--card);
+                border: 2px solid var(--accent);
+                border-radius: 12px;
+                padding: 20px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+                z-index: 10000;
+                max-width: 320px;
+                animation: slideUp 0.3s ease;
+            `;
+            installBanner.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                    <i class="fa-solid fa-download" style="font-size: 24px; color: var(--accent);"></i>
+                    <div>
+                        <h4 style="margin: 0; color: var(--text-main);">Instalar Aplicativo</h4>
+                        <p style="margin: 5px 0 0 0; font-size: 14px; color: var(--text-muted);">Instale para acesso rápido</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="install-btn" class="btn btn-primary" style="flex: 1; padding: 10px;">
+                        <i class="fa-solid fa-download"></i> Instalar
+                    </button>
+                    <button id="dismiss-install" class="btn btn-secondary" style="padding: 10px 15px;">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(installBanner);
+
+            document.getElementById('install-btn').addEventListener('click', () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('Usuário aceitou a instalação do aplicativo');
+                        } else {
+                            console.log('Usuário recusou a instalação do aplicativo');
+                        }
+                        deferredPrompt = null;
+                        installBanner.remove();
+                        localStorage.setItem('installPromptShown', 'true');
+                        installPromptShown = true;
+                    });
+                }
+            });
+
+            document.getElementById('dismiss-install').addEventListener('click', () => {
+                installBanner.remove();
+                localStorage.setItem('installPromptShown', 'true');
+                installPromptShown = true;
+            });
+        }
     </script>
 </body>
 </html>
