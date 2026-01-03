@@ -249,6 +249,9 @@
         header { padding: 20px 40px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         .header-left { display: flex; align-items: center; gap: 15px; }
         .menu-toggle { display: none; padding: 8px; border: none; background: transparent; color: var(--text-main); cursor: pointer; font-size: 20px; }
+        .notification-bell { padding: 8px 12px; border: 2px solid var(--border); background: var(--card); border-radius: 8px; cursor: pointer; color: var(--text-main); transition: all 0.3s; position: relative; }
+        .notification-bell:hover { border-color: var(--accent); }
+        .notification-badge { position: absolute; top: -5px; right: -5px; background: var(--danger); color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; font-weight: 700; display: none; align-items: center; justify-content: center; }
         .theme-toggle { padding: 8px 12px; border: 2px solid var(--border); background: var(--card); border-radius: 8px; cursor: pointer; color: var(--text-main); transition: all 0.3s; position: relative; }
         .theme-toggle:hover { border-color: var(--accent); }
         .theme-toggle i { transition: transform 0.3s, opacity 0.3s; }
@@ -615,6 +618,10 @@
                     <h2 id="view-title"><i class="fa-solid fa-chart-pie"></i> Visão Geral</h2>
                 </div>
                 <div style="display: flex; align-items: center; gap: 15px;">
+                    <button class="notification-bell" onclick="openNotificationsModal()" title="Notificações">
+                        <i class="fa-solid fa-bell"></i>
+                        <span id="notification-badge" class="notification-badge">0</span>
+                    </button>
                     <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
                         <i class="fa-solid fa-sun"></i>
                         <i class="fa-solid fa-moon"></i>
@@ -860,13 +867,13 @@
                             <option value="expense">Despesa</option>
                         </select>
                     </div>
-                    <div class="filter-group">
+                    <div class="filter-group" id="filter-category-group" style="display: none;">
                         <label><i class="fa-solid fa-tags"></i> Categoria</label>
                         <select id="filter-category" onchange="updateTransactionFilters()">
                             <option value="">Todas</option>
                         </select>
                     </div>
-                    <div class="filter-group">
+                    <div class="filter-group" id="filter-subcategory-group" style="display: none;">
                         <label><i class="fa-solid fa-tag"></i> Subcategoria</label>
                         <select id="filter-subcategory" onchange="renderTransactions()">
                             <option value="">Todas</option>
@@ -968,7 +975,10 @@
                 <div class="table-container">
                     <div class="table-header">
                         <h3><i class="fa-solid fa-repeat"></i> Registros Recorrentes</h3>
-                        <button class="btn btn-primary" onclick="openRecurringModal()"><i class="fa-solid fa-plus"></i> Novo Recorrente</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" onclick="openBudgetModal()"><i class="fa-solid fa-calculator"></i> Orçamento</button>
+                            <button class="btn btn-primary" onclick="openRecurringModal()"><i class="fa-solid fa-plus"></i> Novo Recorrente</button>
+                        </div>
                     </div>
                     <table>
                         <thead>
@@ -1366,6 +1376,39 @@
             <div style="margin-top: 25px; display: flex; gap: 10px;">
                 <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal()">Cancelar</button>
                 <button class="btn btn-primary" style="flex: 1;" onclick="saveRecurring()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ORÇAMENTO -->
+    <div class="modal" id="modal-budget">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh;">
+            <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-calculator"></i> Orçamento</h3>
+            <div style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px; padding: 15px;">
+                <div id="budget-items-container"></div>
+            </div>
+            <div style="background: var(--bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 16px; font-weight: 600; color: var(--text-main);">Total:</span>
+                    <strong id="budget-total" style="font-size: 24px; color: var(--danger);">R$ 0,00</strong>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal()">Cancelar</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="confirmBudgetPublish()"><i class="fa-solid fa-paper-plane"></i> Publicar Tudo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NOTIFICAÇÕES -->
+    <div class="modal" id="modal-notifications">
+        <div class="modal-content" style="max-width: 600px; max-height: 90vh;">
+            <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-bell"></i> Notificações</h3>
+            <div style="max-height: 500px; overflow-y: auto;" id="notifications-container">
+                <p style="text-align: center; color: var(--text-muted); padding: 40px;">Carregando notificações...</p>
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal()">Fechar</button>
             </div>
         </div>
     </div>
@@ -2235,8 +2278,23 @@
         function updateTransactionFilters() {
             const filterType = document.getElementById('filter-type').value;
             const filterPaidGroup = document.getElementById('filter-paid-group');
+            const categoryGroup = document.getElementById('filter-category-group');
+            const subcategoryGroup = document.getElementById('filter-subcategory-group');
+            
             filterPaidGroup.style.display = (filterType === 'expense' || filterType === 'income' || filterType === '') ? 'block' : 'none';
-            updateFilterCategories();
+            
+            if(filterType) {
+                if(categoryGroup) categoryGroup.style.display = 'block';
+                updateFilterCategories();
+            } else {
+                if(categoryGroup) categoryGroup.style.display = 'none';
+                if(subcategoryGroup) subcategoryGroup.style.display = 'none';
+                const catSelect = document.getElementById('filter-category');
+                const subcatSelect = document.getElementById('filter-subcategory');
+                if(catSelect) catSelect.value = '';
+                if(subcatSelect) subcatSelect.value = '';
+            }
+            
             renderTransactions();
         }
 
@@ -2248,13 +2306,14 @@
             
             const catSelect = document.getElementById('filter-category');
             const subcatSelect = document.getElementById('filter-subcategory');
+            const subcategoryGroup = document.getElementById('filter-subcategory-group');
             if(!catSelect || !subcatSelect) return;
             
             const filterType = document.getElementById('filter-type')?.value || '';
             
             const currentCat = catSelect.value;
             catSelect.innerHTML = '<option value="">Todas</option>';
-            (DB.categories || []).filter(c => c && (!filterType || c.type === filterType)).forEach(cat => {
+            (DB.categories || []).filter(c => c && c.type === filterType).forEach(cat => {
                 const opt = document.createElement('option');
                 opt.value = cat.name;
                 opt.textContent = cat.name;
@@ -2263,8 +2322,9 @@
             });
 
             const currentSubcat = subcatSelect.value;
-            subcatSelect.innerHTML = '<option value="">Todas</option>';
             if(currentCat) {
+                if(subcategoryGroup) subcategoryGroup.style.display = 'block';
+                subcatSelect.innerHTML = '<option value="">Todas</option>';
                 const cat = (DB.categories || []).find(c => c && c.name === currentCat);
                 if(cat && cat.subcategories && Array.isArray(cat.subcategories)) {
                     cat.subcategories.forEach(sub => {
@@ -2277,6 +2337,10 @@
                         }
                     });
                 }
+            } else {
+                if(subcategoryGroup) subcategoryGroup.style.display = 'none';
+                subcatSelect.innerHTML = '<option value="">Todas</option>';
+                subcatSelect.value = '';
             }
         }
 
@@ -2484,6 +2548,19 @@
     // Cálculo inicial
     const initialQty = rec.quantity || 1;
     const unitVal = (rec.val / initialQty); // Pega o valor unitário original
+    const isExpense = rec.type === 'expense';
+
+    const paymentField = isExpense ? `
+        <div class="form-group">
+            <label><i class="fa-solid fa-credit-card"></i> Tipo de Pagamento</label>
+            <select id="publish-payment" class="form-control">
+                <option value="pix" ${rec.payment === 'pix' ? 'selected' : ''}>Pix</option>
+                <option value="credito" ${rec.payment === 'credito' ? 'selected' : ''}>Crédito</option>
+                <option value="debito" ${rec.payment === 'debito' ? 'selected' : ''}>Débito</option>
+                <option value="vista" ${rec.payment === 'vista' ? 'selected' : ''}>À vista</option>
+            </select>
+        </div>
+    ` : '';
 
     confirmModal.innerHTML = `
         <div class="modal-content" style="width: 400px;">
@@ -2493,12 +2570,19 @@
             </p>
             
             <div class="form-group">
+                <label><i class="fa-solid fa-dollar-sign"></i> Valor Unitário</label>
+                <input type="number" id="publish-val" class="form-control" 
+                       value="${unitVal.toFixed(2)}" step="0.01" min="0"
+                       oninput="updatePublishTotal()">
+            </div>
+            
+            <div class="form-group">
                 <label><i class="fa-solid fa-hashtag"></i> Quantidade</label>
                 <input type="number" id="publish-qty" class="form-control" 
                        value="${initialQty}" min="1" step="1" 
-                       oninput="updatePublishTotal(${unitVal})">
+                       oninput="updatePublishTotal()">
             </div>
-
+            ${paymentField}
             <div style="background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
                 <span style="font-size: 12px; color: var(--text-muted); display: block;">Total a ser lançado:</span>
                 <strong id="publish-total-display" style="font-size: 18px; color: var(--accent);">
@@ -2508,41 +2592,48 @@
 
             <div style="display: flex; gap: 10px;">
                 <button class="btn btn-secondary" style="flex: 1;" onclick="document.getElementById('confirm-publish-modal').remove()">Cancelar</button>
-                <button class="btn btn-primary" style="flex: 1;" onclick="confirmPublishRecurring(${id}, ${unitVal})">Confirmar</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="confirmPublishRecurring(${id})">Confirmar</button>
             </div>
         </div>
     `;
     document.body.appendChild(confirmModal);
 }
 
-function updatePublishTotal(unitVal) {
+function updatePublishTotal() {
+    const val = parseFloat(document.getElementById('publish-val').value) || 0;
     const qty = parseInt(document.getElementById('publish-qty').value) || 1;
-    const total = unitVal * qty;
-    document.getElementById('publish-total-display').textContent = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    const total = val * qty;
+    const totalDisplay = document.getElementById('publish-total-display');
+    if(totalDisplay) {
+        totalDisplay.textContent = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    }
 }
 
-function confirmPublishRecurring(id, unitVal) {
+function confirmPublishRecurring(id) {
     const DB = getUserDB();
     if(!DB) return;
     
     const rec = (DB.recurring || []).find(r => r && r.id === id);
     if(!rec) return;
 
-    // Captura a nova quantidade do input
+    // Captura os valores dos inputs
+    const newVal = parseFloat(document.getElementById('publish-val').value) || 0;
     const newQty = parseInt(document.getElementById('publish-qty').value) || 1;
-    const finalTotal = unitVal * newQty;
+    const finalTotal = newVal * newQty;
+    const paymentInput = document.getElementById('publish-payment');
+    const newPayment = paymentInput ? paymentInput.value : rec.payment;
 
     const today = new Date().toISOString().split('T')[0];
     const tx = {
         id: Date.now(),
         date: today,
         desc: rec.desc || '',
-        val: finalTotal, // Valor atualizado
-        quantity: newQty, // Quantidade atualizada
+        val: finalTotal,
+        quantity: newQty,
         type: rec.type || 'expense',
         cat: rec.cat || '',
         subcat: rec.subcat || null,
-        payment: rec.payment || null,
+        payment: rec.type === 'expense' ? newPayment : null,
         dueDate: rec.type === 'expense' ? today : null,
         receiptDate: rec.type === 'income' ? today : null,
         alertDays: rec.alertDays || null,
@@ -2763,6 +2854,282 @@ function confirmPublishRecurring(id, unitVal) {
                     </tr>
                 `;
             }).filter(html => html).join('') || '<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted)">Nenhum registro recorrente encontrado</td></tr>';
+        }
+
+        // ORÇAMENTO
+        function openBudgetModal() {
+            const DB = getUserDB();
+            if(!DB) return;
+            
+            if(!DB.recurring) DB.recurring = [];
+            
+            // Filtrar apenas despesas
+            const expenses = (DB.recurring || []).filter(r => r && r.type === 'expense');
+            
+            const modal = document.getElementById('modal-budget');
+            const container = document.getElementById('budget-items-container');
+            
+            if(!modal || !container) return;
+            
+            if(expenses.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhuma despesa recorrente cadastrada.</p>';
+                modal.style.display = 'flex';
+                updateBudgetTotal();
+                return;
+            }
+            
+            container.innerHTML = expenses.map(rec => {
+                const unitVal = (rec.val / (rec.quantity || 1)).toFixed(2);
+                return `
+                    <div class="budget-item" data-id="${rec.id}" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: center; padding: 15px; border-bottom: 1px solid var(--border);">
+                        <div>
+                            <div style="font-weight: 600; color: var(--text-main);">${rec.desc || ''}</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">${rec.cat || ''}</div>
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: var(--text-muted);">Valor Unitário</label>
+                            <input type="number" class="form-control budget-val" data-id="${rec.id}" 
+                                   value="${unitVal}" step="0.01" min="0" 
+                                   oninput="updateBudgetItem(${rec.id})" style="margin: 0;">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: var(--text-muted);">Quantidade</label>
+                            <input type="number" class="form-control budget-qty" data-id="${rec.id}" 
+                                   value="${rec.quantity || 1}" min="1" step="1" 
+                                   oninput="updateBudgetItem(${rec.id})" style="margin: 0;">
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 700; color: var(--danger);" class="budget-item-total" data-id="${rec.id}">
+                                R$ ${rec.val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            modal.style.display = 'flex';
+            updateBudgetTotal();
+        }
+
+        function updateBudgetItem(id) {
+            const valInput = document.querySelector(`.budget-val[data-id="${id}"]`);
+            const qtyInput = document.querySelector(`.budget-qty[data-id="${id}"]`);
+            const totalDisplay = document.querySelector(`.budget-item-total[data-id="${id}"]`);
+            
+            if(valInput && qtyInput && totalDisplay) {
+                const val = parseFloat(valInput.value) || 0;
+                const qty = parseInt(qtyInput.value) || 1;
+                const total = val * qty;
+                totalDisplay.textContent = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                updateBudgetTotal();
+            }
+        }
+
+        function updateBudgetTotal() {
+            const items = document.querySelectorAll('.budget-item');
+            let total = 0;
+            
+            items.forEach(item => {
+                const id = item.dataset.id;
+                const valInput = document.querySelector(`.budget-val[data-id="${id}"]`);
+                const qtyInput = document.querySelector(`.budget-qty[data-id="${id}"]`);
+                
+                if(valInput && qtyInput) {
+                    const val = parseFloat(valInput.value) || 0;
+                    const qty = parseInt(qtyInput.value) || 1;
+                    total += val * qty;
+                }
+            });
+            
+            const totalDisplay = document.getElementById('budget-total');
+            if(totalDisplay) {
+                totalDisplay.textContent = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            }
+        }
+
+        function confirmBudgetPublish() {
+            const DB = getUserDB();
+            if(!DB) return;
+            
+            if(!DB.transactions) DB.transactions = [];
+            if(!DB.recurring) DB.recurring = [];
+            
+            const items = document.querySelectorAll('.budget-item');
+            const transactions = [];
+            const today = new Date().toISOString().split('T')[0];
+            
+            items.forEach(item => {
+                const id = parseInt(item.dataset.id);
+                const rec = (DB.recurring || []).find(r => r && r.id === id);
+                
+                if(rec) {
+                    const valInput = document.querySelector(`.budget-val[data-id="${id}"]`);
+                    const qtyInput = document.querySelector(`.budget-qty[data-id="${id}"]`);
+                    
+                    if(valInput && qtyInput) {
+                        const val = parseFloat(valInput.value) || 0;
+                        const qty = parseInt(qtyInput.value) || 1;
+                        const total = val * qty;
+                        
+                        const tx = {
+                            id: Date.now() + Math.random(),
+                            date: today,
+                            desc: rec.desc || '',
+                            val: total,
+                            quantity: qty,
+                            type: 'expense',
+                            cat: rec.cat || '',
+                            subcat: rec.subcat || null,
+                            payment: rec.payment || null,
+                            dueDate: today,
+                            receiptDate: null,
+                            alertDays: rec.alertDays || null,
+                            paid: false,
+                            comment: rec.comment || null
+                        };
+                        
+                        transactions.push(tx);
+                        
+                        // Atualizar próxima data do recorrente
+                        if(rec.nextDate && rec.period) {
+                            const nextDate = new Date(rec.nextDate);
+                            if(!isNaN(nextDate.getTime())) {
+                                nextDate.setDate(nextDate.getDate() + parseInt(rec.period));
+                                rec.nextDate = nextDate.toISOString().split('T')[0];
+                            }
+                        }
+                    }
+                }
+            });
+            
+            if(transactions.length === 0) {
+                alert('Nenhum item selecionado para publicar.');
+                return;
+            }
+            
+            // Adicionar todas as transações
+            transactions.forEach(tx => {
+                DB.transactions.unshift(tx);
+            });
+            
+            saveUserDB(DB);
+            closeModal();
+            renderRecurring();
+            renderAll();
+            
+            alert(`${transactions.length} transação(ões) publicada(s) com sucesso!`);
+        }
+
+        // NOTIFICAÇÕES
+        function updateNotifications() {
+            const DB = getUserDB();
+            if(!DB) return;
+            
+            if(!DB.transactions) DB.transactions = [];
+            if(!DB.recurring) DB.recurring = [];
+            
+            const notifications = [];
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Verificar transações
+            (DB.transactions || []).forEach(tx => {
+                if(!tx) return;
+                const status = getTransactionStatus(tx);
+                if(status === 'alert' || status === 'overdue') {
+                    const targetDate = tx.type === 'expense' ? new Date(tx.dueDate) : new Date(tx.receiptDate);
+                    notifications.push({
+                        type: 'transaction',
+                        id: tx.id,
+                        title: tx.desc || 'Sem título',
+                        desc: tx.desc || '',
+                        value: tx.val || 0,
+                        date: tx.type === 'expense' ? tx.dueDate : tx.receiptDate,
+                        status: status,
+                        category: tx.cat || '',
+                        subcategory: tx.subcat || ''
+                    });
+                }
+            });
+            
+            // Verificar recorrentes
+            (DB.recurring || []).forEach(rec => {
+                if(!rec) return;
+                const status = getRecurringStatus(rec);
+                if(status === 'alert' || status === 'overdue') {
+                    notifications.push({
+                        type: 'recurring',
+                        id: rec.id,
+                        title: rec.desc || 'Sem título',
+                        desc: rec.desc || '',
+                        value: rec.val || 0,
+                        date: rec.nextDate || '',
+                        status: status,
+                        category: rec.cat || '',
+                        subcategory: rec.subcat || ''
+                    });
+                }
+            });
+            
+            // Atualizar badge
+            const badge = document.getElementById('notification-badge');
+            if(badge) {
+                if(notifications.length > 0) {
+                    badge.textContent = notifications.length > 99 ? '99+' : notifications.length;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+            
+            return notifications;
+        }
+
+        function openNotificationsModal() {
+            const notifications = updateNotifications();
+            const modal = document.getElementById('modal-notifications');
+            const container = document.getElementById('notifications-container');
+            
+            if(!modal || !container) return;
+            
+            if(notifications.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Nenhuma notificação no momento.</p>';
+                modal.style.display = 'flex';
+                return;
+            }
+            
+            container.innerHTML = notifications.map(notif => {
+                const statusClass = notif.status === 'overdue' ? 'overdue' : 'alert';
+                const statusColor = notif.status === 'overdue' ? 'var(--danger)' : 'var(--warning)';
+                const statusText = notif.status === 'overdue' ? 'Atrasado' : 'Alerta';
+                const dateDisplay = notif.date ? notif.date.split('-').reverse().join('/') : '-';
+                
+                return `
+                    <div class="notification-item" style="padding: 15px; border-bottom: 1px solid var(--border); background: ${notif.status === 'overdue' ? 'rgba(224, 17, 95, 0.05)' : 'rgba(245, 158, 11, 0.05)'};">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; font-size: 16px; color: var(--text-main); margin-bottom: 5px;">${notif.title}</div>
+                                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">${notif.category}${notif.subcategory ? ' / ' + notif.subcategory : ''}</div>
+                            </div>
+                            <span class="badge" style="background: ${statusColor}; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap;">
+                                ${statusText}
+                            </span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+                            <div>
+                                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 3px;">Valor</div>
+                                <div style="font-weight: 700; color: var(--text-main);">R$ ${notif.value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 3px;">Data</div>
+                                <div style="font-weight: 600; color: var(--text-main);">${dateDisplay}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            modal.style.display = 'flex';
         }
 
         function updateCategoryEssentialField() {
@@ -3779,6 +4146,7 @@ function applySettings(settings) {
     renderRecurring();
     if(currentUser && currentUser.role === 'admin') renderUsers();
     updateCharts();
+    updateNotifications();
 }
         
         // GRÁFICOS
