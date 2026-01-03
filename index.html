@@ -4,17 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finance PRO | Intelligence Suite</title>
-    <link rel="icon" type="image/png" href="https://i.imgur.com/QaYoyv9.png">
+    <link rel="icon" type="image/png" href="https://i.imgur.com/xXj8Zdo.png">
     <link rel="manifest" href="https://raw.githubusercontent.com/fellipek6/finances/refs/heads/main/manifest.json">
-    <meta name="theme-color" content="#3f0000">
-    
+    <meta name="theme-color" content="#3f0000">    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK - Realtime Database -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getDatabase, ref, get, set, update, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         
         const firebaseConfig = {
   apiKey: "AIzaSyBt4LmiSK0DamZSPPQcPpjgo0TaxavGQs8",
@@ -30,21 +29,19 @@
         
         try {
             window.firebaseApp = initializeApp(firebaseConfig);
-            window.db = getFirestore(window.firebaseApp);
-            // Expor funções do Firestore no window para uso global
-            window.firebaseFirestore = {
-                doc: doc,
-                getDoc: getDoc,
-                setDoc: setDoc,
-                updateDoc: updateDoc,
-                deleteDoc: deleteDoc,
-                getDocs: getDocs,
-                collection: collection,
-                query: query,
-                where: where
+            window.db = getDatabase(window.firebaseApp);
+            // Expor funções do Realtime Database no window para uso global
+            window.firebaseDatabase = {
+                ref: ref,
+                get: get,
+                set: set,
+                update: update,
+                remove: remove,
+                onValue: onValue,
+                off: off
             };
             window.firebaseReady = true;
-            console.log('Firebase inicializado com sucesso');
+            console.log('Firebase Realtime Database inicializado com sucesso');
         } catch (error) {
             console.error('Erro ao inicializar Firebase:', error);
             window.firebaseReady = false;
@@ -1279,47 +1276,47 @@
             return window.firebaseReady && window.db;
         }
 
-        // Carregar usuários/acessos do Firebase
+        // Carregar usuários do Firebase Realtime Database
         async function loadUsersFromFirebase() {
             try {
                 const firebaseAvailable = await waitForFirebase();
-                if (firebaseAvailable && window.firebaseFirestore && window.db) {
-                    // Tentar carregar da coleção 'acessos' primeiro, depois 'users'
-                    let usersCollection = null;
-                    let usersSnapshot = null;
-                    
-                    try {
-                        usersCollection = window.firebaseFirestore.collection(window.db, 'acessos');
-                        usersSnapshot = await window.firebaseFirestore.getDocs(usersCollection);
-                    } catch (e) {
-                        // Se não encontrar 'acessos', tentar 'users'
-                        try {
-                            usersCollection = window.firebaseFirestore.collection(window.db, 'users');
-                            usersSnapshot = await window.firebaseFirestore.getDocs(usersCollection);
-                        } catch (e2) {
-                            console.warn('Coleções "acessos" e "users" não encontradas no Firestore');
-                            return [];
-                        }
-                    }
+                if (firebaseAvailable && window.firebaseDatabase && window.db) {
+                    // Carregar do nó 'userAccounts'
+                    const userAccountsRef = window.firebaseDatabase.ref(window.db, 'userAccounts');
+                    const snapshot = await window.firebaseDatabase.get(userAccountsRef);
                     
                     const users = [];
-                    usersSnapshot.forEach(doc => {
-                        const userData = doc.data();
-                        // Verificar se o documento tem campos de acesso (user/login, pass/senha, name/nome, role/nivel)
-                        const login = userData.user || userData.login || doc.id;
-                        const pass = userData.pass || userData.senha || '';
-                        const name = userData.name || userData.nome || login;
-                        const role = userData.role || userData.nivel || 'user';
+                    if (snapshot.exists()) {
+                        const userAccountsData = snapshot.val();
                         
-                        if (login && pass) {
-                            users.push({
-                                user: login,
-                                pass: pass,
-                                name: name,
-                                role: role
+                        // userAccountsData pode ser um array ou um objeto
+                        if (Array.isArray(userAccountsData)) {
+                            // Se for um array, processar diretamente
+                            userAccountsData.forEach(userData => {
+                                if (userData && userData.user && userData.pass) {
+                                    users.push({
+                                        user: userData.user,
+                                        pass: userData.pass,
+                                        name: userData.name || userData.user,
+                                        role: userData.role || 'user'
+                                    });
+                                }
+                            });
+                        } else if (typeof userAccountsData === 'object') {
+                            // Se for um objeto, pode ter índices numéricos ou chaves
+                            Object.keys(userAccountsData).forEach(key => {
+                                const userData = userAccountsData[key];
+                                if (userData && userData.user && userData.pass) {
+                                    users.push({
+                                        user: userData.user,
+                                        pass: userData.pass,
+                                        name: userData.name || userData.user,
+                                        role: userData.role || 'user'
+                                    });
+                                }
                             });
                         }
-                    });
+                    }
                     
                     // Salvar no localStorage como backup
                     if (users.length > 0) {
@@ -1371,17 +1368,17 @@
             return defaultDB;
         }
         
-        // Função assíncrona para tentar sincronizar com Firebase
+        // Função assíncrona para tentar sincronizar com Firebase Realtime Database
         async function syncWithFirebase() {
             if (!currentUser || !useFirebase) return;
             
             try {
                 const firebaseAvailable = await waitForFirebase();
-                if (firebaseAvailable && window.firebaseFirestore && window.db) {
-                    const userDocRef = window.firebaseFirestore.doc(window.db, 'users', currentUser.user);
-                    const userDoc = await window.firebaseFirestore.getDoc(userDocRef);
-                    if (userDoc.exists()) {
-                        const data = userDoc.data();
+                if (firebaseAvailable && window.firebaseDatabase && window.db) {
+                    const userRef = window.firebaseDatabase.ref(window.db, `users/${currentUser.user}`);
+                    const snapshot = await window.firebaseDatabase.get(userRef);
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
                         // Garantir propriedades
                         if (!data.transactions) data.transactions = [];
                         if (!data.recurring) data.recurring = [];
@@ -1400,12 +1397,10 @@
                 const errorMessage = error.message || '';
                 const errorCode = error.code || '';
                 
-                if (errorCode === 'permission-denied' || 
+                if (errorCode === 'PERMISSION_DENIED' || 
                     errorCode === 'unavailable' || 
-                    errorMessage.includes('API has not been used') ||
-                    errorMessage.includes('not been used in project') ||
-                    errorMessage.includes('is disabled') ||
-                    errorMessage.includes('Could not reach Cloud Firestore')) {
+                    errorMessage.includes('permission-denied') ||
+                    errorMessage.includes('Permission denied')) {
                     console.warn('Firebase não disponível ou sem permissão. Continuando com localStorage apenas.');
                     useFirebase = false; // Desabilitar tentativas futuras
                 } else {
@@ -1426,14 +1421,14 @@
             const key = `fpro_${currentUser.user}`;
             localStorage.setItem(key, JSON.stringify(data));
             
-            // Tentar salvar no Firebase (prioridade)
+            // Tentar salvar no Firebase Realtime Database (prioridade)
             if (useFirebase) {
                 try {
                     const firebaseAvailable = await waitForFirebase();
-                    if (firebaseAvailable && window.firebaseFirestore && window.db) {
-                        const userDocRef = window.firebaseFirestore.doc(window.db, 'users', currentUser.user);
-                        await window.firebaseFirestore.setDoc(userDocRef, data, { merge: true });
-                        console.log('Dados salvos no Firebase com sucesso');
+                    if (firebaseAvailable && window.firebaseDatabase && window.db) {
+                        const userRef = window.firebaseDatabase.ref(window.db, `users/${currentUser.user}`);
+                        await window.firebaseDatabase.set(userRef, data);
+                        console.log('Dados salvos no Firebase Realtime Database com sucesso');
                     } else {
                         console.warn('Firebase não disponível, usando apenas localStorage');
                     }
@@ -1442,12 +1437,10 @@
                     const errorMessage = error.message || '';
                     const errorCode = error.code || '';
                     
-                    if (errorCode === 'permission-denied' || 
+                    if (errorCode === 'PERMISSION_DENIED' || 
                         errorCode === 'unavailable' || 
-                        errorMessage.includes('API has not been used') ||
-                        errorMessage.includes('not been used in project') ||
-                        errorMessage.includes('is disabled') ||
-                        errorMessage.includes('Could not reach Cloud Firestore')) {
+                        errorMessage.includes('permission-denied') ||
+                        errorMessage.includes('Permission denied')) {
                         console.warn('Firebase não disponível ou sem permissão. Usando localStorage apenas.');
                         useFirebase = false; // Desabilitar tentativas futuras
                     } else {
@@ -2521,7 +2514,7 @@
             modal.style.display = 'flex';
         }
 
-        function saveUser() {
+        async function saveUser() {
             const users = JSON.parse(localStorage.getItem('fpro_users')) || [];
             const name = document.getElementById('user-name').value;
             const login = document.getElementById('user-login').value;
@@ -2531,6 +2524,13 @@
             if(!name || !login) return alert("Nome e login são obrigatórios");
             if(!editingUserId && !pass) return alert("Senha é obrigatória para novos usuários");
 
+            const userData = {
+                user: login,
+                pass: pass || (editingUserId ? users.find(u => u.user === editingUserId)?.pass : ''),
+                name: name,
+                role: role
+            };
+
             if(editingUserId) {
                 const index = users.findIndex(u => u.user === editingUserId);
                 if(index !== -1) {
@@ -2538,23 +2538,113 @@
                     users[index].user = login;
                     users[index].role = role;
                     if(pass) users[index].pass = pass;
+                    userData.pass = users[index].pass; // Usar senha atualizada ou existente
                 }
             } else {
                 if(users.find(u => u.user === login)) return alert("Login já existe");
-                users.push({user: login, pass: pass, name: name, role: role});
+                users.push(userData);
             }
 
             localStorage.setItem('fpro_users', JSON.stringify(users));
+            
+            // Salvar no Firebase Realtime Database
+            if (useFirebase) {
+                try {
+                    const firebaseAvailable = await waitForFirebase();
+                    if (firebaseAvailable && window.firebaseDatabase && window.db) {
+                        // Carregar userAccounts existente
+                        const userAccountsRef = window.firebaseDatabase.ref(window.db, 'userAccounts');
+                        const snapshot = await window.firebaseDatabase.get(userAccountsRef);
+                        
+                        let userAccounts = [];
+                        if (snapshot.exists()) {
+                            const data = snapshot.val();
+                            // Converter para array se for objeto
+                            if (Array.isArray(data)) {
+                                userAccounts = data;
+                            } else if (typeof data === 'object') {
+                                userAccounts = Object.values(data);
+                            }
+                        }
+                        
+                        if(editingUserId) {
+                            // Atualizar usuário existente
+                            const userIndex = userAccounts.findIndex(u => u.user === editingUserId);
+                            if(userIndex !== -1) {
+                                userAccounts[userIndex] = userData;
+                            } else {
+                                // Se não encontrou pelo ID antigo, procurar pelo login
+                                const userIndexByLogin = userAccounts.findIndex(u => u.user === login);
+                                if(userIndexByLogin !== -1) {
+                                    userAccounts[userIndexByLogin] = userData;
+                                } else {
+                                    userAccounts.push(userData);
+                                }
+                            }
+                        } else {
+                            // Verificar se login já existe no Firebase
+                            if(userAccounts.find(u => u.user === login)) {
+                                alert("Login já existe no banco de dados");
+                                return;
+                            }
+                            // Adicionar novo usuário
+                            userAccounts.push(userData);
+                        }
+                        
+                        // Salvar no Firebase
+                        await window.firebaseDatabase.set(userAccountsRef, userAccounts);
+                        console.log('Usuário salvo no Firebase Realtime Database com sucesso');
+                    }
+                } catch (error) {
+                    console.error('Erro ao salvar usuário no Firebase:', error);
+                    // Continuar mesmo se houver erro no Firebase
+                }
+            }
+            
             closeModal();
             renderUsers();
         }
 
-        function deleteUser(login) {
+        async function deleteUser(login) {
             if(login === currentUser.user) return alert("Você não pode excluir seu próprio usuário");
             if(!confirm('Deseja realmente excluir este usuário?')) return;
             const users = JSON.parse(localStorage.getItem('fpro_users')) || [];
             const filtered = users.filter(u => u.user !== login);
             localStorage.setItem('fpro_users', JSON.stringify(filtered));
+            
+            // Remover do Firebase Realtime Database
+            if (useFirebase) {
+                try {
+                    const firebaseAvailable = await waitForFirebase();
+                    if (firebaseAvailable && window.firebaseDatabase && window.db) {
+                        // Carregar userAccounts existente
+                        const userAccountsRef = window.firebaseDatabase.ref(window.db, 'userAccounts');
+                        const snapshot = await window.firebaseDatabase.get(userAccountsRef);
+                        
+                        let userAccounts = [];
+                        if (snapshot.exists()) {
+                            const data = snapshot.val();
+                            // Converter para array se for objeto
+                            if (Array.isArray(data)) {
+                                userAccounts = data;
+                            } else if (typeof data === 'object') {
+                                userAccounts = Object.values(data);
+                            }
+                        }
+                        
+                        // Remover usuário
+                        userAccounts = userAccounts.filter(u => u.user !== login);
+                        
+                        // Salvar no Firebase
+                        await window.firebaseDatabase.set(userAccountsRef, userAccounts);
+                        console.log('Usuário removido do Firebase Realtime Database com sucesso');
+                    }
+                } catch (error) {
+                    console.error('Erro ao remover usuário do Firebase:', error);
+                    // Continuar mesmo se houver erro no Firebase
+                }
+            }
+            
             renderUsers();
         }
 
