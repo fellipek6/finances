@@ -4356,36 +4356,56 @@ function applySettings(settings) {
 async function confirmDeleteAccount() {
     const passwordInput = document.getElementById('confirm-delete-password').value;
     
+    // 1. Validação de Segurança
     if (!currentUser) return;
+
+    if (!passwordInput) {
+        alert("Por favor, digite sua senha.");
+        return;
+    }
+
     if (passwordInput !== currentUser.pass) {
         alert("Senha incorreta!");
         return;
     }
 
-    // DEBUG: Verifica se o banco está pronto antes de tentar deletar
-    if (!window.db || !window.firebaseDatabase) {
-        console.error("Firebase não inicializado corretamente.");
-        alert("Erro de conexão: O banco de dados ainda não está pronto. Aguarde um instante.");
-        return;
-    }
-
-    if (confirm("Deseja realmente apagar sua conta?")) {
+    if (confirm("ATENÇÃO: Isso apagará todos os seus dados e seu acesso definitivamente. Confirma?")) {
         try {
-            // Referência exata conforme seu esquema no index.html
-            const userPath = `users/${currentUser.user}`;
-            const userRef = window.firebaseDatabase.ref(window.db, userPath);
+            if (!window.db || !window.firebaseDatabase) {
+                throw new Error("Firebase não inicializado.");
+            }
+
+            const dbRef = window.firebaseDatabase;
+            const database = window.db;
+
+            // --- PASSO 1: Apagar os dados financeiros (nó 'users/LOGIN') ---
+            const userDataRef = dbRef.ref(database, `users/${currentUser.user}`);
+            await dbRef.remove(userDataRef);
+
+            // --- PASSO 2: Remover das credenciais de acesso (nó 'userAccounts') ---
+            const userAccountsRef = dbRef.ref(database, 'userAccounts');
+            const snapshot = await dbRef.get(userAccountsRef);
             
-            await window.firebaseDatabase.remove(userRef);
-            
-            // Sucesso: Limpar e Redirecionar
+            if (snapshot.exists()) {
+                const accounts = snapshot.val();
+                
+                // Filtra a lista mantendo apenas quem NÃO é o usuário atual
+                const updatedAccounts = accounts.filter(acc => acc.user !== currentUser.user);
+                
+                // Salva a lista atualizada de volta
+                await dbRef.set(userAccountsRef, updatedAccounts);
+            }
+
+            // --- PASSO 3: Finalização Premium ---
             localStorage.removeItem('fpro_user');
-            alert("Conta removida com sucesso.");
-            location.reload(); // Forma mais limpa de resetar o app para o login
+            alert("Conta excluída com sucesso!");
             
+            // Reinicia a aplicação para limpar o estado da memória
+            window.location.reload();
+
         } catch (error) {
-            console.error("Erro detalhado:", error);
-            // Se cair aqui, o erro é de permissão (Regras) ou API desativada
-            alert("Erro de permissão: Verifique se a API do Firestore/Realtime está ativada no console do Google.");
+            console.error("Erro ao excluir conta:", error);
+            alert("Erro técnico ao excluir dados. Verifique sua conexão ou permissões do Firebase.");
         }
     }
 }
