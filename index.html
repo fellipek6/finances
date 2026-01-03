@@ -872,7 +872,7 @@
                             <option value="">Todas</option>
                         </select>
                     </div>
-                    <div class="filter-group" id="filter-paid-group" style="display: none;">
+                    <div class="filter-group" id="filter-paid-group" >
                         <label><i class="fa-solid fa-check-circle"></i> Status Pagamento</label>
                         <select id="filter-paid" onchange="renderTransactions()">
                             <option value="">Todos</option>
@@ -1178,7 +1178,7 @@
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
                 <div>
                     <label><i class="fa-solid fa-dollar-sign"></i> Valor</label>
-                    <input type="number" id="f-val" class="form-control" step="0.01">
+                    <input type="number" id="f-val" class="form-control" step="0.01" oninput="updateTransactionTotal()">
                 </div>
                 <div>
                     <label><i class="fa-solid fa-hashtag"></i> Quantidade</label>
@@ -1217,6 +1217,7 @@
                     <option value="credito">Crédito</option>
                     <option value="debito">Débito</option>
                     <option value="vista">À vista</option>
+                    <option value="vista">Boleto</option>
                 </select>
             </div>
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -1966,7 +1967,7 @@
                 if(receiptDateField) receiptDateField.style.display = 'block';
                 if(alertDaysField) alertDaysField.style.display = 'block';
                 if(paidField) paidField.style.display = 'block';
-                if(fPaid) fPaid.checked = false; // Não obrigatório, deixar desmarcado por padrão
+                if(fPaid) fPaid.checked = true; // Não obrigatório, deixar desmarcado por padrão
             } else {
                 if(paymentField) paymentField.style.display = 'none';
                 if(dueDateField) dueDateField.style.display = 'none';
@@ -2307,8 +2308,8 @@
             if(rCat) rCat.value = '';
             if(rSubcat) rSubcat.value = '';
             if(rPayment) rPayment.value = 'pix';
-            if(rPeriod) rPeriod.value = '30';
-            if(rNextDate) rNextDate.value = new Date().toISOString().split('T')[0];
+            if(rPeriod) rPeriod.value = '';
+            if(rNextDate) rNextDate.value = '';
             if(rAlertDays) rAlertDays.value = '';
             if(rComment) rComment.value = '';
             
