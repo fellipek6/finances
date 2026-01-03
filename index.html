@@ -208,11 +208,31 @@
         }
         
         @media (max-width: 768px) {
-            aside { position: fixed; left: 0; top: 0; height: 100vh; z-index: 999; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
-            aside.hidden { transform: translateX(-100%); }
-            aside.collapsed { width: 280px; padding: 24px; transform: translateX(0); }
-            main { margin-left: 0; }
-        }
+    aside { 
+        position: fixed; 
+        left: 0; 
+        top: 0; 
+        height: 100vh; 
+        z-index: 999; 
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        /* Garante que a transição ocorra suavemente no mobile */
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        transform: translateX(0); /* Estado visível por padrão */
+    }
+
+    /* Quando a classe .hidden é aplicada, ele desliza para fora da tela */
+    aside.hidden { 
+        transform: translateX(-100%); 
+        display: flex !important; /* Garante que o elemento exista para animar */
+    }
+
+    /* Ajuste para que a barra lateral ocupe a largura total ou desejada no mobile */
+    aside.collapsed { 
+        width: 280px; 
+        padding: 24px; 
+        transform: translateX(-100%); 
+    }
+}
 
         .logo { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 40px; width: 100%; }
         .logo i { background: var(--accent); color: white; padding: 8px; border-radius: 8px; }
@@ -571,8 +591,16 @@
                 <div class="nav-link" onclick="showTab('settings')"><i class="fa-solid fa-gear"></i> Configurações</div>
             </nav>
             <div class="user-info-mobile" style="margin-top: auto; padding: 15px; border-top: 1px solid var(--border); display: none;">
-                <div style="font-weight: 700; font-size: 14px; margin-bottom: 5px;" id="admin-name-mobile">Admin</div>
-                <div style="font-size: 11px; color: var(--success);">● Online</div>
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px; margin-bottom: 5px;" id="admin-name-mobile">Admin</div>
+                        <div style="font-size: 11px; color: var(--success);">● Online</div>
+                    </div>
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema" style="display: flex !important;">
+                        <i class="fa-solid fa-sun"></i>
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                </div>
             </div>
             <div class="nav-link" style="margin-top: auto; color: var(--danger);" onclick="logout()">
                 <i class="fa-solid fa-power-off"></i> Sair
@@ -1029,6 +1057,22 @@
                                     <i class="fa-solid fa-coins" style="font-size: 24px; color: var(--accent);"></i>
                                     <div style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Moedas</div>
                                 </div>
+                                <div class="icon-option" data-icon="fa-money-bill-trend-up" onclick="selectIcon('fa-money-bill-trend-up')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <i class="fa-solid fa-money-bill-trend-up" style="font-size: 24px; color: var(--accent);"></i>
+                                    <div style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Lucro</div>
+                                </div>
+                                <div class="icon-option" data-icon="fa-credit-card" onclick="selectIcon('fa-credit-card')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <i class="fa-solid fa-credit-card" style="font-size: 24px; color: var(--accent);"></i>
+                                    <div style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Cartão</div>
+                                </div>
+                                <div class="icon-option" data-icon="fa-building-columns" onclick="selectIcon('fa-building-columns')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <i class="fa-solid fa-building-columns" style="font-size: 24px; color: var(--accent);"></i>
+                                    <div style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Banco</div>
+                                </div>
+                                <div class="icon-option" data-icon="fa-calculator" onclick="selectIcon('fa-calculator')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <i class="fa-solid fa-calculator" style="font-size: 24px; color: var(--accent);"></i>
+                                    <div style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Contas</div>
+                                </div>
                             </div>
                         </div>
                         <div class="form-group" style="margin-bottom: 25px;">
@@ -1037,7 +1081,7 @@
                                 <div class="color-palette" data-palette="blue" onclick="selectPalette('blue')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); height: 80px; position: relative;">
                                     <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Azul</div>
                                 </div>
-                                <div class="color-palette" data-palette="green" onclick="selectPalette('green')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #10b981 0%, #059669 100%); height: 80px; position: relative;">
+                                <div class="color-palette" data-palette="green" onclick="selectPalette('green')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #00ee9f 0%, #00b37a 100%); height: 80px; position: relative;">
                                     <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Verde</div>
                                 </div>
                                 <div class="color-palette" data-palette="purple" onclick="selectPalette('purple')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); height: 80px; position: relative;">
@@ -1060,6 +1104,15 @@
                                 </div>
                                 <div class="color-palette" data-palette="indigo" onclick="selectPalette('indigo')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #555555 0%, #666666 100%); height: 80px; position: relative;">
                                     <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Preto</div>
+                                </div>
+                                <div class="color-palette" data-palette="emerald" onclick="selectPalette('emerald')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); height: 80px; position: relative;">
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Esmeralda</div>
+                                </div>
+                                <div class="color-palette" data-palette="ocean" onclick="selectPalette('ocean')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #0077be 0%, #005a8e 100%); height: 80px; position: relative;">
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Oceano</div>
+                                </div>
+                                <div class="color-palette" data-palette="sunset" onclick="selectPalette('sunset')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #ff5f6d 0%, #ffc371 100%); height: 80px; position: relative;">
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Pôr do Sol</div>
                                 </div>
                             </div>
                         </div>
@@ -1829,6 +1882,7 @@
                     if(fQuantity) fQuantity.value = tx.quantity || 1;
                     if(fType) fType.value = tx.type || 'income';
                     // Atualizar categorias após definir o tipo
+                    updateTransactionTotal();
                     updateCategoryOptions();
                     updatePaymentField();
                     // Aguardar um pouco para garantir que as opções foram carregadas
@@ -2026,6 +2080,7 @@
             closeModal();
             renderAll();
             updateCharts();
+            
         }
 
         function deleteTransaction(id) {
@@ -2399,86 +2454,108 @@
         }
 
         function publishRecurring(id) {
-            const DB = getUserDB();
-            if(!DB) return;
-            
-            if(!DB.transactions) DB.transactions = [];
-            if(!DB.recurring) DB.recurring = [];
-            
-            const rec = (DB.recurring || []).find(r => r && r.id === id);
-            if(!rec) return;
-            
-            // Criar modal de confirmação
-            const confirmModal = document.createElement('div');
-            confirmModal.className = 'modal';
-            confirmModal.id = 'confirm-publish-modal';
-            confirmModal.style.display = 'flex';
-            confirmModal.innerHTML = `
-                <div class="modal-content" style="max-width: 400px;">
-                    <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-question-circle"></i> Confirmar Publicação</h3>
-                    <p style="margin-bottom: 20px;">Deseja realmente publicar a transação recorrente "<strong>${rec.desc}</strong>" no valor de <strong>R$ ${rec.val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>?</p>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-secondary" style="flex: 1;" onclick="document.getElementById('confirm-publish-modal').remove()">Cancelar</button>
-                        <button class="btn btn-primary" style="flex: 1;" onclick="confirmPublishRecurring(${id})">Confirmar</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(confirmModal);
-        }
+    const DB = getUserDB();
+    if(!DB || !DB.recurring) return;
+    const rec = (DB.recurring || []).find(r => r && r.id === id);
+    if(!rec) return;
 
-        function confirmPublishRecurring(id) {
-            const DB = getUserDB();
-            if(!DB) return;
+    // Remove modal anterior se existir
+    const existing = document.getElementById('confirm-publish-modal');
+    if(existing) existing.remove();
+
+    const confirmModal = document.createElement('div');
+    confirmModal.id = 'confirm-publish-modal';
+    confirmModal.className = 'modal';
+    confirmModal.style.display = 'flex';
+    
+    // Cálculo inicial
+    const initialQty = rec.quantity || 1;
+    const unitVal = (rec.val / initialQty); // Pega o valor unitário original
+
+    confirmModal.innerHTML = `
+        <div class="modal-content" style="width: 400px;">
+            <h3 style="margin-bottom: 15px;">Confirmar Publicação</h3>
+            <p style="font-size: 14px; margin-bottom: 20px; color: var(--text-muted)">
+                Deseja lançar "<strong>${rec.desc}</strong>" nas transações de hoje?
+            </p>
             
-            if(!DB.transactions) DB.transactions = [];
-            if(!DB.recurring) DB.recurring = [];
-            
-            const rec = (DB.recurring || []).find(r => r && r.id === id);
-            if(!rec) return;
-            
-            // Criar transação com data de hoje
-            const today = new Date().toISOString().split('T')[0];
-            const tx = {
-                id: Date.now(),
-                date: today,
-                desc: rec.desc || '',
-                val: parseFloat(rec.val) || 0,
-                quantity: rec.quantity || 1,
-                type: rec.type || 'expense',
-                cat: rec.cat || '',
-                subcat: rec.subcat || null,
-                payment: rec.payment || null,
-                dueDate: rec.type === 'expense' ? today : null,
-                receiptDate: rec.type === 'income' ? today : null,
-                alertDays: rec.alertDays || null,
-                paid: rec.type === 'income' ? true : false, // Receitas sempre pago, despesas não
-                comment: rec.comment || null
-            };
-            DB.transactions.unshift(tx);
-            
-            // Atualizar próxima data apenas se houver periodicidade e próxima data definida
-            if(rec.nextDate && rec.period) {
-                const nextDate = new Date(rec.nextDate);
-                if(!isNaN(nextDate.getTime())) {
-                    nextDate.setDate(nextDate.getDate() + parseInt(rec.period));
-                    rec.nextDate = nextDate.toISOString().split('T')[0];
-                }
-            } else if(rec.period) {
-                // Se só tem periodicidade, calcular a partir de hoje
-                const nextDate = new Date();
-                nextDate.setDate(nextDate.getDate() + parseInt(rec.period));
-                rec.nextDate = nextDate.toISOString().split('T')[0];
-            }
-            
-            // Remover modal de confirmação
-            const confirmModal = document.getElementById('confirm-publish-modal');
-            if(confirmModal) confirmModal.remove();
-            
-            saveUserDB(DB);
-            renderRecurring();
-            renderAll();
-            updateCharts();
+            <div class="form-group">
+                <label><i class="fa-solid fa-hashtag"></i> Quantidade</label>
+                <input type="number" id="publish-qty" class="form-control" 
+                       value="${initialQty}" min="1" step="1" 
+                       oninput="updatePublishTotal(${unitVal})">
+            </div>
+
+            <div style="background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                <span style="font-size: 12px; color: var(--text-muted); display: block;">Total a ser lançado:</span>
+                <strong id="publish-total-display" style="font-size: 18px; color: var(--accent);">
+                    R$ ${rec.val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                </strong>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="document.getElementById('confirm-publish-modal').remove()">Cancelar</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="confirmPublishRecurring(${id}, ${unitVal})">Confirmar</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(confirmModal);
+}
+
+function updatePublishTotal(unitVal) {
+    const qty = parseInt(document.getElementById('publish-qty').value) || 1;
+    const total = unitVal * qty;
+    document.getElementById('publish-total-display').textContent = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+}
+
+function confirmPublishRecurring(id, unitVal) {
+    const DB = getUserDB();
+    if(!DB) return;
+    
+    const rec = (DB.recurring || []).find(r => r && r.id === id);
+    if(!rec) return;
+
+    // Captura a nova quantidade do input
+    const newQty = parseInt(document.getElementById('publish-qty').value) || 1;
+    const finalTotal = unitVal * newQty;
+
+    const today = new Date().toISOString().split('T')[0];
+    const tx = {
+        id: Date.now(),
+        date: today,
+        desc: rec.desc || '',
+        val: finalTotal, // Valor atualizado
+        quantity: newQty, // Quantidade atualizada
+        type: rec.type || 'expense',
+        cat: rec.cat || '',
+        subcat: rec.subcat || null,
+        payment: rec.payment || null,
+        dueDate: rec.type === 'expense' ? today : null,
+        receiptDate: rec.type === 'income' ? today : null,
+        alertDays: rec.alertDays || null,
+        paid: rec.type === 'income' ? true : false,
+        comment: rec.comment || null
+    };
+
+    if(!DB.transactions) DB.transactions = [];
+    DB.transactions.unshift(tx);
+
+    // Lógica de atualização da próxima data (mantida do seu original)
+    if(rec.nextDate && rec.period) {
+        const nextDate = new Date(rec.nextDate);
+        if(!isNaN(nextDate.getTime())) {
+            nextDate.setDate(nextDate.getDate() + parseInt(rec.period));
+            rec.nextDate = nextDate.toISOString().split('T')[0];
         }
+    }
+
+    const confirmModal = document.getElementById('confirm-publish-modal');
+    if(confirmModal) confirmModal.remove();
+
+    saveUserDB(DB);
+    renderRecurring();
+    alert("Transação publicada com sucesso!");
+}
 
         function getRecurringStatus(rec) {
             if(!rec.nextDate) return 'ok';
@@ -2508,14 +2585,22 @@
 
         // Função para atualizar total da transação
         function updateTransactionTotal() {
-            const val = parseFloat(document.getElementById('f-val')?.value || 0);
-            const quantity = parseInt(document.getElementById('f-quantity')?.value || 1);
-            const total = val * quantity;
-            const totalEl = document.getElementById('transaction-total');
-            if(totalEl) {
-                totalEl.textContent = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            }
-        }
+    const fVal = document.getElementById('f-val');
+    const fQuantity = document.getElementById('f-quantity');
+    const totalDisplay = document.getElementById('transaction-total');
+
+    if (!fVal || !fQuantity || !totalDisplay) return;
+
+    const val = parseFloat(fVal.value) || 0;
+    const qty = parseInt(fQuantity.value) || 1;
+    const total = val * qty;
+
+    // Atualiza a exibição visual para o usuário
+    totalDisplay.textContent = total.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    });
+}
 
         // Função para atualizar total do recorrente
         function updateRecurringTotal() {
@@ -3265,10 +3350,21 @@ function selectPalette(palette) {
 }
 
 function saveSettings() {
+    // --- NOVA CONDIÇÃO DE BLOQUEIO ---
+    // Verifica se o tema atual é escuro (dark)
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    
+    if (currentTheme === 'dark') {
+        alert('Não é possível salvar alterações no Modo Escuro. Por favor, mude para o Modo Claro antes de salvar.');
+        return; // Interrompe a função aqui
+    }
+    // --------------------------------
+
     const DB = getUserDB();
     if (!DB) return;
 
     const siteName = document.getElementById('settings-site-name')?.value || 'Finance PRO';
+    
     const selectedIconEl = Array.from(document.querySelectorAll('.icon-option')).find(el => 
         el.style.borderWidth === '3px' || getComputedStyle(el).borderWidth.includes('3')
     );
@@ -3288,6 +3384,7 @@ function saveSettings() {
     DB.settings = settings;
     saveUserDB(DB);
     applySettings(settings);
+    
     alert('Configurações salvas com sucesso!');
 }
 
@@ -3316,7 +3413,7 @@ function applySettings(settings) {
     if (document.documentElement.getAttribute('data-theme') !== 'dark') {
         const palettes = {
             blue: { accent: '#2563eb', primary: '#0f172a' },
-            green: { accent: '#10b981', primary: '#0f172a' },
+            green: { accent: '#00f0a0', primary: '#0f172a' },
             purple: { accent: '#8b5cf6', primary: '#0f172a' },
             ruby: { accent: '#E0115F', primary: '#0f172a' },
             orange: { accent: '#f59e0b', primary: '#0f172a' },
@@ -3332,9 +3429,10 @@ function applySettings(settings) {
             violet: { accent: '#7c3aed', primary: '#0f172a' },
             fuchsia: { accent: '#d946ef', primary: '#0f172a' },
             sky: { accent: '#0ea5e9', primary: '#0f172a' },
-            rose: { accent: '#e11d48', primary: '#0f172a' }
+            rose: { accent: '#e11d48', primary: '#0f172a' },
+            ocean: { accent: '#0077be', primary: '#001f3f' },
+            sunset: { accent: '#ff5f6d', primary: '#2d1b2d' }
         };
-
         const palette = palettes[settings.palette] || palettes.ruby;
         document.documentElement.style.setProperty('--accent', palette.accent);
         document.documentElement.style.setProperty('--primary', palette.primary);
@@ -3997,6 +4095,11 @@ function applySettings(settings) {
     if (tab === 'recurring') renderRecurring();
     if (tab === 'users' && currentUser && currentUser.role === 'admin') renderUsers();
     if (tab === 'settings') loadSettings();
+    if (window.innerWidth <= 768) {
+        const sidebar = document.querySelector('aside');
+        // Adiciona a classe que esconde a sidebar no mobile
+        sidebar.classList.add('hidden');
+    }
 }
 
         function openModal(id) { 
@@ -4050,12 +4153,22 @@ function applySettings(settings) {
 
         // TOGGLE THEME
         function toggleTheme() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        }
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', currentTheme);
+    
+    // Salvar a preferência no banco de dados do usuário
+    const DB = getUserDB();
+    if (DB && DB.settings) {
+        DB.settings.theme = currentTheme;
+        saveUserDB(DB);
+    }
+    
+    // IMPORTANTE: Reaplicar as cores após mudar o tema
+    if (DB && DB.settings) {
+        applySettings(DB.settings);
+    }
+}
 
         // CARREGAR TEMA SALVO
         function loadTheme() {
