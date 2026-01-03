@@ -675,7 +675,7 @@
                     </div>
                 </div>
 
-                <div class="stats-grid" style="grid-template-columns: repeat(6, 1fr);">
+                <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr);">
                     <div class="stat-card" title="Saldo total atual (Receitas - Despesas)">
                         <div class="tooltip">Saldo total atual (Receitas - Despesas)</div>
                         <div class="label">SALDO ATUAL</div>
@@ -702,14 +702,14 @@
                         <div class="label">DESPESAS</div>
                         <div class="value" style="color: var(--danger);" id="stat-expense">R$ 0,00</div>
                     </div>
+                </div>
+
+                <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr); margin-bottom: 30px;">
                     <div class="stat-card" title="Percentual de eficiência (Receitas - Despesas) / Receitas">
                         <div class="tooltip">Percentual de eficiência (Receitas - Despesas) / Receitas</div>
                         <div class="label">EFICIÊNCIA</div>
                         <div class="value" id="stat-efficiency">0%</div>
                     </div>
-                </div>
-
-                <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 30px;">
                     <div class="stat-card" title="Despesas marcadas como essenciais">
                         <div class="tooltip">Despesas marcadas como essenciais</div>
                         <div class="label">DESPESAS ESSENCIAIS</div>
@@ -1629,44 +1629,60 @@
         
         // Função assíncrona para tentar sincronizar com Firebase Realtime Database
         async function syncWithFirebase() {
-            if (!currentUser || !useFirebase) return;
+    if (!currentUser || !useFirebase) return;
+    
+    try {
+        const firebaseAvailable = await waitForFirebase();
+        if (firebaseAvailable && window.firebaseDatabase && window.db) {
+            const userRef = window.firebaseDatabase.ref(window.db, `users/${currentUser.user}`);
             
-            try {
-                const firebaseAvailable = await waitForFirebase();
-                if (firebaseAvailable && window.firebaseDatabase && window.db) {
-                    const userRef = window.firebaseDatabase.ref(window.db, `users/${currentUser.user}`);
-                    const snapshot = await window.firebaseDatabase.get(userRef);
-                    if (snapshot.exists()) {
-                        const data = snapshot.val();
-                        // Garantir propriedades
-                        if (!data.transactions) data.transactions = [];
-                        if (!data.recurring) data.recurring = [];
-                        if (!data.categories) data.categories = [];
+            // Usamos onValue em vez de get para escutar alterações em tempo real
+            window.firebaseDatabase.onValue(userRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    
+                    // Garantir que as propriedades essenciais existam
+                    if (!data.transactions) data.transactions = [];
+                    if (!data.recurring) data.recurring = [];
+                    if (!data.categories) data.categories = [];
+
+                    const key = `fpro_${currentUser.user}`;
+                    const newDataStr = JSON.stringify(data);
+                    const oldDataStr = localStorage.getItem(key);
+
+                    // SÓ atualiza e renderiza se houver mudança real nos dados
+                    if (newDataStr !== oldDataStr) {
                         // Salvar no localStorage como backup
-                        const key = `fpro_${currentUser.user}`;
-                        localStorage.setItem(key, JSON.stringify(data));
-                        // Forçar atualização da interface
+                        localStorage.setItem(key, newDataStr);
+
+                        // Forçar atualização da interface e gráficos
                         if (typeof renderAll === 'function') {
-                            setTimeout(() => renderAll(), 100);
+                            // Usamos um pequeno timeout para garantir que o ciclo de renderização ocorra sem travar a UI
+                            setTimeout(() => {
+                                renderAll();
+                                if (typeof updateCharts === 'function') updateCharts();
+                            }, 100);
                         }
                     }
                 }
-            } catch (error) {
-                // Ignorar erros de permissão, offline ou API não habilitada
-                const errorMessage = error.message || '';
-                const errorCode = error.code || '';
-                
-                if (errorCode === 'PERMISSION_DENIED' || 
-                    errorCode === 'unavailable' || 
-                    errorMessage.includes('permission-denied') ||
-                    errorMessage.includes('Permission denied')) {
-                    console.warn('Firebase não disponível ou sem permissão. Continuando com localStorage apenas.');
-                    useFirebase = false; // Desabilitar tentativas futuras
-                } else {
-                    console.error('Erro ao sincronizar com Firebase:', error);
-                }
-            }
+            });
         }
+    } catch (error) {
+        // Tratamendo de erros de permissão ou conexão
+        const errorMessage = error.message || '';
+        const errorCode = error.code || '';
+        
+        if (errorCode === 'PERMISSION_DENIED' || 
+            errorCode === 'unavailable' || 
+            errorMessage.includes('permission-denied') ||
+            errorMessage.includes('Permission denied')) {
+            console.warn('Firebase não disponível ou sem permissão. Usando apenas localStorage.');
+            useFirebase = false; 
+        } else {
+            console.error('Erro ao sincronizar com Firebase:', error);
+        }
+    }
+}
 
         async function saveUserDB(data) {
             if (!currentUser) return;
@@ -2554,7 +2570,7 @@ function confirmPublishRecurring(id, unitVal) {
 
     saveUserDB(DB);
     renderRecurring();
-    alert("Transação publicada com sucesso!");
+    renderAll();
 }
 
         function getRecurringStatus(rec) {
