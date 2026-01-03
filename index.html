@@ -3667,111 +3667,120 @@ function applySettings(settings) {
         }
 
         function renderAll() {
-            const DB = getUserDB();
-            if(!DB) return;
-            
-            // Garantir que todas as propriedades existam
-            if(!DB.transactions) DB.transactions = [];
-            if(!DB.categories) DB.categories = [];
-            if(!DB.recurring) DB.recurring = [];
-            
-            const range = getTimeRange();
-            const filterCat = document.getElementById('dashboard-filter-category').value;
-            const filterSubcat = document.getElementById('dashboard-filter-subcategory').value;
-            
-            let filtered = (DB.transactions || []).filter(t => {
-                if(!t || !t.date) return false;
-                const txDate = new Date(t.date);
-                if(isNaN(txDate.getTime())) return false;
-                if(txDate < range.start || txDate > range.end) return false;
-                if(filterCat && t.cat !== filterCat) return false;
-                if(filterSubcat && t.subcat !== filterSubcat) return false;
-                return true;
-            });
+    const DB = getUserDB();
+    if(!DB) return;
+    
+    // Garantir que todas as propriedades existam
+    if(!DB.transactions) DB.transactions = [];
+    if(!DB.categories) DB.categories = [];
+    if(!DB.recurring) DB.recurring = [];
+    
+    const range = getTimeRange();
+    const filterCat = document.getElementById('dashboard-filter-category').value;
+    const filterSubcat = document.getElementById('dashboard-filter-subcategory').value;
+    
+    let filtered = (DB.transactions || []).filter(t => {
+        if(!t || !t.date) return false;
+        const txDate = new Date(t.date);
+        if(isNaN(txDate.getTime())) return false;
+        if(txDate < range.start || txDate > range.end) return false;
+        if(filterCat && t.cat !== filterCat) return false;
+        if(filterSubcat && t.subcat !== filterSubcat) return false;
+        return true;
+    });
 
-            let inc = 0, exp = 0, essential = 0, nonessential = 0, pending = 0, overdue = 0;
+    let inc = 0, exp = 0, essential = 0, nonessential = 0, pending = 0, overdue = 0;
 
-            filtered.forEach(t => {
-                if(t.type === 'income') {
-                    inc += t.val;
-                } else {
-                    exp += t.val;
-                    const cat = DB.categories.find(c => c.name === t.cat);
-                    if(cat) {
-                        const isEssential = t.subcat ? 
-                            (cat.subcategories.find(s => s.name === t.subcat)?.essential ?? cat.essential) : 
-                            cat.essential;
-                        if(isEssential) essential += t.val;
-                        else nonessential += t.val;
-                    }
-                }
-            });
-
-            // Contas a pagar e atrasadas
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            (DB.transactions || []).filter(t => t && t.type === 'expense' && t.dueDate && !t.paid).forEach(t => {
-                const dueDate = new Date(t.dueDate);
-                dueDate.setHours(0, 0, 0, 0);
-                if(dueDate < today) overdue += (parseFloat(t.val) || 0);
-                else pending += (parseFloat(t.val) || 0);
-            });
-
-            // Calcular saldo total (todas as transações)
-            let totalInc = 0, totalExp = 0;
-            (DB.transactions || []).forEach(t => {
-                if(t && t.type === 'income') totalInc += t.val;
-                else if(t && t.type === 'expense') totalExp += t.val;
-            });
-            const totalBalance = totalInc - totalExp;
-            
-            // Calcular média mensal de gastos (baseado em todas as despesas)
-            const allExpenses = (DB.transactions || []).filter(t => t && t.type === 'expense');
-            let monthlyExpenses = {};
-            allExpenses.forEach(t => {
-                if(t && t.date) {
-                    const monthKey = t.date.substring(0, 7); // YYYY-MM
-                    monthlyExpenses[monthKey] = (monthlyExpenses[monthKey] || 0) + t.val;
-                }
-            });
-            const monthCount = Object.keys(monthlyExpenses).length;
-            const avgExpense = monthCount > 0 ? Object.values(monthlyExpenses).reduce((a, b) => a + b, 0) / monthCount : 0;
-            
-            // Saldo do período filtrado
-            
-            document.getElementById('stat-balance').textContent = `R$ ${totalBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('stat-income').textContent = `R$ ${inc.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('stat-avg-expense').textContent = `R$ ${avgExpense.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('stat-expense').textContent = `R$ ${exp.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('stat-essential').textContent = `R$ ${essential.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('stat-nonessential').textContent = `R$ ${nonessential.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('stat-pending').textContent = `R$ ${pending.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('stat-overdue').textContent = `R$ ${overdue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('stat-efficiency').textContent = inc > 0 ? Math.round(((inc-exp)/inc)*100) + '%' : '0%';
-
-            // Atualizar filtros de categoria no dashboard
-            const dashCatSelect = document.getElementById('dashboard-filter-category');
-            if(dashCatSelect) {
-                const currentDashCat = dashCatSelect.value;
-                dashCatSelect.innerHTML = '<option value="">Todas</option>';
-                (DB.categories || []).forEach(cat => {
-                    if(cat && cat.name) {
-                        const opt = document.createElement('option');
-                        opt.value = cat.name;
-                        opt.textContent = cat.name;
-                        if(opt.value === currentDashCat) opt.selected = true;
-                        dashCatSelect.appendChild(opt);
-                    }
-                });
+    filtered.forEach(t => {
+        if(t.type === 'income') {
+            inc += t.val;
+        } else {
+            exp += t.val;
+            const cat = DB.categories.find(c => c.name === t.cat);
+            if(cat) {
+                const isEssential = t.subcat ? 
+                    (cat.subcategories.find(s => s.name === t.subcat)?.essential ?? cat.essential) : 
+                    cat.essential;
+                if(isEssential) essential += t.val;
+                else nonessential += t.val;
             }
-
-            renderTransactions();
-            renderCategories();
-            renderRecurring();
-            if(currentUser && currentUser.role === 'admin') renderUsers();
-            updateCharts();
         }
+    });
 
+    // Contas a pagar e atrasadas (Transações + Recorrentes)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 1. Transações pendentes/vencidas
+    (DB.transactions || []).filter(t => t && t.type === 'expense' && t.dueDate && !t.paid).forEach(t => {
+        const dueDate = new Date(t.dueDate);
+        dueDate.setHours(0, 0, 0, 0);
+        if(dueDate < today) overdue += (parseFloat(t.val) || 0);
+        else pending += (parseFloat(t.val) || 0);
+    });
+
+    // 2. Gastos Recorrentes (Baseado no próximo vencimento)
+    (DB.recurring || []).filter(r => r && r.type === 'expense' && r.nextDate).forEach(r => {
+        const nextDate = new Date(r.nextDate);
+        nextDate.setHours(0, 0, 0, 0);
+        if(nextDate < today) overdue += (parseFloat(r.val) || 0);
+        else pending += (parseFloat(r.val) || 0);
+    });
+
+    // Calcular saldo total (todas as transações)
+    let totalInc = 0, totalExp = 0;
+    (DB.transactions || []).forEach(t => {
+        if(t && t.type === 'income') totalInc += t.val;
+        else if(t && t.type === 'expense') totalExp += t.val;
+    });
+    const totalBalance = totalInc - totalExp;
+    
+    // Calcular média mensal de gastos (baseado em todas as despesas)
+    const allExpenses = (DB.transactions || []).filter(t => t && t.type === 'expense');
+    let monthlyExpenses = {};
+    allExpenses.forEach(t => {
+        if(t && t.date) {
+            const monthKey = t.date.substring(0, 7); // YYYY-MM
+            monthlyExpenses[monthKey] = (monthlyExpenses[monthKey] || 0) + t.val;
+        }
+    });
+    const monthCount = Object.keys(monthlyExpenses).length;
+    const avgExpense = monthCount > 0 ? Object.values(monthlyExpenses).reduce((a, b) => a + b, 0) / monthCount : 0;
+    
+    // Atualização do DOM
+    document.getElementById('stat-balance').textContent = `R$ ${totalBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('stat-income').textContent = `R$ ${inc.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('stat-avg-expense').textContent = `R$ ${avgExpense.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('stat-expense').textContent = `R$ ${exp.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('stat-essential').textContent = `R$ ${essential.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('stat-nonessential').textContent = `R$ ${nonessential.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('stat-pending').textContent = `R$ ${pending.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('stat-overdue').textContent = `R$ ${overdue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('stat-efficiency').textContent = inc > 0 ? Math.round(((inc-exp)/inc)*100) + '%' : '0%';
+
+    // Atualizar filtros de categoria no dashboard
+    const dashCatSelect = document.getElementById('dashboard-filter-category');
+    if(dashCatSelect) {
+        const currentDashCat = dashCatSelect.value;
+        dashCatSelect.innerHTML = '<option value="">Todas</option>';
+        (DB.categories || []).forEach(cat => {
+            if(cat && cat.name) {
+                const opt = document.createElement('option');
+                opt.value = cat.name;
+                opt.textContent = cat.name;
+                if(opt.value === currentDashCat) opt.selected = true;
+                dashCatSelect.appendChild(opt);
+            }
+        });
+    }
+
+    renderTransactions();
+    renderCategories();
+    renderRecurring();
+    if(currentUser && currentUser.role === 'admin') renderUsers();
+    updateCharts();
+}
+        
         // GRÁFICOS
         function initCharts() {
             const ctxMain = document.getElementById('mainChart').getContext('2d');
