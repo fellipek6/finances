@@ -550,6 +550,7 @@
             border-color: var(--accent) !important;
             border-width: 3px !important;
         }
+        
     </style>
 </head>
 <body>
@@ -687,15 +688,15 @@
                         <div class="label">RECEITAS</div>
                         <div class="value" style="color: var(--success);" id="stat-income">R$ 0,00</div>
                     </div>
-                    <div class="stat-card" title="Média mensal de gastos">
-                        <div class="tooltip">Média mensal de gastos</div>
-                        <div class="label">MÉDIA DE GASTOS</div>
-                        <div class="value" style="color: var(--warning);" id="stat-avg-expense">R$ 0,00</div>
-                    </div>
                     <div class="stat-card" title="Total de despesas no período">
                         <div class="tooltip">Total de despesas no período</div>
                         <div class="label">DESPESAS</div>
                         <div class="value" style="color: var(--danger);" id="stat-expense">R$ 0,00</div>
+                    </div>
+                    <div class="stat-card" title="Média mensal de gastos">
+                        <div class="tooltip">Média mensal de gastos</div>
+                        <div class="label">MÉDIA DE GASTOS</div>
+                        <div class="value" style="color: var(--warning);" id="stat-avg-expense">R$ 0,00</div>
                     </div>
                 </div>
 
@@ -4245,61 +4246,79 @@ function applySettings(settings) {
 }
             
             // Determinar período baseado no filtro
-            if(timeRangeType === 'all') {
-                // Ano atual de janeiro a dezembro
-                const now = new Date();
-                const currentYear = now.getFullYear();
-                for(let m = 0; m < 12; m++) {
-                    labels.push(monthNames[m] + '/' + String(currentYear).slice(-2));
-                    let monthInc = 0, monthExp = 0;
-                    const monthKey = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
-                    const isFuture = isFutureDate(currentYear, m + 1);
-                    
-                    if(isFuture) {
-                        incomeData.push(null);
-                        expenseData.push(null);
-                        balanceData.push(null);
-                    } else {
-                        filtered.forEach(t => {
-                            if(!t || !t.date) return;
-                            const txMonth = t.date.substring(0, 7);
-                            if(txMonth === monthKey) {
-                                if(t.type === 'income') monthInc += (parseFloat(t.val) || 0);
-                                else if(t.type === 'expense') monthExp += (parseFloat(t.val) || 0);
-                            }
-                        });
-                        incomeData.push(monthInc);
-                        expenseData.push(monthExp);
-                        balanceData.push(monthInc - monthExp);
-                    }
+            // Determinar período baseado no filtro
+if (timeRangeType === 'all') {
+    // --- LÓGICA PARA TODO O ANO ATUAL ---
+    const now = new Date();
+    const currentYear = now.getFullYear();
+
+    // Filtramos apenas por categoria/subcat, ignorando o range.start/end de data
+    let annualData = (DB.transactions || []).filter(t => {
+        if (!t || !t.date) return false;
+        if (filterCat && t.cat !== filterCat) return false;
+        if (filterSubcat && t.subcat !== filterSubcat) return false;
+        return true;
+    });
+
+    for (let m = 0; m < 12; m++) {
+        labels.push(monthNames[m] + '/' + String(currentYear).slice(-2));
+        let monthInc = 0, monthExp = 0;
+        const monthKey = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
+        const isFuture = isFutureDate(currentYear, m + 1);
+
+        if (isFuture) {
+            incomeData.push(null);
+            expenseData.push(null);
+            balanceData.push(null);
+        } else {
+            annualData.forEach(t => {
+                const txMonth = t.date.substring(0, 7); // Pega 'YYYY-MM'
+                if (txMonth === monthKey) {
+                    if (t.type === 'income') monthInc += (parseFloat(t.val) || 0);
+                    else if (t.type === 'expense') monthExp += (parseFloat(t.val) || 0);
                 }
-            } else if(timeRangeType === 'year') {
-                // Janeiro a dezembro do ano selecionado
-                const year = start.getFullYear();
-                for(let m = 0; m < 12; m++) {
-                    labels.push(monthNames[m] + '/' + String(year).slice(-2));
-                    let monthInc = 0, monthExp = 0;
-                    const monthKey = `${year}-${String(m + 1).padStart(2, '0')}`;
-                    const isFuture = isFutureDate(year, m + 1);
-                    
-                    if(isFuture) {
-                        incomeData.push(null);
-                        expenseData.push(null);
-                        balanceData.push(null);
-                    } else {
-                        filtered.forEach(t => {
-                            if(!t || !t.date) return;
-                            const txMonth = t.date.substring(0, 7);
-                            if(txMonth === monthKey) {
-                                if(t.type === 'income') monthInc += (parseFloat(t.val) || 0);
-                                else if(t.type === 'expense') monthExp += (parseFloat(t.val) || 0);
-                            }
-                        });
-                        incomeData.push(monthInc);
-                        expenseData.push(monthExp);
-                        balanceData.push(monthInc - monthExp);
-                    }
+            });
+            incomeData.push(monthInc);
+            expenseData.push(monthExp);
+            balanceData.push(monthInc - monthExp);
+        }
+    }
+
+} else if (timeRangeType === 'year') {
+    // --- LÓGICA PARA O ANO SELECIONADO ---
+    const year = start.getFullYear();
+
+    // Também ignoramos o filtro de range.start/end para permitir ver o ano todo
+    let yearData = (DB.transactions || []).filter(t => {
+        if (!t || !t.date) return false;
+        if (filterCat && t.cat !== filterCat) return false;
+        if (filterSubcat && t.subcat !== filterSubcat) return false;
+        return true;
+    });
+
+    for (let m = 0; m < 12; m++) {
+        labels.push(monthNames[m] + '/' + String(year).slice(-2));
+        let monthInc = 0, monthExp = 0;
+        const monthKey = `${year}-${String(m + 1).padStart(2, '0')}`;
+        const isFuture = isFutureDate(year, m + 1);
+
+        if (isFuture) {
+            incomeData.push(null);
+            expenseData.push(null);
+            balanceData.push(null);
+        } else {
+            yearData.forEach(t => {
+                const txMonth = t.date.substring(0, 7);
+                if (txMonth === monthKey) {
+                    if (t.type === 'income') monthInc += (parseFloat(t.val) || 0);
+                    else if (t.type === 'expense') monthExp += (parseFloat(t.val) || 0);
                 }
+            });
+            incomeData.push(monthInc);
+            expenseData.push(monthExp);
+            balanceData.push(monthInc - monthExp);
+        }
+    }
             } else if(timeRangeType === 'month') {
                 // Dias do mês
                 const year = start.getFullYear();
@@ -4394,28 +4413,39 @@ function applySettings(settings) {
 
             // Gráfico de Eficiência
             if(efficiencyChart) {
-                const efficiencyData = [];
-                labels.forEach((_, i) => {
-                    const inc = incomeData[i] || 0;
-                    const exp = expenseData[i] || 0;
-                    const efficiency = inc > 0 ? Math.round(((inc - exp) / inc) * 100) : 0;
-                    efficiencyData.push(efficiency);
-                });
+    const efficiencyData = [];
+    labels.forEach((_, i) => {
+        // Removemos o "|| 0" para conseguir detectar se o dado original é null (futuro)
+        const inc = incomeData[i];
+        const exp = expenseData[i];
 
-                efficiencyChart.data.labels = labels.length > 0 ? labels : ['Sem dados'];
-                efficiencyChart.data.datasets = [{
-                    label: 'Eficiência (%)',
-                    data: efficiencyData.length > 0 ? efficiencyData : [0],
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    spanGaps: true
-                }];
-                efficiencyChart.update('active');
-            }
+        // Se o dado for null (definido na lógica anterior como futuro), empurra null
+        if (inc === null || exp === null) {
+            efficiencyData.push(null);
+        } else {
+            // Caso contrário, calcula a eficiência (usando 0 se for indefinido, mas não null)
+            const valInc = inc || 0;
+            const valExp = exp || 0;
+            const efficiency = valInc > 0 ? Math.round(((valInc - valExp) / valInc) * 100) : 0;
+            efficiencyData.push(efficiency);
+        }
+    });
+
+    efficiencyChart.data.labels = labels.length > 0 ? labels : ['Sem dados'];
+    efficiencyChart.data.datasets = [{
+        label: 'Eficiência (%)',
+        data: efficiencyData.length > 0 ? efficiencyData : [0],
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        // spanGaps deve ser false para não conectar a linha entre pontos nulos
+        spanGaps: false 
+    }];
+    efficiencyChart.update('active');
+}
 
             // Gráfico de Saldo
             if(balanceChart) {
