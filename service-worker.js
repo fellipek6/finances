@@ -4,7 +4,7 @@ const urlsToCache = [
   '/index.html',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap',
-  'https://i.imgur.com/xXj8Zdo.png',
+  'https://i.imgur.com/QaYoyv9.png',
   'https://raw.githubusercontent.com/fellipek6/finances/refs/heads/main/manifest.json'
 ];
 
@@ -85,4 +85,5 @@ self.addEventListener('fetch', event => {
           });
       })
   );
+
 }); 
