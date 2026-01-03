@@ -1,0 +1,23 @@
+{
+  
+  "name": "Gestão de Finanças",
+  "short_name": "Finances",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3f0000",
+  "icons": [
+    {
+      "src": "https://i.imgur.com/xXj8Zdo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.imgur.com/xXj8Zdo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "description": "Aplicativo para gestão financeira",
+  "scope": "/"
+}
