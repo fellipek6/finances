@@ -675,7 +675,7 @@
                     </div>
                 </div>
 
-                <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr);">
+                <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
                     <div class="stat-card" title="Saldo total atual (Receitas - Despesas)">
                         <div class="tooltip">Saldo total atual (Receitas - Despesas)</div>
                         <div class="label">SALDO ATUAL</div>
@@ -686,11 +686,6 @@
                         <div class="tooltip">Total de receitas no período</div>
                         <div class="label">RECEITAS</div>
                         <div class="value" style="color: var(--success);" id="stat-income">R$ 0,00</div>
-                    </div>
-                    <div class="stat-card" title="Saldo do período (Receitas - Despesas)">
-                        <div class="tooltip">Saldo do período (Receitas - Despesas)</div>
-                        <div class="label">SALDO</div>
-                        <div class="value" id="stat-period-balance">R$ 0,00</div>
                     </div>
                     <div class="stat-card" title="Média mensal de gastos">
                         <div class="tooltip">Média mensal de gastos</div>
@@ -3741,11 +3736,9 @@ function applySettings(settings) {
             const avgExpense = monthCount > 0 ? Object.values(monthlyExpenses).reduce((a, b) => a + b, 0) / monthCount : 0;
             
             // Saldo do período filtrado
-            const periodBalance = inc - exp;
             
             document.getElementById('stat-balance').textContent = `R$ ${totalBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('stat-income').textContent = `R$ ${inc.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('stat-period-balance').textContent = `R$ ${periodBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('stat-avg-expense').textContent = `R$ ${avgExpense.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('stat-expense').textContent = `R$ ${exp.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('stat-essential').textContent = `R$ ${essential.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
@@ -4235,17 +4228,21 @@ function applySettings(settings) {
             
             // Função para verificar se uma data é futura
             function isFutureDate(year, month, day) {
-                if(day) {
-                    const checkDate = new Date(year, month - 1, day);
-                    checkDate.setHours(0, 0, 0, 0);
-                    return checkDate > today;
-                } else {
-                    const checkDate = new Date(year, month - 1, 1);
-                    checkDate.setHours(0, 0, 0, 0);
-                    const lastDay = new Date(year, month, 0);
-                    return lastDay > today;
-                }
-            }
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1;
+
+    if (day) {
+        const checkDate = new Date(year, month - 1, day);
+        checkDate.setHours(0, 0, 0, 0);
+        return checkDate > today;
+    }
+
+    // Correção: mês futuro apenas se for após o mês atual
+    if (year > currentYear) return true;
+    if (year === currentYear && month > currentMonth) return true;
+
+    return false;
+}
             
             // Determinar período baseado no filtro
             if(timeRangeType === 'all') {
@@ -4757,6 +4754,8 @@ function applySettings(settings) {
             }
         }
 
+        
+        
         // Inicializar
         document.addEventListener('DOMContentLoaded', function() {
             loadTheme();
