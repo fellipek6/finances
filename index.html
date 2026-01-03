@@ -315,11 +315,32 @@
         [data-theme="dark"] .theme-toggle .fa-moon { opacity: 1; }
         
         @media (max-width: 768px) {
-            header { padding: 15px 20px; }
-            .menu-toggle { display: block; }
-            header .header-left ~ div { display: none !important; }
-            .user-info-mobile { display: block !important; }
-        }
+    header { padding: 15px 20px; }
+    .menu-toggle { display: block; }
+    
+    /* Permite que o container dos botões apareça */
+    header .header-left ~ div { 
+        display: flex !important; 
+        gap: 10px;
+    }
+
+    /* OCULTA o botão de tema no mobile */
+    header .header-left ~ div .theme-toggle {
+        display: none !important;
+    }
+
+    /* OCULTA as informações de texto (Nome Admin/Online) no mobile */
+    header .header-left ~ div div:last-child {
+        display: none !important;
+    }
+
+    /* GARANTE que o sino de notificação fique visível */
+    .notification-bell {
+        display: block !important;
+    }
+
+    .user-info-mobile { display: block !important; }
+}
         
         .content-area { padding: 30px 40px; max-width: 1400px; margin: 0 auto; }
         
