@@ -292,20 +292,6 @@
         .notification-dropdown-item:last-child {
             border-bottom: none;
         }
-        @media (max-width: 768px) {
-            .notifications-dropdown {
-                position: fixed;
-                top: 70px;
-                left: 10px;
-                right: 10px;
-                min-width: auto;
-                max-width: none;
-                max-height: calc(100vh - 90px);
-            }
-            .notifications-dropdown-content {
-                max-height: calc(100vh - 150px);
-            }
-        }
         .theme-toggle { padding: 8px 12px; border: 2px solid var(--border); background: var(--card); border-radius: 8px; cursor: pointer; color: var(--text-main); transition: all 0.3s; position: relative; }
         .theme-toggle:hover { border-color: var(--accent); }
         .theme-toggle i { transition: transform 0.3s, opacity 0.3s; }
@@ -330,9 +316,7 @@
     }
 
     /* OCULTA as informações de texto (Nome Admin/Online) no mobile */
-    header .header-left ~ div div:last-child {
-        display: none !important;
-    }
+    .user-profile-info { display: none !important; }
 
     /* GARANTE que o sino de notificação fique visível */
     .notification-bell {
@@ -390,11 +374,11 @@
             border-top-color: #f1f5f9;
         }
         
-        @media (max-width: 768px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        @media (max-width: 900px) {
+            .stats-grid { grid-template-columns: 1fr !important; gap: 15px; }
         }
         @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr; gap: 15px;}
             .stats-grid[style*="grid-template-columns: repeat(6"] { grid-template-columns: 1fr !important; }
             .stats-grid[style*="grid-template-columns: repeat(3"] { grid-template-columns: 1fr !important; }
         }
@@ -751,7 +735,7 @@
                         <i class="fa-solid fa-sun"></i>
                         <i class="fa-solid fa-moon"></i>
                     </button>
-                    <div style="text-align: right;">
+                    <div style="text-align: right;" class="user-profile-info">
                         <div style="font-weight: 700; font-size: 14px;" id="admin-name">Admin</div>
                         <div style="font-size: 11px; color: var(--success);">● Online</div>
                     </div>
