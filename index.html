@@ -770,7 +770,7 @@
                         <label><i class="fa-solid fa-calendar-day"></i> Data Final</label>
                         <input type="date" id="filter-date-end" class="form-control" onchange="renderAll()">
                     </div>
-                    <div class="filter-group">
+                    <div class="filter-group" style="display: none !important;">
                         <label><i class="fa-solid fa-filter"></i> Tipo</label>
                         <select id="dashboard-filter-type" onchange="updateDashboardTypeFilter()">
                             <option value="">Todos</option>
@@ -2384,6 +2384,7 @@
             updateFilterCategories();
         }
 
+        
         function updateTransactionFilters() {
             const filterType = document.getElementById('filter-type').value;
             const filterPaidGroup = document.getElementById('filter-paid-group');
@@ -5321,18 +5322,30 @@ if (timeRangeType === 'all') {
 
             // Gráfico de distribuição por categoria/subcategoria - DESPESAS (barra horizontal)
             const categoryExpenseData = {};
-            filtered.forEach(t => {
-                if(!t || !t.cat || t.type !== 'expense') return;
-                const key = filterCat && filterSubcat && t.subcat ? t.subcat : filterCat ? t.cat : t.cat;
-                if(key) {
-                    categoryExpenseData[key] = (categoryExpenseData[key] || 0) + (parseFloat(t.val) || 0);
-                }
-            });
+filtered.forEach(t => {
+    if (!t || !t.cat || t.type !== 'expense') return;
+    
+    const key = filterCat && filterSubcat && t.subcat 
+        ? t.subcat 
+        : filterCat 
+            ? t.cat 
+            : t.cat;
+            
+    if (key) {
+        categoryExpenseData[key] = (categoryExpenseData[key] || 0) + (parseFloat(t.val) || 0);
+    }
+});
 
-            const expenseCatLabels = Object.keys(categoryExpenseData);
-            const expenseCatData = Object.values(categoryExpenseData);
-            const totalExpense = expenseCatData.reduce((a, b) => a + b, 0);
-            const colors = ['#2563eb', '#10b981', '#f59e0b', '#E0115F', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+// Converter objeto em array de [label, valor] e ordenar por valor decrescente
+const sortedEntries = Object.entries(categoryExpenseData)
+    .sort(([, a], [, b]) => b - a);  // b - a = decrescente
+
+// Separar labels e valores já ordenados
+const expenseCatLabels = sortedEntries.map(([label]) => label);
+const expenseCatData   = sortedEntries.map(([, value]) => value);
+
+const totalExpense = expenseCatData.reduce((a, b) => a + b, 0);
+const colors = ['#2563eb', '#10b981', '#f59e0b', '#E0115F', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#a78bfa'];
             
             if(categoryExpenseChart) {
                 // Adicionar % e quantidade nos labels
@@ -5349,18 +5362,31 @@ if (timeRangeType === 'all') {
             }
 
             // Gráfico de distribuição por categoria/subcategoria - RECEITAS (barra horizontal)
-            const categoryIncomeData = {};
-            filtered.forEach(t => {
-                if(!t || !t.cat || t.type !== 'income') return;
-                const key = filterCat && filterSubcat && t.subcat ? t.subcat : filterCat ? t.cat : t.cat;
-                if(key) {
-                    categoryIncomeData[key] = (categoryIncomeData[key] || 0) + (parseFloat(t.val) || 0);
-                }
-            });
+            // Gráfico de distribuição por categoria/subcategoria - RECEITAS (barra horizontal)
+const categoryIncomeData = {};
+filtered.forEach(t => {
+    if (!t || !t.cat || t.type !== 'income') return;
+    
+    const key = filterCat && filterSubcat && t.subcat 
+        ? t.subcat 
+        : filterCat 
+            ? t.cat 
+            : t.cat;
+            
+    if (key) {
+        categoryIncomeData[key] = (categoryIncomeData[key] || 0) + (parseFloat(t.val) || 0);
+    }
+});
 
-            const incomeCatLabels = Object.keys(categoryIncomeData);
-            const incomeCatData = Object.values(categoryIncomeData);
-            const totalIncome = incomeCatData.reduce((a, b) => a + b, 0);
+// Converter objeto em array de [label, valor] e ordenar por valor decrescente
+const sortedIncomeEntries = Object.entries(categoryIncomeData)
+    .sort(([, a], [, b]) => b - a);  // b - a = maior para menor
+
+// Separar labels e valores já ordenados
+const incomeCatLabels = sortedIncomeEntries.map(([label]) => label);
+const incomeCatData   = sortedIncomeEntries.map(([, value]) => value);
+
+const totalIncome = incomeCatData.reduce((a, b) => a + b, 0);
             
             if(categoryIncomeChart) {
                 // Adicionar % e quantidade nos labels
