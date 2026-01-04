@@ -292,6 +292,20 @@
         .notification-dropdown-item:last-child {
             border-bottom: none;
         }
+        @media (max-width: 768px) {
+            .notifications-dropdown {
+                position: fixed;
+                top: 70px;
+                left: 10px;
+                right: 10px;
+                min-width: auto;
+                max-width: none;
+                max-height: calc(100vh - 90px);
+            }
+            .notifications-dropdown-content {
+                max-height: calc(100vh - 150px);
+            }
+        }
         .theme-toggle { padding: 8px 12px; border: 2px solid var(--border); background: var(--card); border-radius: 8px; cursor: pointer; color: var(--text-main); transition: all 0.3s; position: relative; }
         .theme-toggle:hover { border-color: var(--accent); }
         .theme-toggle i { transition: transform 0.3s, opacity 0.3s; }
@@ -792,7 +806,7 @@
                     </div>
                 </div>
 
-                <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr);">
                     <div class="stat-card" title="Saldo total atual (Receitas - Despesas)">
                         <div class="tooltip">Saldo total atual (Receitas - Despesas)</div>
                         <div class="label">SALDO ATUAL</div>
