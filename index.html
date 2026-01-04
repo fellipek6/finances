@@ -1495,7 +1495,7 @@
             <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-calculator"></i> Orçamento</h3>
             
             <div class="form-group" style="position: relative;">
-                <label><i class="fa-solid fa-search"></i> Buscar Despesa Recorrente</label>
+                <label><i class="fa-solid fa-search"></i> Buscar Receitas</label>
                 <input type="text" id="budget-search" class="form-control" placeholder="Digite para buscar..." 
                        onkeyup="filterBudgetItems()" autocomplete="off">
                 <div id="budget-dropdown" class="budget-dropdown" style="display: none;"></div>
@@ -2977,7 +2977,7 @@ function confirmPublishRecurring(id) {
             if(!modal || !container) return;
             
             if(searchInput) searchInput.value = '';
-            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Use a busca para adicionar despesas recorrentes ao orçamento.</p>';
+            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Use a busca para adicionar receitas recorrentes ao orçamento.</p>';
             updateBudgetTotal();
             modal.style.display = 'flex';
         }
@@ -3005,7 +3005,7 @@ function confirmPublishRecurring(id) {
             const addedIds = budgetSelectedItems.map(item => item.id);
             const expenses = (DB.recurring || []).filter(r => 
                 r && 
-                r.type === 'expense' && 
+                r.type === 'income' && 
                 !addedIds.includes(r.id) &&
                 (normalizeText(r.desc || '').includes(searchText) ||
                  normalizeText(r.cat || '').includes(searchText) ||
@@ -3033,7 +3033,7 @@ function confirmPublishRecurring(id) {
             if(!DB || !DB.recurring) return;
             
             const rec = (DB.recurring || []).find(r => r && r.id === id);
-            if(!rec || rec.type !== 'expense') return;
+            if(!rec || rec.type !== 'income') return;
             
             // Verificar se já foi adicionado
             if(budgetSelectedItems.find(item => item.id === id)) return;
@@ -3072,7 +3072,7 @@ function confirmPublishRecurring(id) {
             if(!container) return;
             
             if(budgetSelectedItems.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Use a busca para adicionar despesas recorrentes ao orçamento.</p>';
+                container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Use a busca para adicionar receitas recorrentes ao orçamento.</p>';
                 updateBudgetTotal();
                 return;
             }
@@ -3174,7 +3174,7 @@ function confirmPublishRecurring(id) {
                     desc: item.desc || '',
                     val: total,
                     quantity: item.quantity || 1,
-                    type: 'expense',
+                    type: 'income',
                     cat: item.cat || '',
                     subcat: item.subcat || null,
                     payment: item.payment || null,
