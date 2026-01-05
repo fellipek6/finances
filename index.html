@@ -3410,65 +3410,75 @@ function updateRecurringSubcategoryFilters() {
         }
 
         function confirmBudgetPublish() {
-            const DB = getUserDB();
-            if(!DB) return;
-            
-            if(!DB.transactions) DB.transactions = [];
-            if(!DB.recurring) DB.recurring = [];
-            
-            if(budgetSelectedItems.length === 0) {
-                alert('Nenhum item selecionado para publicar.');
-                return;
+    // 1. Janela de confirmação imediata
+    const confirmacao = confirm("Deseja realmente publicar este orçamento?");
+    if (!confirmacao) return;
+
+    const DB = getUserDB();
+    if (!DB) return;
+
+    if (!DB.transactions) DB.transactions = [];
+    if (!DB.recurring) DB.recurring = [];
+
+    if (budgetSelectedItems.length === 0) {
+        alert('Nenhum item selecionado para publicar.');
+        return;
+    }
+
+    const transactions = [];
+    const today = new Date().toISOString().split('T')[0];
+
+    budgetSelectedItems.forEach((item, index) => {
+        const total = (item.unitVal || 0) * (item.quantity || 1);
+
+        const tx = {
+            // Usando index para garantir que o ID seja único mesmo que criados no mesmo milissegundo
+            id: Date.now() + index + Math.random(), 
+            date: today,
+            desc: item.desc || '',
+            val: total,
+            quantity: item.quantity || 1,
+            type: 'income',
+            cat: item.cat || '',
+            subcat: item.subcat || null,
+            payment: item.payment || null,
+            dueDate: today,
+            receiptDate: null,
+            alertDays: item.alertDays || null,
+            paid: false,
+            comment: item.comment || null
+        };
+
+        transactions.push(tx);
+
+        // Atualizar próxima data do recorrente se existir
+        const rec = (DB.recurring || []).find(r => r && r.id === item.id);
+        if (rec && rec.nextDate && rec.period) {
+            const nextDate = new Date(rec.nextDate + 'T00:00:00'); // T00:00:00 evita erro de fuso horário
+            if (!isNaN(nextDate.getTime())) {
+                nextDate.setDate(nextDate.getDate() + parseInt(rec.period));
+                rec.nextDate = nextDate.toISOString().split('T')[0];
             }
-            
-            const transactions = [];
-            const today = new Date().toISOString().split('T')[0];
-            
-            budgetSelectedItems.forEach(item => {
-                const total = (item.unitVal || 0) * (item.quantity || 1);
-                
-                const tx = {
-                    id: Date.now() + Math.random(),
-                    date: today,
-                    desc: item.desc || '',
-                    val: total,
-                    quantity: item.quantity || 1,
-                    type: 'income',
-                    cat: item.cat || '',
-                    subcat: item.subcat || null,
-                    payment: item.payment || null,
-                    dueDate: today,
-                    receiptDate: null,
-                    alertDays: item.alertDays || null,
-                    paid: false,
-                    comment: item.comment || null
-                };
-                
-                transactions.push(tx);
-                
-                // Atualizar próxima data do recorrente
-                const rec = (DB.recurring || []).find(r => r && r.id === item.id);
-                if(rec && rec.nextDate && rec.period) {
-                    const nextDate = new Date(rec.nextDate);
-                    if(!isNaN(nextDate.getTime())) {
-                        nextDate.setDate(nextDate.getDate() + parseInt(rec.period));
-                        rec.nextDate = nextDate.toISOString().split('T')[0];
-                    }
-                }
-            });
-            
-            // Adicionar todas as transações
-            transactions.forEach(tx => {
-                DB.transactions.unshift(tx);
-            });
-            
-            saveUserDB(DB);
-            closeModal();
-            renderRecurring();
-            renderAll();
-            
-            alert(`${transactions.length} transação(ões) publicada(s) com sucesso!`);
         }
+    });
+
+    // Adicionar todas as transações ao início da lista
+    transactions.forEach(tx => {
+        DB.transactions.unshift(tx);
+    });
+
+    // Salvar e atualizar interface
+    saveUserDB(DB);
+    
+    // Limpar seleção após publicar (opcional, dependendo da sua lógica)
+    // budgetSelectedItems = []; 
+
+    closeModal();
+    renderRecurring();
+    renderAll();
+
+    alert(`${transactions.length} transação(ões) publicada(s) com sucesso!`);
+}
 
         // NOTIFICAÇÕES
         function updateNotifications() {
