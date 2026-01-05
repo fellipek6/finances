@@ -1495,7 +1495,7 @@
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
                 <label>Categoria</label>
-                    <select id="r-cat" class="form-control" onchange="updateRecurringSubcategories(); enableRecurringSubcategory();">
+                    <select id="r-cat" class="form-control" onchange="updateRecurringSubcategories()">
                         <option value="">Selecione...</option>
                 </select>
                 </div>
@@ -1583,7 +1583,7 @@
             </div>
             <div class="form-group">
                 <label>Login</label>
-                <input type="text" id="create-login" class="form-control">
+                <input type="text" id="create-login" class="form-control" oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9]/g, '')">
             </div>
             <div class="form-group">
                 <label>Senha</label>
@@ -1629,7 +1629,7 @@
             </div>
             <div class="form-group">
                 <label>Login</label>
-                <input type="text" id="user-login" class="form-control">
+                <input type="text" id="user-login" class="form-control" oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9]/g, '')">
             </div>
             <div class="form-group">
                 <label>Senha</label>
@@ -2602,141 +2602,157 @@
 
         // RECORRENTES
         function openRecurringModal(id = null) {
-            editingRecurringId = id;
-            const DB = getUserDB();
-            const modal = document.getElementById('modal-recurring');
-            const title = document.getElementById('recurring-modal-title');
+    editingRecurringId = id;
+    const DB = getUserDB();
+    const modal = document.getElementById('modal-recurring');
+    const title = document.getElementById('recurring-modal-title');
+    
+    if(!modal || !title) return;
+    
+    const rDesc = document.getElementById('r-desc');
+    const rVal = document.getElementById('r-val');
+    const rQuantity = document.getElementById('r-quantity');
+    const rType = document.getElementById('r-type');
+    const rCat = document.getElementById('r-cat');
+    const rSubcat = document.getElementById('r-subcat');
+    const rPayment = document.getElementById('r-payment');
+    const rPeriod = document.getElementById('r-period');
+    const rNextDate = document.getElementById('r-next-date');
+    const rAlertDays = document.getElementById('r-alert-days');
+    const rComment = document.getElementById('r-comment');
+    
+    // Reset inicial do formulário
+    if(rDesc) rDesc.value = '';
+    if(rVal) rVal.value = '';
+    if(rQuantity) rQuantity.value = '1';
+    if(rType) rType.value = 'expense';
+    if(rCat) rCat.value = '';
+    if(rSubcat) {
+        rSubcat.innerHTML = '<option value="">Selecione uma categoria primeiro</option>';
+        rSubcat.value = '';
+        rSubcat.disabled = true; // Desabilita por padrão para novos registros
+    }
+    if(rPayment) rPayment.value = 'pix';
+    if(rPeriod) rPeriod.value = '';
+    if(rNextDate) rNextDate.value = '';
+    if(rAlertDays) rAlertDays.value = '';
+    if(rComment) rComment.value = '';
+    
+    // Inicializa campos dependentes
+    updateRecurringCategories();
+    updateRecurringPaymentField();
+    updateRecurringTotal();
+    
+    if(id && DB) {
+        if(!DB.recurring) DB.recurring = [];
+        const rec = (DB.recurring || []).find(r => r && r.id === id);
+        
+        if(rec) {
+            title.textContent = 'Editar Registro Recorrente';
+            if(rDesc) rDesc.value = rec.desc || '';
+            if(rVal) {
+                const quantity = rec.quantity || 1;
+                rVal.value = quantity > 1 ? (rec.val / quantity).toFixed(2) : (rec.val || '');
+            }
+            if(rQuantity) rQuantity.value = rec.quantity || 1;
+            if(rType) rType.value = rec.type || 'expense';
             
-            if(!modal || !title) return;
-            
-            const rDesc = document.getElementById('r-desc');
-            const rVal = document.getElementById('r-val');
-            const rQuantity = document.getElementById('r-quantity');
-            const rType = document.getElementById('r-type');
-            const rCat = document.getElementById('r-cat');
-            const rSubcat = document.getElementById('r-subcat');
-            const rPayment = document.getElementById('r-payment');
-            const rPeriod = document.getElementById('r-period');
-            const rNextDate = document.getElementById('r-next-date');
-            const rAlertDays = document.getElementById('r-alert-days');
-            const rComment = document.getElementById('r-comment');
-            
-            if(rDesc) rDesc.value = '';
-            if(rVal) rVal.value = '';
-            if(rQuantity) rQuantity.value = '1';
-            if(rType) rType.value = 'expense';
-            if(rCat) rCat.value = '';
-            if(rSubcat) rSubcat.value = '';
-            if(rPayment) rPayment.value = 'pix';
-            if(rPeriod) rPeriod.value = '';
-            if(rNextDate) rNextDate.value = '';
-            if(rAlertDays) rAlertDays.value = '';
-            if(rComment) rComment.value = '';
-            
+            // Atualiza categorias baseadas no tipo carregado
             updateRecurringCategories();
             updateRecurringPaymentField();
-            updateRecurringTotal();
             
-            if(id && DB) {
-                if(!DB.recurring) DB.recurring = [];
-                const rec = (DB.recurring || []).find(r => r && r.id === id);
-                if(rec) {
-                    title.textContent = 'Editar Registro Recorrente';
-                    if(rDesc) rDesc.value = rec.desc || '';
-                    if(rVal) {
-                        // Calcular valor unitário se houver quantidade
-                        const quantity = rec.quantity || 1;
-                        rVal.value = quantity > 1 ? (rec.val / quantity).toFixed(2) : (rec.val || '');
+            // Delay necessário para o navegador processar as opções do Select de categoria
+            setTimeout(() => {
+                if(rCat) rCat.value = rec.cat || '';
+                if(rPayment) rPayment.value = rec.payment || 'pix';
+                if(rPeriod) rPeriod.value = rec.period || '';
+                if(rNextDate) rNextDate.value = rec.nextDate || '';
+                if(rAlertDays) rAlertDays.value = rec.alertDays || '';
+                if(rComment) rComment.value = rec.comment || '';
+                
+                // Carrega e habilita as subcategorias
+                updateRecurringSubcategories(); 
+                
+                // Segundo delay para selecionar o valor da subcategoria após ela ser habilitada
+                setTimeout(() => {
+                    if(rSubcat) {
+                        rSubcat.value = rec.subcat || '';
+                        rSubcat.disabled = false; // Garante que fique habilitado na edição
                     }
-                    if(rQuantity) rQuantity.value = rec.quantity || 1;
-                    if(rType) rType.value = rec.type || 'expense';
-                    // Atualizar categorias após definir o tipo
-                    updateRecurringCategories();
-                    updateRecurringPaymentField();
-                    // Aguardar um pouco para garantir que as opções foram carregadas
-                    setTimeout(() => {
-                    if(rCat) rCat.value = rec.cat || '';
-                    if(rPayment) rPayment.value = rec.payment || 'pix';
-                    if(rPeriod) rPeriod.value = rec.period || '';
-                    if(rNextDate) rNextDate.value = rec.nextDate || '';
-                        if(rAlertDays) rAlertDays.value = rec.alertDays || '';
-                        if(rComment) rComment.value = rec.comment || '';
-                        updateRecurringSubcategories();
-                        setTimeout(() => {
-                            if(rSubcat) rSubcat.value = rec.subcat || '';
-                            updateRecurringTotal();
-                        }, 50);
-                    }, 50);
-                }
-            } else {
-                title.textContent = 'Novo Registro Recorrente';
-            }
-            
-            // Adicionar event listeners para atualizar total
-            if(rVal) rVal.addEventListener('input', updateRecurringTotal);
-            if(rQuantity) rQuantity.addEventListener('input', updateRecurringTotal);
-            
-            modal.style.display = 'flex';
+                    updateRecurringTotal();
+                }, 50);
+            }, 100);
         }
+    } else {
+        title.textContent = 'Novo Registro Recorrente';
+    }
+    
+    // Listeners para cálculo em tempo real
+    if(rVal) rVal.addEventListener('input', updateRecurringTotal);
+    if(rQuantity) rQuantity.addEventListener('input', updateRecurringTotal);
+    
+    modal.style.display = 'flex';
+}
 
         function updateRecurringCategories() {
-            const DB = getUserDB();
-            if(!DB) return;
-            
-            if(!DB.categories) DB.categories = [];
-            
-            const type = document.getElementById('r-type')?.value;
-            const catSelect = document.getElementById('r-cat');
-            if(!catSelect) return;
-            
-            catSelect.innerHTML = '<option value="">Selecione...</option>';
-            
-            // Ordenar categorias alfabeticamente
-            const categories = (DB.categories || []).filter(c => c && c.type === type).sort((a, b) => {
-                const nameA = (a.name || '').toLowerCase();
-                const nameB = (b.name || '').toLowerCase();
-                return nameA.localeCompare(nameB, 'pt-BR');
-            });
-            
-            categories.forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat.name;
-                opt.textContent = cat.name;
-                catSelect.appendChild(opt);
-            });
-        }
+    const DB = getUserDB();
+    if (!DB || !DB.categories) return;
+    
+    const type = document.getElementById('r-type')?.value;
+    const catSelect = document.getElementById('r-cat');
+    if (!catSelect) return;
+    
+    catSelect.innerHTML = '<option value="">Selecione...</option>';
+    
+    const categories = DB.categories
+        .filter(c => c && c.type === type)
+        .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+    
+    categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.name;
+        opt.textContent = cat.name;
+        catSelect.appendChild(opt);
+    });
 
-        function updateRecurringSubcategories() {
-            const DB = getUserDB();
-            if(!DB) return;
-            
-            if(!DB.categories) DB.categories = [];
-            
-            const catName = document.getElementById('r-cat')?.value;
-            const subcatSelect = document.getElementById('r-subcat');
-            if(!subcatSelect) return;
-            
-            subcatSelect.innerHTML = '<option value="">Nenhuma</option>';
-            
-            if(catName) {
-                const cat = (DB.categories || []).find(c => c && c.name === catName);
-                if(cat && cat.subcategories && Array.isArray(cat.subcategories)) {
-                    // Ordenar subcategorias alfabeticamente
-                    const sortedSubcats = cat.subcategories.filter(sub => sub && sub.name).sort((a, b) => {
-                        const nameA = (a.name || '').toLowerCase();
-                        const nameB = (b.name || '').toLowerCase();
-                        return nameA.localeCompare(nameB, 'pt-BR');
-                    });
-                    
-                    sortedSubcats.forEach(sub => {
-                        const opt = document.createElement('option');
-                        opt.value = sub.name;
-                        opt.textContent = sub.name;
-                        subcatSelect.appendChild(opt);
-                    });
-                }
-            }
-        }
+    // Resetar subcategoria ao mudar o tipo
+    const subcatSelect = document.getElementById('r-subcat');
+    if (subcatSelect) {
+        subcatSelect.innerHTML = '<option value="">Selecione uma categoria primeiro</option>';
+        subcatSelect.disabled = true;
+    }
+}
+
+function updateRecurringSubcategories() {
+    const DB = getUserDB();
+    const catName = document.getElementById('r-cat')?.value;
+    const subcatSelect = document.getElementById('r-subcat');
+    
+    if (!subcatSelect) return;
+
+    if (!catName) {
+        subcatSelect.innerHTML = '<option value="">Selecione uma categoria primeiro</option>';
+        subcatSelect.disabled = true;
+        return;
+    }
+
+    subcatSelect.innerHTML = '<option value="">Nenhuma</option>';
+    subcatSelect.disabled = false; // Habilita o campo
+
+    const cat = DB.categories.find(c => c && c.name === catName);
+    if (cat && cat.subcategories && Array.isArray(cat.subcategories)) {
+        const sortedSubcats = cat.subcategories
+            .filter(sub => sub && sub.name)
+            .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+        
+        sortedSubcats.forEach(sub => {
+            const opt = document.createElement('option');
+            opt.value = sub.name;
+            opt.textContent = sub.name;
+            subcatSelect.appendChild(opt);
+        });
+    }
+}
 
         function updateRecurringPaymentField() {
             const type = document.getElementById('r-type').value;
@@ -3913,71 +3929,72 @@ function confirmPublishRecurring(id) {
         }
 
         async function saveCreateAccount() {
-            const name = document.getElementById('create-name').value;
-            const login = document.getElementById('create-login').value;
-            const pass = document.getElementById('create-pass').value;
+    const name = document.getElementById('create-name').value;
+    let login = document.getElementById('create-login').value;
+    const pass = document.getElementById('create-pass').value;
 
-            if(!name || !login || !pass) {
-                return alert("Todos os campos são obrigatórios");
-            }
+    // Forçar minúsculas, remover espaços e caracteres especiais do login
+    login = login.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/\s/g, '');
+    document.getElementById('create-login').value = login;
 
-            if(pass.length < 4) {
-                return alert("A senha deve ter pelo menos 4 caracteres");
-            }
+    if(!name || !login || !pass) {
+        return alert("Todos os campos são obrigatórios");
+    }
 
-            // Carregar usuários existentes
-            let users = [];
-            try {
-                users = await loadUsersFromFirebase();
-            } catch (error) {
-                users = JSON.parse(localStorage.getItem('fpro_users')) || [];
-            }
+    if(pass.length < 4) {
+        return alert("A senha deve ter pelo menos 4 caracteres");
+    }
 
-            // Verificar se login já existe
-            if(users.find(u => u.user === login)) {
-                return alert("Login já existe. Escolha outro login.");
-            }
+    // Carregar usuários existentes
+    let users = [];
+    try {
+        users = await loadUsersFromFirebase();
+    } catch (error) {
+        users = JSON.parse(localStorage.getItem('fpro_users')) || [];
+    }
 
-            const userData = {
-                user: login,
-                pass: pass,
-                name: name,
-                role: 'user' // Sempre criar como usuário
-            };
+    // Verificar se login já existe
+    if(users.find(u => u.user === login)) {
+        return alert("Login já existe. Escolha outro login.");
+    }
 
-            users.push(userData);
-            localStorage.setItem('fpro_users', JSON.stringify(users));
+    const userData = {
+        user: login,
+        pass: pass,
+        name: name,
+        role: 'user'
+    };
 
-            // Salvar no Firebase
-            if (useFirebase) {
-                try {
-                    const firebaseAvailable = await waitForFirebase();
-                    if (firebaseAvailable && window.firebaseDatabase && window.db) {
-                        const userAccountsRef = window.firebaseDatabase.ref(window.db, 'userAccounts');
-                        const snapshot = await window.firebaseDatabase.get(userAccountsRef);
-                        
-                        let userAccounts = [];
-                        if (snapshot.exists()) {
-                            const data = snapshot.val();
-                            if (Array.isArray(data)) {
-                                userAccounts = data;
-                            } else if (typeof data === 'object') {
-                                userAccounts = Object.values(data);
-                            }
-                        }
-                        
-                        userAccounts.push(userData);
-                        await window.firebaseDatabase.set(userAccountsRef, userAccounts);
-                        console.log('Conta criada no Firebase com sucesso');
-                    }
-                } catch (error) {
-                    console.error('Erro ao salvar conta no Firebase:', error);
+    users.push(userData);
+    localStorage.setItem('fpro_users', JSON.stringify(users));
+
+    if (useFirebase) {
+        try {
+            const firebaseAvailable = await waitForFirebase();
+            if (firebaseAvailable && window.firebaseDatabase && window.db) {
+                const userAccountsRef = window.firebaseDatabase.ref(window.db, 'userAccounts');
+                const snapshot = await window.firebaseDatabase.get(userAccountsRef);
+                
+                let userAccounts = [];
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (Array.isArray(data)) userAccounts = data;
+                    else if (typeof data === 'object') userAccounts = Object.values(data);
                 }
+                
+                userAccounts.push(userData);
+                await window.firebaseDatabase.set(userAccountsRef, userAccounts);
             }
-
-            alert('Conta criada com sucesso! Você já pode fazer login.');
-            closeModal();
+        } catch (error) {
+            console.error('Erro ao salvar conta no Firebase:', error);
         }
+    }
+
+    alert('Conta criada com sucesso! Você já pode fazer login.');
+    closeModal();
+}
+        
+
 
         // ALTERAR SENHA DO PRÓPRIO USUÁRIO
         function openChangePasswordModal() {
@@ -4170,17 +4187,17 @@ function saveSettings() {
 }
 
 function applySettings(settings) {
-    // Aplicar nome do site
+    // 1. Aplicar nome do site
     const logoSpan = document.querySelector('.logo span');
     if (logoSpan) logoSpan.textContent = settings.siteName || 'Finance PRO';
 
-    // Aplicar ícone
+    // 2. Aplicar ícone
     const logoIcon = document.querySelector('.logo i');
     if (logoIcon && settings.icon) {
         logoIcon.className = `fa-solid ${settings.icon}`;
     }
     
-    // Aplicar nome e ícone na tela de login
+    // 3. Aplicar nome e ícone na tela de login
     const loginIcon = document.getElementById('login-icon');
     const loginTitle = document.getElementById('login-title');
     if (loginIcon && settings.icon) {
@@ -4190,36 +4207,50 @@ function applySettings(settings) {
         loginTitle.textContent = settings.siteName || 'Finance PRO';
     }
 
-    // Aplicar paleta de cores (apenas modo claro)
-    if (document.documentElement.getAttribute('data-theme') !== 'dark') {
-        const palettes = {
-            blue: { accent: '#2563eb', primary: '#0f172a' },
-            green: { accent: '#00f0a0', primary: '#0f172a' },
-            purple: { accent: '#8b5cf6', primary: '#0f172a' },
-            ruby: { accent: '#E0115F', primary: '#0f172a' },
-            orange: { accent: '#f59e0b', primary: '#0f172a' },
-            pink: { accent: '#ec4899', primary: '#0f172a' },
-            cyan: { accent: '#06b6d4', primary: '#0f172a' },
-            teal: { accent: '#14b8a6', primary: '#0f172a' },
-            indigo: { accent: '#555555', primary: '#666666' },
-            amber: { accent: '#f59e0b', primary: '#0f172a' },
-            black: { accent: '#000000', primary: '#0f172a' },
-            gray: { accent: '#6b7280', primary: '#0f172a' },
-            lime: { accent: '#84cc16', primary: '#0f172a' },
-            emerald: { accent: '#059669', primary: '#0f172a' },
-            violet: { accent: '#7c3aed', primary: '#0f172a' },
-            fuchsia: { accent: '#d946ef', primary: '#0f172a' },
-            sky: { accent: '#0ea5e9', primary: '#0f172a' },
-            rose: { accent: '#e11d48', primary: '#0f172a' },
-            ocean: { accent: '#0077be', primary: '#001f3f' },
-            sunset: { accent: '#ff6b6b', primary: '#2d1b2d' }
-        };
-        const palette = palettes[settings.palette] || palettes.ruby;
-        document.documentElement.style.setProperty('--accent', palette.accent);
+    // 4. Definição das Paletas
+    const palettes = {
+        blue: { accent: '#2563eb', primary: '#0f172a' },
+        green: { accent: '#00ee9f', primary: '#0f172a' },
+        purple: { accent: '#8b5cf6', primary: '#0f172a' },
+        ruby: { accent: '#E0115F', primary: '#0f172a' },
+        orange: { accent: '#f59e0b', primary: '#0f172a' },
+        pink: { accent: '#ec4899', primary: '#0f172a' },
+        cyan: { accent: '#06b6d4', primary: '#0f172a' },
+        teal: { accent: '#14b8a6', primary: '#0f172a' },
+        indigo: { accent: '#555555', primary: '#666666' },
+        amber: { accent: '#f59e0b', primary: '#0f172a' },
+        black: { accent: '#000000', primary: '#0f172a' },
+        gray: { accent: '#6b7280', primary: '#0f172a' },
+        lime: { accent: '#84cc16', primary: '#0f172a' },
+        emerald: { accent: '#059669', primary: '#0f172a' },
+        violet: { accent: '#7c3aed', primary: '#0f172a' },
+        fuchsia: { accent: '#d946ef', primary: '#0f172a' },
+        sky: { accent: '#0ea5e9', primary: '#0f172a' },
+        rose: { accent: '#e11d48', primary: '#0f172a' },
+        ocean: { accent: '#0077be', primary: '#001f3f' },
+        sunset: { accent: '#ff6b6b', primary: '#2d1b2d' }
+    };
+
+    const palette = palettes[settings.palette] || palettes.ruby;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+    // 5. Aplicação das cores (Independente do tema)
+    // A cor de destaque (--accent) deve mudar sempre para atualizar botões e ícones
+    document.documentElement.style.setProperty('--accent', palette.accent);
+
+    // A cor primária (--primary) é usada para textos e elementos escuros
+    if (!isDark) {
+        // No modo claro, usamos a cor da paleta
         document.documentElement.style.setProperty('--primary', palette.primary);
+    } else {
+        // No modo escuro, forçamos o texto a ser claro (#f1f5f9) para manter o contraste
+        document.documentElement.style.setProperty('--primary', '#f1f5f9');
     }
 }
-        // DASHBOARD E RENDERIZAÇÃO
+
+
+
+// DASHBOARD E RENDERIZAÇÃO
         // Função para obter data/hora de Brasília
         function getBrasiliaDate() {
             const now = new Date();
@@ -5756,118 +5787,128 @@ const totalIncome = incomeCatData.reduce((a, b) => a + b, 0);
         let rankingSortOrder = 'desc'; // 'asc' ou 'desc'
         
         function updateRankingTable() {
-            const DB = getUserDB();
-            if(!DB) return;
-            
-            // Verificar se os elementos existem antes de acessá-los
-            const rankingFilterType = document.getElementById('ranking-filter-type');
-            const rankingFilterCategory = document.getElementById('ranking-filter-category');
-            const rankingTableBody = document.getElementById('ranking-table-body');
-            
-            if(!rankingFilterType || !rankingFilterCategory || !rankingTableBody) return;
-            
-            const filterType = rankingFilterType.value || 'expense';
-            const filterCategory = rankingFilterCategory.value || '';
-            
-            // Atualizar lista de categorias baseado no tipo
-            const currentCat = rankingFilterCategory.value;
-            rankingFilterCategory.innerHTML = '<option value="">Nenhum</option>';
-            
-            // Ordenar categorias alfabeticamente
-            const categories = (DB.categories || []).filter(c => c && c.type === filterType).sort((a, b) => {
-                const nameA = (a.name || '').toLowerCase();
-                const nameB = (b.name || '').toLowerCase();
-                return nameA.localeCompare(nameB, 'pt-BR');
-            });
-            
-            categories.forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat.name;
-                opt.textContent = cat.name;
-                if(opt.value === currentCat) opt.selected = true;
-                rankingFilterCategory.appendChild(opt);
-            });
-            
-            // Obter transações filtradas
-            const range = getTimeRange();
-            const transactions = (DB.transactions || []).filter(t => {
-                if(!t || !t.date || t.type !== filterType) return false;
-                if(filterCategory && t.cat !== filterCategory) return false;
-                const txDate = new Date(t.date);
-                if(isNaN(txDate.getTime())) return false;
-                if(txDate < range.start || txDate > range.end) return false;
-                return true;
-            });
-            
-            // Agrupar por subcategoria
-            const subcategoryData = {};
-            transactions.forEach(t => {
-                const subcat = t.subcat || 'Sem subcategoria';
-                if(!subcategoryData[subcat]) {
-                    subcategoryData[subcat] = { quantity: 0, value: 0 };
-                }
-                subcategoryData[subcat].quantity += (t.quantity || 1);
-                subcategoryData[subcat].value += t.val;
-            });
-            
-            // Converter para array e ordenar
-            let rankingData = Object.entries(subcategoryData).map(([subcat, data]) => ({
-                subcat,
-                quantity: data.quantity,
-                value: data.value
-            }));
-            
-            // Ordenar
-            rankingData.sort((a, b) => {
-                const aVal = rankingSortBy === 'value' ? a.value : a.quantity;
-                const bVal = rankingSortBy === 'value' ? b.value : b.quantity;
-                return rankingSortOrder === 'desc' ? bVal - aVal : aVal - bVal;
-            });
-            
-            // Paginação
-            const totalPages = Math.ceil(rankingData.length / rankingPageSize);
-            const startIndex = (rankingCurrentPage - 1) * rankingPageSize;
-            const endIndex = startIndex + rankingPageSize;
-            const pageData = rankingData.slice(startIndex, endIndex);
-            
-            // Renderizar tabela
-            if(pageData.length === 0) {
-                rankingTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 40px; color: var(--text-muted);">Nenhum dado encontrado</td></tr>';
-            } else {
-                rankingTableBody.innerHTML = pageData.map(item => `
-                    <tr style="border-bottom: 1px solid var(--border);">
-                        <td style="padding: 12px; font-weight: 600; color: var(--text-main);">${item.subcat}</td>
-                        <td style="padding: 12px; text-align: right; color: var(--text-main);">${item.quantity}</td>
-                        <td style="padding: 12px; text-align: right; font-weight: 700; color: var(--text-main);">R$ ${item.value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                    </tr>
-                `).join('');
-            }
-            
-            // Atualizar controles de paginação
-            const prevBtn = document.getElementById('ranking-prev');
-            const nextBtn = document.getElementById('ranking-next');
-            const pageInfo = document.getElementById('ranking-page-info');
-            
-            if(prevBtn) prevBtn.disabled = rankingCurrentPage === 1;
-            if(nextBtn) nextBtn.disabled = rankingCurrentPage >= totalPages || totalPages === 0;
-            if(pageInfo) pageInfo.textContent = `Página ${rankingCurrentPage} de ${totalPages || 1}`;
-            
-            // Atualizar ícones de ordenação
-            const quantityIcon = document.getElementById('sort-quantity-icon');
-            const valueIcon = document.getElementById('sort-value-icon');
-            
-            if(quantityIcon) {
-                quantityIcon.className = rankingSortBy === 'quantity' 
-                    ? (rankingSortOrder === 'desc' ? 'fa-solid fa-sort-down' : 'fa-solid fa-sort-up')
-                    : 'fa-solid fa-sort';
-            }
-            if(valueIcon) {
-                valueIcon.className = rankingSortBy === 'value'
-                    ? (rankingSortOrder === 'desc' ? 'fa-solid fa-sort-down' : 'fa-solid fa-sort-up')
-                    : 'fa-solid fa-sort';
-            }
+    const DB = getUserDB();
+    if(!DB) return;
+    
+    // Verificar se os elementos existem antes de acessá-los
+    const rankingFilterType = document.getElementById('ranking-filter-type');
+    const rankingFilterCategory = document.getElementById('ranking-filter-category');
+    const rankingTableBody = document.getElementById('ranking-table-body');
+    
+    if(!rankingFilterType || !rankingFilterCategory || !rankingTableBody) return;
+    
+    const filterType = rankingFilterType.value || 'expense';
+    const range = getTimeRange(); // Obtém o período global do dashboard
+
+    // --- 1. FILTRAGEM DINÂMICA DA LISTA SUSPENSA ---
+    
+    // Identificar quais categorias possuem transações no período e tipo selecionados
+    const activeTransactions = (DB.transactions || []).filter(t => {
+        if(!t || !t.date || t.type !== filterType) return false;
+        const txDate = new Date(t.date);
+        return !isNaN(txDate.getTime()) && txDate >= range.start && txDate <= range.end;
+    });
+
+    // Criar um conjunto (Set) com os nomes únicos de categorias que têm dados
+    const categoriesWithData = [...new Set(activeTransactions.map(t => t.cat))];
+
+    // Atualizar o dropdown de categorias
+    const currentSelectedCat = rankingFilterCategory.value;
+    rankingFilterCategory.innerHTML = '<option value="">Nenhum</option>';
+    
+    // Filtrar a lista global de categorias para mostrar apenas as que têm dados no período
+    const categoriesToDisplay = (DB.categories || [])
+        .filter(c => c && c.type === filterType && categoriesWithData.includes(c.name))
+        .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+    
+    categoriesToDisplay.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.name;
+        opt.textContent = cat.name;
+        if(opt.value === currentSelectedCat) opt.selected = true;
+        rankingFilterCategory.appendChild(opt);
+    });
+
+    // --- 2. FILTRAGEM DOS DADOS PARA A TABELA ---
+    
+    const filterCategory = rankingFilterCategory.value || '';
+    
+    // Refinar transações com base no filtro de categoria selecionado no dropdown do ranking
+    const finalTransactions = activeTransactions.filter(t => {
+        if(filterCategory && t.cat !== filterCategory) return false;
+        return true;
+    });
+    
+    // Agrupar por subcategoria
+    const subcategoryData = {};
+    finalTransactions.forEach(t => {
+        const subcat = t.subcat || 'Sem subcategoria';
+        if(!subcategoryData[subcat]) {
+            subcategoryData[subcat] = { quantity: 0, value: 0 };
         }
-        
+        subcategoryData[subcat].quantity += (t.quantity || 1);
+        subcategoryData[subcat].value += t.val;
+    });
+    
+    // Converter para array para ordenação
+    let rankingData = Object.entries(subcategoryData).map(([subcat, data]) => ({
+        subcat,
+        quantity: data.quantity,
+        value: data.value
+    }));
+    
+    // Aplicar ordenação (Valor ou Quantidade)
+    rankingData.sort((a, b) => {
+        const aVal = rankingSortBy === 'value' ? a.value : a.quantity;
+        const bVal = rankingSortBy === 'value' ? b.value : b.quantity;
+        return rankingSortOrder === 'desc' ? bVal - aVal : aVal - bVal;
+    });
+    
+    // --- 3. PAGINAÇÃO E RENDERIZAÇÃO ---
+    
+    const totalPages = Math.ceil(rankingData.length / rankingPageSize);
+    const startIndex = (rankingCurrentPage - 1) * rankingPageSize;
+    const pageData = rankingData.slice(startIndex, startIndex + rankingPageSize);
+    
+    if(pageData.length === 0) {
+        rankingTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 40px; color: var(--text-muted);">Nenhum dado encontrado</td></tr>';
+    } else {
+        rankingTableBody.innerHTML = pageData.map(item => `
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 12px; font-weight: 600; color: var(--text-main);">${item.subcat}</td>
+                <td style="padding: 12px; text-align: right; color: var(--text-main);">${item.quantity}</td>
+                <td style="padding: 12px; text-align: right; font-weight: 700; color: var(--text-main);">R$ ${item.value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+            </tr>
+        `).join('');
+    }
+    
+    // Atualizar botões e texto da página
+    const prevBtn = document.getElementById('ranking-prev');
+    const nextBtn = document.getElementById('ranking-next');
+    const pageInfo = document.getElementById('ranking-page-info');
+    
+    if(prevBtn) prevBtn.disabled = rankingCurrentPage === 1;
+    if(nextBtn) nextBtn.disabled = rankingCurrentPage >= totalPages || totalPages === 0;
+    if(pageInfo) pageInfo.textContent = `Página ${rankingCurrentPage} de ${totalPages || 1}`;
+    
+    // Atualizar ícones visuais de ordenação (Setas)
+    const quantityIcon = document.getElementById('sort-quantity-icon');
+    const valueIcon = document.getElementById('sort-value-icon');
+    
+    if(quantityIcon) {
+        quantityIcon.className = rankingSortBy === 'quantity' 
+            ? (rankingSortOrder === 'desc' ? 'fa-solid fa-sort-down' : 'fa-solid fa-sort-up')
+            : 'fa-solid fa-sort';
+    }
+    if(valueIcon) {
+        valueIcon.className = rankingSortBy === 'value'
+            ? (rankingSortOrder === 'desc' ? 'fa-solid fa-sort-down' : 'fa-solid fa-sort-up')
+            : 'fa-solid fa-sort';
+    }
+}
+
+
+
         function toggleRankingSort(sortBy) {
             if(rankingSortBy === sortBy) {
                 rankingSortOrder = rankingSortOrder === 'desc' ? 'asc' : 'desc';
