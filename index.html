@@ -1073,7 +1073,6 @@
                         <label><i class="fa-solid fa-search"></i> Buscar</label>
                         <div style="display: flex; gap: 5px;">
                             <input type="text" id="transactions-search" class="form-control" placeholder="Buscar..." onkeyup="renderTransactions()" style="margin: 0;">
-                            <button class="btn btn-secondary" onclick="document.getElementById('transactions-search').value=''; renderTransactions();" style="padding: 10px; min-width: auto;"><i class="fa-solid fa-times"></i></button>
                         </div>
                     </div>
                     <div class="filter-group" style="flex: 0 0 auto;">
@@ -1156,7 +1155,6 @@
                         <label><i class="fa-solid fa-search"></i> Buscar</label>
                         <div style="display: flex; gap: 5px;">
                             <input type="text" id="recurring-search" class="form-control" placeholder="Buscar..." onkeyup="renderRecurring()" style="margin: 0;">
-                            <button class="btn btn-secondary" onclick="document.getElementById('recurring-search').value=''; renderRecurring();" style="padding: 10px; min-width: auto;"><i class="fa-solid fa-times"></i></button>
                         </div>
                     </div>
                     <div class="filter-group" style="flex: 0 0 auto;">
@@ -1382,7 +1380,7 @@
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
                 <div>
                     <label><i class="fa-solid fa-dollar-sign"></i> Valor</label>
-                    <input type="number" id="f-val" class="form-control" step="0.01" oninput="updateTransactionTotal()">
+                    <input type="number" id="f-val" class="form-control" step="0.001" oninput="updateTransactionTotal()">
                 </div>
                 <div>
                     <label><i class="fa-solid fa-hashtag"></i> Quantidade</label>
@@ -2489,7 +2487,7 @@
                         <td style="font-weight:600">${t.desc}${t.comment ? '<br><small style="color:var(--text-muted)">' + t.comment + '</small>' : ''}</td>
                         <td>${t.cat}</td>
                         <td>${t.subcat || '-'}</td>
-                        <td style="font-weight:700">R$ ${t.val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td style="font-weight:700">R$ ${t.val.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 3})}</td>
                         <td><span class="badge ${t.type === 'income' ? 'badge-income' : 'badge-expense'}">${t.type === 'income' ? 'Entrada' : 'Saída'}</span></td>
                         <td>${paymentDisplay}</td>
                         <td>${dueDateDisplay}</td>
@@ -2686,7 +2684,7 @@
             if(rDesc) rDesc.value = rec.desc || '';
             if(rVal) {
                 const quantity = rec.quantity || 1;
-                rVal.value = quantity > 1 ? (rec.val / quantity).toFixed(2) : (rec.val || '');
+                rVal.value = quantity > 1 ? (rec.val / quantity).toFixed(3) : (rec.val || '');
             }
             if(rQuantity) rQuantity.value = rec.quantity || 1;
             if(rType) rType.value = rec.type || 'expense';
@@ -2804,7 +2802,7 @@ function updateRecurringSubcategories() {
             
             const quantity = parseInt(document.getElementById('r-quantity')?.value || 1);
             const unitValue = parseFloat(document.getElementById('r-val')?.value || 0);
-            const totalValue = Math.round((unitValue * quantity) * 100) / 100; // Arredondar para 2 casas decimais
+            const totalValue = Math.round((unitValue * quantity) * 1000) / 1000; // Arredondar para 2 casas decimais
             const rec = {
                 id: editingRecurringId || Date.now(),
                 desc: document.getElementById('r-desc')?.value || '',
@@ -3020,7 +3018,8 @@ function confirmPublishRecurring(id) {
     // Atualiza a exibição visual para o usuário
     totalDisplay.textContent = total.toLocaleString('pt-BR', {
         style: 'currency',
-        currency: 'BRL'
+        currency: 'BRL',
+        maximumFractionDigits: 3
     });
 }
 
@@ -3031,7 +3030,12 @@ function confirmPublishRecurring(id) {
             const total = Math.round((val * quantity) * 100) / 100; // Arredondar para 2 casas decimais
             const totalEl = document.getElementById('recurring-total');
             if(totalEl) {
-                totalEl.textContent = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                totalEl.textContent = total.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 3 
+        });
             }
         }
 
@@ -6094,7 +6098,7 @@ function resetDashboardFilters() {
     const now = getBrasiliaDate();
     const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     
-    if(document.getElementById('time-range-type')) document.getElementById('time-range-type').value = 'month';
+    if(document.getElementById('time-range-type')) document.getElementById('time-range-type').value = 'all';
     if(document.getElementById('filter-month')) document.getElementById('filter-month').value = monthStr;
     if(document.getElementById('filter-year')) document.getElementById('filter-year').value = now.getFullYear();
     if(document.getElementById('filter-date-start')) document.getElementById('filter-date-start').value = '';
