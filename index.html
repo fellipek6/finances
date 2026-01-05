@@ -669,6 +669,22 @@
             border-width: 3px !important;
         }
         
+        .btn-reset {
+    width: 42px;    /* Largura fixa */
+    height: 42px;   /* Altura fixa (igual à altura padrão dos inputs) */
+    padding: 0;     /* Remove o padding interno */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px !important; /* Garante que não encolha em telas menores */
+}
+
+/* Efeito de rotação ao passar o mouse */
+.btn-reset:hover i {
+    transform: rotate(180deg);
+    transition: transform 0.4s ease;
+}
+
     </style>
 </head>
 <body>
@@ -784,6 +800,12 @@
                     <div class="filter-group" id="filter-date-end-group" style="display: none;">
                         <label><i class="fa-solid fa-calendar-day"></i> Data Final</label>
                         <input type="date" id="filter-date-end" class="form-control" onchange="renderAll()">
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-secondary btn-reset" onclick="resetDashboardFilters()" title="Resetar Filtros">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -1054,6 +1076,12 @@
                             <button class="btn btn-secondary" onclick="document.getElementById('transactions-search').value=''; renderTransactions();" style="padding: 10px; min-width: auto;"><i class="fa-solid fa-times"></i></button>
                         </div>
                     </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-secondary btn-reset" onclick="resetTransactionFilters()" title="Resetar Filtros">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="table-container">
@@ -1130,6 +1158,12 @@
                             <input type="text" id="recurring-search" class="form-control" placeholder="Buscar..." onkeyup="renderRecurring()" style="margin: 0;">
                             <button class="btn btn-secondary" onclick="document.getElementById('recurring-search').value=''; renderRecurring();" style="padding: 10px; min-width: auto;"><i class="fa-solid fa-times"></i></button>
                         </div>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-secondary btn-reset" onclick="resetRecurringFilters()" title="Resetar Filtros">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="table-container">
@@ -3003,121 +3037,111 @@ function confirmPublishRecurring(id) {
 
         // Função para atualizar filtros de recorrentes
         function updateRecurringFilters() {
-            const DB = getUserDB();
-            if(!DB) return;
+    const DB = getUserDB();
+    if(!DB) return;
+    
+    if(!DB.categories) DB.categories = [];
+    
+    // CORREÇÃO: Capturando o valor do elemento corretamente
+    const filterType = document.getElementById('recurring-filter-type')?.value || '';
+    
+    const categoryGroup = document.getElementById('recurring-filter-category-group');
+    const subcategoryGroup = document.getElementById('recurring-filter-subcategory-group');
+    const categorySelect = document.getElementById('recurring-filter-category');
+    const subcategorySelect = document.getElementById('recurring-filter-subcategory');
+    
+    if(filterType) {
+        if(categoryGroup) categoryGroup.style.display = 'block';
+        if(categorySelect) {
+            const currentCat = categorySelect.value;
+            categorySelect.innerHTML = '<option value="">Todas</option>';
             
-            if(!DB.categories) DB.categories = [];
-            
-            const filterType = document.getElementById('recurring-filter-type')?.value || '';
-            const categoryGroup = document.getElementById('recurring-filter-category-group');
-            const subcategoryGroup = document.getElementById('recurring-filter-subcategory-group');
-            const categorySelect = document.getElementById('recurring-filter-category');
-            const subcategorySelect = document.getElementById('recurring-filter-subcategory');
-            
-            if(filterType) {
-                if(categoryGroup) categoryGroup.style.display = 'block';
-                if(categorySelect) {
-                    const currentCat = categorySelect.value;
-                    categorySelect.innerHTML = '<option value="">Todas</option>';
-                    
-                    // Obter categorias visíveis dos recorrentes
-                    const searchText = normalizeText(document.getElementById('recurring-search')?.value || '');
-                    const visibleRecurring = (DB.recurring || []).filter(rec => {
-                        if(!rec) return false;
-                        if(filterType && rec.type !== filterType) return false;
-                        if(searchText) {
-                            const searchIn = normalizeText(rec.desc) + ' ' + normalizeText(rec.cat) + ' ' + normalizeText(rec.subcat || '');
-                            if(!searchIn.includes(searchText)) return false;
-                        }
-                        return true;
-                    });
-                    const visibleCategories = new Set(visibleRecurring.map(r => r.cat).filter(c => c));
-                    
-                    // Ordenar categorias alfabeticamente e filtrar apenas as visíveis
-                    const categories = (DB.categories || []).filter(c => {
-                        if(!c || c.type !== filterType) return false;
-                        return visibleCategories.size === 0 || visibleCategories.has(c.name);
-                    }).sort((a, b) => {
-                        const nameA = (a.name || '').toLowerCase();
-                        const nameB = (b.name || '').toLowerCase();
-                        return nameA.localeCompare(nameB, 'pt-BR');
-                    });
-                    
-                    categories.forEach(cat => {
-                        const opt = document.createElement('option');
-                        opt.value = cat.name;
-                        opt.textContent = cat.name;
-                        if(opt.value === currentCat) opt.selected = true;
-                        categorySelect.appendChild(opt);
-                    });
-                    
-                    // Atualizar subcategorias
-                    updateRecurringSubcategoryFilters();
+            const searchText = normalizeText(document.getElementById('recurring-search')?.value || '');
+            const visibleRecurring = (DB.recurring || []).filter(rec => {
+                if(!rec) return false;
+                if(filterType && rec.type !== filterType) return false;
+                if(searchText) {
+                    const searchIn = normalizeText(rec.desc) + ' ' + normalizeText(rec.cat) + ' ' + normalizeText(rec.subcat || '');
+                    if(!searchIn.includes(searchText)) return false;
                 }
-            } else {
-                if(categoryGroup) categoryGroup.style.display = 'none';
-                if(subcategoryGroup) subcategoryGroup.style.display = 'none';
-                if(categorySelect) categorySelect.value = '';
-                if(subcategorySelect) subcategorySelect.value = '';
-            }
+                return true;
+            });
+            const visibleCategories = new Set(visibleRecurring.map(r => r.cat).filter(c => c));
             
-            renderRecurring();
+            const categories = (DB.categories || []).filter(c => {
+                if(!c || c.type !== filterType) return false;
+                return visibleCategories.size === 0 || visibleCategories.has(c.name);
+            }).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
+            
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.name;
+                opt.textContent = cat.name;
+                if(opt.value === currentCat) opt.selected = true;
+                categorySelect.appendChild(opt);
+            });
+            
+            updateRecurringSubcategoryFilters();
         }
+    } else {
+        if(categoryGroup) categoryGroup.style.display = 'none';
+        if(subcategoryGroup) subcategoryGroup.style.display = 'none';
+        if(categorySelect) categorySelect.value = '';
+        if(subcategorySelect) subcategorySelect.value = '';
+    }
+    
+    renderRecurring();
+}
 
-        function updateRecurringSubcategoryFilters() {
-            const DB = getUserDB();
-            if(!DB) return;
-            
-            if(!DB.categories) DB.categories = [];
-            
-            const catName = document.getElementById('recurring-filter-category')?.value;
-            const subcatSelect = document.getElementById('recurring-filter-subcategory');
-            const subcategoryGroup = document.getElementById('recurring-filter-subcategory-group');
-            
-            if(!subcatSelect) return;
-            
-            if(catName) {
-                if(subcategoryGroup) subcategoryGroup.style.display = 'block';
-                const currentSubcat = subcatSelect.value;
-                subcatSelect.innerHTML = '<option value="">Todas</option>';
-                // Obter subcategorias visíveis dos recorrentes
-                const searchText = normalizeText(document.getElementById('recurring-search')?.value || '');
-                const visibleRecurring = (DB.recurring || []).filter(rec => {
-                    if(!rec || rec.cat !== catName) return false;
-                    if(filterType && rec.type !== filterType) return false;
-                    if(searchText) {
-                        const searchIn = normalizeText(rec.desc) + ' ' + normalizeText(rec.cat) + ' ' + normalizeText(rec.subcat || '');
-                        if(!searchIn.includes(searchText)) return false;
-                    }
-                    return true;
-                });
-                const visibleSubcats = new Set(visibleRecurring.map(r => r.subcat).filter(s => s));
-                
-                const cat = (DB.categories || []).find(c => c && c.name === catName);
-                if(cat && cat.subcategories && Array.isArray(cat.subcategories)) {
-                    // Ordenar subcategorias alfabeticamente e filtrar apenas as visíveis
-                    const sortedSubcats = cat.subcategories.filter(sub => {
-                        if(!sub || !sub.name) return false;
-                        return visibleSubcats.size === 0 || visibleSubcats.has(sub.name);
-                    }).sort((a, b) => {
-                        const nameA = (a.name || '').toLowerCase();
-                        const nameB = (b.name || '').toLowerCase();
-                        return nameA.localeCompare(nameB, 'pt-BR');
-                    });
-                    
-                    sortedSubcats.forEach(sub => {
-                        const opt = document.createElement('option');
-                        opt.value = sub.name;
-                        opt.textContent = sub.name;
-                        if(opt.value === currentSubcat) opt.selected = true;
-                        subcatSelect.appendChild(opt);
-                    });
-                }
-            } else {
-                if(subcategoryGroup) subcategoryGroup.style.display = 'none';
-                subcatSelect.innerHTML = '<option value="">Todas</option>';
+function updateRecurringSubcategoryFilters() {
+    const DB = getUserDB();
+    if(!DB) return;
+    
+    // CORREÇÃO: Definindo filterType localmente para evitar o ReferenceError
+    const filterType = document.getElementById('recurring-filter-type')?.value || '';
+    const catName = document.getElementById('recurring-filter-category')?.value;
+    const subcatSelect = document.getElementById('recurring-filter-subcategory');
+    const subcategoryGroup = document.getElementById('recurring-filter-subcategory-group');
+    
+    if(!subcatSelect) return;
+    
+    if(catName) {
+        if(subcategoryGroup) subcategoryGroup.style.display = 'block';
+        const currentSubcat = subcatSelect.value;
+        subcatSelect.innerHTML = '<option value="">Todas</option>';
+        
+        const searchText = normalizeText(document.getElementById('recurring-search')?.value || '');
+        const visibleRecurring = (DB.recurring || []).filter(rec => {
+            if(!rec || rec.cat !== catName) return false;
+            if(filterType && rec.type !== filterType) return false;
+            if(searchText) {
+                const searchIn = normalizeText(rec.desc) + ' ' + normalizeText(rec.cat) + ' ' + normalizeText(rec.subcat || '');
+                if(!searchIn.includes(searchText)) return false;
             }
+            return true;
+        });
+        const visibleSubcats = new Set(visibleRecurring.map(r => r.subcat).filter(s => s));
+        
+        const cat = (DB.categories || []).find(c => c && c.name === catName);
+        if(cat && cat.subcategories && Array.isArray(cat.subcategories)) {
+            const sortedSubcats = cat.subcategories.filter(sub => {
+                if(!sub || !sub.name) return false;
+                return visibleSubcats.size === 0 || visibleSubcats.has(sub.name);
+            }).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
+            
+            sortedSubcats.forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub.name;
+                opt.textContent = sub.name;
+                if(opt.value === currentSubcat) opt.selected = true;
+                subcatSelect.appendChild(opt);
+            });
         }
+    } else {
+        if(subcategoryGroup) subcategoryGroup.style.display = 'none';
+        subcatSelect.innerHTML = '<option value="">Todas</option>';
+    }
+}
 
         function renderRecurring() {
             const DB = getUserDB();
@@ -6064,6 +6088,52 @@ async function confirmDeleteAccount() {
         }
     }
 }
+
+// Reset de Filtros do Dashboard
+function resetDashboardFilters() {
+    const now = getBrasiliaDate();
+    const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    
+    if(document.getElementById('time-range-type')) document.getElementById('time-range-type').value = 'month';
+    if(document.getElementById('filter-month')) document.getElementById('filter-month').value = monthStr;
+    if(document.getElementById('filter-year')) document.getElementById('filter-year').value = now.getFullYear();
+    if(document.getElementById('filter-date-start')) document.getElementById('filter-date-start').value = '';
+    if(document.getElementById('filter-date-end')) document.getElementById('filter-date-end').value = '';
+    
+    // Filtros do Ranking de Subcategorias
+    if(document.getElementById('ranking-filter-type')) document.getElementById('ranking-filter-type').value = 'expense';
+    if(document.getElementById('ranking-filter-category')) document.getElementById('ranking-filter-category').value = '';
+    
+    updateTimeRange(); // Esta função já chama o renderAll()
+}
+
+// Reset de Filtros de Transações
+function resetTransactionFilters() {
+    const now = getBrasiliaDate();
+    const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    if(document.getElementById('trans-time-range-type')) document.getElementById('trans-time-range-type').value = 'all';
+    if(document.getElementById('trans-filter-month')) document.getElementById('trans-filter-month').value = monthStr;
+    if(document.getElementById('filter-type')) document.getElementById('filter-type').value = '';
+    if(document.getElementById('filter-category')) document.getElementById('filter-category').value = '';
+    if(document.getElementById('filter-subcategory')) document.getElementById('filter-subcategory').value = '';
+    if(document.getElementById('filter-paid')) document.getElementById('filter-paid').value = '';
+    if(document.getElementById('transactions-search')) document.getElementById('transactions-search').value = '';
+
+    updateTransactionTimeRange();
+    updateTransactionFilters();
+}
+
+// Reset de Filtros de Recorrentes
+function resetRecurringFilters() {
+    if(document.getElementById('recurring-filter-type')) document.getElementById('recurring-filter-type').value = '';
+    if(document.getElementById('recurring-filter-category')) document.getElementById('recurring-filter-category').value = '';
+    if(document.getElementById('recurring-filter-subcategory')) document.getElementById('recurring-filter-subcategory').value = '';
+    if(document.getElementById('recurring-search')) document.getElementById('recurring-search').value = '';
+
+    updateRecurringFilters();
+}
+
     </script>
 </body>
 </html>
