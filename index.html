@@ -763,6 +763,7 @@
                         <label><i class="fa-solid fa-calendar-alt"></i> Período</label>
                         <select id="time-range-type" onchange="updateTimeRange()">
                             <option value="all">Todos</option>
+                            <option value="today">Hoje</option>
                             <option value="month">Mês/Ano</option>
                             <option value="year">Ano</option>
                             <option value="custom">Personalizado</option>
@@ -784,26 +785,6 @@
                         <label><i class="fa-solid fa-calendar-day"></i> Data Final</label>
                         <input type="date" id="filter-date-end" class="form-control" onchange="renderAll()">
                     </div>
-                    <div class="filter-group" style="display: none !important;">
-                        <label><i class="fa-solid fa-filter"></i> Tipo</label>
-                        <select id="dashboard-filter-type" onchange="updateDashboardTypeFilter()">
-                            <option value="">Todos</option>
-                            <option value="expense">Despesa</option>
-                            <option value="income">Receita</option>
-                        </select>
-                    </div>
-                    <div class="filter-group" id="dashboard-filter-category-group" style="display: none;">
-                        <label><i class="fa-solid fa-tags"></i> Categoria</label>
-                        <select id="dashboard-filter-category" onchange="updateDashboardFilters()">
-                            <option value="">Todas</option>
-                        </select>
-                    </div>
-                    <div class="filter-group" id="dashboard-filter-subcategory-group" style="display: none;">
-                        <label><i class="fa-solid fa-tag"></i> Subcategoria</label>
-                        <select id="dashboard-filter-subcategory" onchange="renderAll()">
-                            <option value="">Todas</option>
-                        </select>
-                    </div>
                 </div>
 
                 <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr);">
@@ -812,6 +793,11 @@
                         <div class="label">SALDO ATUAL</div>
                         <div class="value" id="stat-balance">R$ 0,00</div>
                         <div style="font-size: 11px; color: var(--success);"><i class="fa-solid fa-caret-up"></i> Atualizado agora</div>
+                    </div>
+                    <div class="stat-card" title="Saldo do período filtrado (Receitas - Despesas)">
+                        <div class="tooltip">Saldo do período filtrado (Receitas - Despesas)</div>
+                        <div class="label">SALDO DO PERÍODO</div>
+                        <div class="value" id="stat-period-balance">R$ 0,00</div>
                     </div>
                     <div class="stat-card" title="Total de receitas no período">
                         <div class="tooltip">Total de receitas no período</div>
@@ -952,6 +938,56 @@
                             <canvas id="balanceChart"></canvas>
                         </div>
                     </div>
+                    <div class="chart-box">
+                        <div class="chart-title">
+                            <i class="fa-solid fa-table"></i>
+                            Ranking de Subcategorias
+                        </div>
+                        <div style="padding: 15px;">
+                            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 5px;">Tipo</label>
+                                    <select id="ranking-filter-type" class="form-control" onchange="updateRankingTable()" style="margin: 0;">
+                                        <option value="expense" selected>Despesa</option>
+                                        <option value="income">Receita</option>
+                                    </select>
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 5px;">Categoria</label>
+                                    <select id="ranking-filter-category" class="form-control" onchange="updateRankingTable()" style="margin: 0;">
+                                        <option value="">Nenhum</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="overflow-x: auto;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="background: var(--bg);">
+                                            <th style="padding: 10px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid var(--border);">Subcategoria</th>
+                                            <th style="padding: 10px; text-align: right; font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid var(--border); cursor: pointer;" onclick="toggleRankingSort('quantity')" title="Clique para ordenar">
+                                                Quantidade <i id="sort-quantity-icon" class="fa-solid fa-sort"></i>
+                                            </th>
+                                            <th style="padding: 10px; text-align: right; font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid var(--border); cursor: pointer;" onclick="toggleRankingSort('value')" title="Clique para ordenar">
+                                                Valor <i id="sort-value-icon" class="fa-solid fa-sort-down"></i>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ranking-table-body">
+                                        <tr><td colspan="3" style="text-align: center; padding: 40px; color: var(--text-muted);">Carregando...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 15px;">
+                                <button id="ranking-prev" class="btn btn-secondary" onclick="changeRankingPage(-1)" style="padding: 8px 16px; min-width: auto;" disabled>
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+                                <span id="ranking-page-info" style="color: var(--text-muted); font-size: 13px;">Página 1</span>
+                                <button id="ranking-next" class="btn btn-secondary" onclick="changeRankingPage(1)" style="padding: 8px 16px; min-width: auto;">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -961,6 +997,7 @@
                         <label><i class="fa-solid fa-calendar-alt"></i> Período</label>
                         <select id="trans-time-range-type" onchange="updateTransactionTimeRange()">
                             <option value="all">Todos</option>
+                            <option value="today">Hoje</option>
                             <option value="month">Mês/Ano</option>
                             <option value="year">Ano</option>
                             <option value="custom">Personalizado</option>
@@ -1208,40 +1245,40 @@
                             <label><i class="fa-solid fa-palette"></i> Paleta de Cores</label>
                             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; margin-top: 10px;">
                                 <div class="color-palette" data-palette="blue" onclick="selectPalette('blue')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); height: 80px; position: relative;">
-                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Azul</div>
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600; color: #000;">Azul</div>
                                 </div>
                                 <div class="color-palette" data-palette="green" onclick="selectPalette('green')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #00ee9f 0%, #00b37a 100%); height: 80px; position: relative;">
-                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Verde</div>
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600; color: #000;">Verde</div>
                                 </div>
                                 <div class="color-palette" data-palette="purple" onclick="selectPalette('purple')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); height: 80px; position: relative;">
-                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Roxo</div>
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600; color: #000;">Roxo</div>
                                 </div>
                                 <div class="color-palette" data-palette="ruby" onclick="selectPalette('ruby')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #E0115F 0%, #B80E4D 100%); height: 80px; position: relative;">
-                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Rubi</div>
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600; color: #000;">Rubi</div>
                                 </div>
                                 <div class="color-palette" data-palette="orange" onclick="selectPalette('orange')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); height: 80px; position: relative;">
-                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Laranja</div>
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600; color: #000;">Laranja</div>
                                 </div>
                                 <div class="color-palette" data-palette="pink" onclick="selectPalette('pink')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); height: 80px; position: relative;">
-                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Rosa</div>
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600; color: #000;">Rosa</div>
                                 </div>
                                 <div class="color-palette" data-palette="cyan" onclick="selectPalette('cyan')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); height: 80px; position: relative;">
-                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Ciano</div>
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600; color: #000;">Ciano</div>
                                 </div>
                                 <div class="color-palette" data-palette="teal" onclick="selectPalette('teal')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); height: 80px; position: relative;">
-                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Verde-água</div>
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600; color: #000;">Verde-água</div>
                                 </div>
                                 <div class="color-palette" data-palette="indigo" onclick="selectPalette('indigo')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #555555 0%, #666666 100%); height: 80px; position: relative;">
-                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Preto</div>
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600; color: #000;">Preto</div>
                                 </div>
                                 <div class="color-palette" data-palette="emerald" onclick="selectPalette('emerald')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); height: 80px; position: relative;">
-                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Esmeralda</div>
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600; color: #000;">Esmeralda</div>
                                 </div>
                                 <div class="color-palette" data-palette="ocean" onclick="selectPalette('ocean')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #0077be 0%, #005a8e 100%); height: 80px; position: relative;">
-                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Oceano</div>
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600; color: #000;">Oceano</div>
                                 </div>
-                                <div class="color-palette" data-palette="sunset" onclick="selectPalette('sunset')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #ff5f6d 0%, #ffc371 100%); height: 80px; position: relative;">
-                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600;">Pôr do Sol</div>
+                                <div class="color-palette" data-palette="sunset" onclick="selectPalette('sunset')" style="padding: 15px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 50%, #ff8c00 100%); height: 80px; position: relative;">
+                                    <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px; font-size: 11px; text-align: center; font-weight: 600; color: #000;">Pôr do Sol</div>
                                 </div>
                             </div>
                         </div>
@@ -1437,7 +1474,7 @@
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
                 <div>
                     <label>Valor</label>
-                    <input type="number" id="r-val" class="form-control" step="0.01" onchange="updateRecurringTotal()">
+                    <input type="number" id="r-val" class="form-control" step="0.001" onchange="updateRecurringTotal()">
                 </div>
                 <div>
                     <label>Quantidade</label>
@@ -1458,14 +1495,14 @@
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
                 <label>Categoria</label>
-                    <select id="r-cat" class="form-control" onchange="updateRecurringSubcategories()">
+                    <select id="r-cat" class="form-control" onchange="updateRecurringSubcategories(); enableRecurringSubcategory();">
                         <option value="">Selecione...</option>
                 </select>
                 </div>
                 <div>
                     <label>Subcategoria</label>
-                    <select id="r-subcat" class="form-control">
-                        <option value="">Nenhuma</option>
+                    <select id="r-subcat" class="form-control" disabled>
+                        <option value="">Selecione uma categoria primeiro</option>
                     </select>
                 </div>
             </div>
@@ -1524,7 +1561,7 @@
             <div style="background: var(--bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <span style="font-size: 16px; font-weight: 600; color: var(--text-main);">Total:</span>
-                    <strong id="budget-total" style="font-size: 24px; color: var(--danger);">R$ 0,00</strong>
+                    <strong id="budget-total" style="font-size: 24px; color: var(--text-main);">R$ 0,00</strong>
                 </div>
             </div>
             
@@ -1892,8 +1929,12 @@
         async function handleLogin() {
             if(isLocked) return;
 
-            const u = document.getElementById('user-input').value;
+            let u = document.getElementById('user-input').value;
             const p = document.getElementById('pass-input').value;
+            
+            // Forçar letras minúsculas, sem caracteres especiais e sem espaços no login
+            u = u.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/\s/g, '');
+            document.getElementById('user-input').value = u;
             const box = document.getElementById('login-box');
 
             // Carregar usuários do Firebase primeiro
@@ -1971,7 +2012,32 @@
         }
 
         function logout() {
+            // Limpar todas as informações do usuário
             currentUser = null;
+            localStorage.removeItem('fpro_user');
+            
+            // Limpar dados dos gráficos
+            if(mainChart) mainChart.destroy();
+            if(pieChart) pieChart.destroy();
+            if(essentialChart) essentialChart.destroy();
+            if(essentialLineChart) essentialLineChart.destroy();
+            if(categoryExpenseChart) categoryExpenseChart.destroy();
+            if(categoryIncomeChart) categoryIncomeChart.destroy();
+            if(efficiencyChart) efficiencyChart.destroy();
+            if(paymentChart) paymentChart.destroy();
+            if(balanceChart) balanceChart.destroy();
+            
+            // Resetar variáveis
+            mainChart = null;
+            pieChart = null;
+            essentialChart = null;
+            essentialLineChart = null;
+            categoryExpenseChart = null;
+            categoryIncomeChart = null;
+            efficiencyChart = null;
+            paymentChart = null;
+            balanceChart = null;
+            
             const loginScreen = document.getElementById('login-screen');
             const app = document.getElementById('app');
             const userInput = document.getElementById('user-input');
@@ -1985,6 +2051,10 @@
             if(userInput) userInput.value = '';
             if(passInput) passInput.value = '';
             attempts = 0;
+            isLocked = false;
+            
+            // Ocultar elementos admin
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
         }
 
         function startLockout() {
@@ -2202,13 +2272,18 @@
             if(catName) {
                 const cat = (DB.categories || []).find(c => c && c.name === catName);
                 if(cat && cat.subcategories && Array.isArray(cat.subcategories)) {
-                    cat.subcategories.forEach(sub => {
-                        if(sub && sub.name) {
-                            const opt = document.createElement('option');
-                            opt.value = sub.name;
-                            opt.textContent = sub.name;
-                            subcatSelect.appendChild(opt);
-                        }
+                    // Ordenar subcategorias alfabeticamente
+                    const sortedSubcats = cat.subcategories.filter(sub => sub && sub.name).sort((a, b) => {
+                        const nameA = (a.name || '').toLowerCase();
+                        const nameB = (b.name || '').toLowerCase();
+                        return nameA.localeCompare(nameB, 'pt-BR');
+                    });
+                    
+                    sortedSubcats.forEach(sub => {
+                        const opt = document.createElement('option');
+                        opt.value = sub.name;
+                        opt.textContent = sub.name;
+                        subcatSelect.appendChild(opt);
                     });
                 }
             }
@@ -2331,7 +2406,7 @@
                 if(filterType && t.type !== filterType) return false;
                 if(filterCat && t.cat !== filterCat) return false;
                 if(filterSubcat && t.subcat !== filterSubcat) return false;
-                if((filterType === 'expense' || filterType === 'income') && filterPaid) {
+                if(filterPaid) {
                     if(filterPaid === 'paid' && !t.paid) return false;
                     if(filterPaid === 'unpaid' && t.paid) return false;
                 }
@@ -2434,10 +2509,40 @@
             if(!catSelect || !subcatSelect) return;
             
             const filterType = document.getElementById('filter-type')?.value || '';
+            const timeRange = getTransactionTimeRange();
+            const searchText = normalizeText(document.getElementById('transactions-search')?.value || '');
+            
+            // Obter transações visíveis para filtrar categorias
+            const visibleTransactions = (DB.transactions || []).filter(t => {
+                if(!t || !t.date) return false;
+                if(timeRange) {
+                    const txDate = new Date(t.date);
+                    if(txDate < timeRange.start || txDate > timeRange.end) return false;
+                }
+                if(filterType && t.type !== filterType) return false;
+                if(searchText) {
+                    const searchIn = normalizeText(t.desc) + ' ' + normalizeText(t.cat) + ' ' + normalizeText(t.subcat || '');
+                    if(!searchIn.includes(searchText)) return false;
+                }
+                return true;
+            });
+            
+            // Obter categorias únicas das transações visíveis
+            const visibleCategories = new Set(visibleTransactions.map(t => t.cat).filter(c => c));
             
             const currentCat = catSelect.value;
             catSelect.innerHTML = '<option value="">Todas</option>';
-            (DB.categories || []).filter(c => c && c.type === filterType).forEach(cat => {
+            // Ordenar categorias alfabeticamente e filtrar apenas as visíveis
+            const categories = (DB.categories || []).filter(c => {
+                if(!c || c.type !== filterType) return false;
+                return visibleCategories.size === 0 || visibleCategories.has(c.name);
+            }).sort((a, b) => {
+                const nameA = (a.name || '').toLowerCase();
+                const nameB = (b.name || '').toLowerCase();
+                return nameA.localeCompare(nameB, 'pt-BR');
+            });
+            
+            categories.forEach(cat => {
                 const opt = document.createElement('option');
                 opt.value = cat.name;
                 opt.textContent = cat.name;
@@ -2449,16 +2554,43 @@
             if(currentCat) {
                 if(subcategoryGroup) subcategoryGroup.style.display = 'block';
                 subcatSelect.innerHTML = '<option value="">Todas</option>';
+                
+                // Obter subcategorias visíveis
+                const timeRange = getTransactionTimeRange();
+                const searchText = normalizeText(document.getElementById('transactions-search')?.value || '');
+                const visibleTransactions = (DB.transactions || []).filter(t => {
+                    if(!t || !t.date || t.cat !== currentCat) return false;
+                    if(timeRange) {
+                        const txDate = new Date(t.date);
+                        if(txDate < timeRange.start || txDate > timeRange.end) return false;
+                    }
+                    if(filterType && t.type !== filterType) return false;
+                    if(searchText) {
+                        const searchIn = normalizeText(t.desc) + ' ' + normalizeText(t.cat) + ' ' + normalizeText(t.subcat || '');
+                        if(!searchIn.includes(searchText)) return false;
+                    }
+                    return true;
+                });
+                const visibleSubcats = new Set(visibleTransactions.map(t => t.subcat).filter(s => s));
+                
                 const cat = (DB.categories || []).find(c => c && c.name === currentCat);
                 if(cat && cat.subcategories && Array.isArray(cat.subcategories)) {
-                    cat.subcategories.forEach(sub => {
-                        if(sub && sub.name) {
-                            const opt = document.createElement('option');
-                            opt.value = sub.name;
-                            opt.textContent = sub.name;
-                            if(opt.value === currentSubcat) opt.selected = true;
-                            subcatSelect.appendChild(opt);
-                        }
+                    // Ordenar subcategorias alfabeticamente e filtrar apenas as visíveis
+                    const sortedSubcats = cat.subcategories.filter(sub => {
+                        if(!sub || !sub.name) return false;
+                        return visibleSubcats.size === 0 || visibleSubcats.has(sub.name);
+                    }).sort((a, b) => {
+                        const nameA = (a.name || '').toLowerCase();
+                        const nameB = (b.name || '').toLowerCase();
+                        return nameA.localeCompare(nameB, 'pt-BR');
+                    });
+                    
+                    sortedSubcats.forEach(sub => {
+                        const opt = document.createElement('option');
+                        opt.value = sub.name;
+                        opt.textContent = sub.name;
+                        if(opt.value === currentSubcat) opt.selected = true;
+                        subcatSelect.appendChild(opt);
                     });
                 }
             } else {
@@ -2559,7 +2691,14 @@
             
             catSelect.innerHTML = '<option value="">Selecione...</option>';
             
-            (DB.categories || []).filter(c => c && c.type === type).forEach(cat => {
+            // Ordenar categorias alfabeticamente
+            const categories = (DB.categories || []).filter(c => c && c.type === type).sort((a, b) => {
+                const nameA = (a.name || '').toLowerCase();
+                const nameB = (b.name || '').toLowerCase();
+                return nameA.localeCompare(nameB, 'pt-BR');
+            });
+            
+            categories.forEach(cat => {
                 const opt = document.createElement('option');
                 opt.value = cat.name;
                 opt.textContent = cat.name;
@@ -2582,13 +2721,18 @@
             if(catName) {
                 const cat = (DB.categories || []).find(c => c && c.name === catName);
                 if(cat && cat.subcategories && Array.isArray(cat.subcategories)) {
-                    cat.subcategories.forEach(sub => {
-                        if(sub && sub.name) {
-                            const opt = document.createElement('option');
-                            opt.value = sub.name;
-                            opt.textContent = sub.name;
-                            subcatSelect.appendChild(opt);
-                        }
+                    // Ordenar subcategorias alfabeticamente
+                    const sortedSubcats = cat.subcategories.filter(sub => sub && sub.name).sort((a, b) => {
+                        const nameA = (a.name || '').toLowerCase();
+                        const nameB = (b.name || '').toLowerCase();
+                        return nameA.localeCompare(nameB, 'pt-BR');
+                    });
+                    
+                    sortedSubcats.forEach(sub => {
+                        const opt = document.createElement('option');
+                        opt.value = sub.name;
+                        opt.textContent = sub.name;
+                        subcatSelect.appendChild(opt);
                     });
                 }
             }
@@ -2610,7 +2754,7 @@
             
             const quantity = parseInt(document.getElementById('r-quantity')?.value || 1);
             const unitValue = parseFloat(document.getElementById('r-val')?.value || 0);
-            const totalValue = unitValue * quantity;
+            const totalValue = Math.round((unitValue * quantity) * 100) / 100; // Arredondar para 2 casas decimais
             const rec = {
                 id: editingRecurringId || Date.now(),
                 desc: document.getElementById('r-desc')?.value || '',
@@ -2834,10 +2978,10 @@ function confirmPublishRecurring(id) {
         function updateRecurringTotal() {
             const val = parseFloat(document.getElementById('r-val')?.value || 0);
             const quantity = parseInt(document.getElementById('r-quantity')?.value || 1);
-            const total = val * quantity;
+            const total = Math.round((val * quantity) * 100) / 100; // Arredondar para 2 casas decimais
             const totalEl = document.getElementById('recurring-total');
             if(totalEl) {
-                totalEl.textContent = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                totalEl.textContent = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             }
         }
 
@@ -2859,7 +3003,31 @@ function confirmPublishRecurring(id) {
                 if(categorySelect) {
                     const currentCat = categorySelect.value;
                     categorySelect.innerHTML = '<option value="">Todas</option>';
-                    (DB.categories || []).filter(c => c && c.type === filterType).forEach(cat => {
+                    
+                    // Obter categorias visíveis dos recorrentes
+                    const searchText = normalizeText(document.getElementById('recurring-search')?.value || '');
+                    const visibleRecurring = (DB.recurring || []).filter(rec => {
+                        if(!rec) return false;
+                        if(filterType && rec.type !== filterType) return false;
+                        if(searchText) {
+                            const searchIn = normalizeText(rec.desc) + ' ' + normalizeText(rec.cat) + ' ' + normalizeText(rec.subcat || '');
+                            if(!searchIn.includes(searchText)) return false;
+                        }
+                        return true;
+                    });
+                    const visibleCategories = new Set(visibleRecurring.map(r => r.cat).filter(c => c));
+                    
+                    // Ordenar categorias alfabeticamente e filtrar apenas as visíveis
+                    const categories = (DB.categories || []).filter(c => {
+                        if(!c || c.type !== filterType) return false;
+                        return visibleCategories.size === 0 || visibleCategories.has(c.name);
+                    }).sort((a, b) => {
+                        const nameA = (a.name || '').toLowerCase();
+                        const nameB = (b.name || '').toLowerCase();
+                        return nameA.localeCompare(nameB, 'pt-BR');
+                    });
+                    
+                    categories.forEach(cat => {
                         const opt = document.createElement('option');
                         opt.value = cat.name;
                         opt.textContent = cat.name;
@@ -2896,16 +3064,37 @@ function confirmPublishRecurring(id) {
                 if(subcategoryGroup) subcategoryGroup.style.display = 'block';
                 const currentSubcat = subcatSelect.value;
                 subcatSelect.innerHTML = '<option value="">Todas</option>';
+                // Obter subcategorias visíveis dos recorrentes
+                const searchText = normalizeText(document.getElementById('recurring-search')?.value || '');
+                const visibleRecurring = (DB.recurring || []).filter(rec => {
+                    if(!rec || rec.cat !== catName) return false;
+                    if(filterType && rec.type !== filterType) return false;
+                    if(searchText) {
+                        const searchIn = normalizeText(rec.desc) + ' ' + normalizeText(rec.cat) + ' ' + normalizeText(rec.subcat || '');
+                        if(!searchIn.includes(searchText)) return false;
+                    }
+                    return true;
+                });
+                const visibleSubcats = new Set(visibleRecurring.map(r => r.subcat).filter(s => s));
+                
                 const cat = (DB.categories || []).find(c => c && c.name === catName);
                 if(cat && cat.subcategories && Array.isArray(cat.subcategories)) {
-                    cat.subcategories.forEach(sub => {
-                        if(sub && sub.name) {
-                            const opt = document.createElement('option');
-                            opt.value = sub.name;
-                            opt.textContent = sub.name;
-                            if(opt.value === currentSubcat) opt.selected = true;
-                            subcatSelect.appendChild(opt);
-                        }
+                    // Ordenar subcategorias alfabeticamente e filtrar apenas as visíveis
+                    const sortedSubcats = cat.subcategories.filter(sub => {
+                        if(!sub || !sub.name) return false;
+                        return visibleSubcats.size === 0 || visibleSubcats.has(sub.name);
+                    }).sort((a, b) => {
+                        const nameA = (a.name || '').toLowerCase();
+                        const nameB = (b.name || '').toLowerCase();
+                        return nameA.localeCompare(nameB, 'pt-BR');
+                    });
+                    
+                    sortedSubcats.forEach(sub => {
+                        const opt = document.createElement('option');
+                        opt.value = sub.name;
+                        opt.textContent = sub.name;
+                        if(opt.value === currentSubcat) opt.selected = true;
+                        subcatSelect.appendChild(opt);
                     });
                 }
             } else {
@@ -3119,7 +3308,7 @@ function confirmPublishRecurring(id) {
                             </div>
                             <div>
                                 <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 5px;">Total</label>
-                                <div style="font-weight: 700; color: var(--danger); font-size: 18px; padding: 10px; background: var(--bg); border-radius: 8px; text-align: center;" class="budget-item-total" data-id="${item.id}">
+                                <div style="font-weight: 700; color: var(--text-main); font-size: 18px; padding: 10px; background: var(--bg); border-radius: 8px; text-align: center;" class="budget-item-total" data-id="${item.id}">
                                     R$ ${(item.unitVal * item.quantity).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                                 </div>
                             </div>
@@ -3312,14 +3501,24 @@ function confirmPublishRecurring(id) {
                             const statusText = notif.status === 'overdue' ? 'Atrasado' : 'Alerta';
                             const dateDisplay = notif.date ? notif.date.split('-').reverse().join('/') : '-';
                             
+                            // Cores compatíveis com modo noturno
+                            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                            const bgColor = isDark 
+                                ? (notif.status === 'overdue' ? 'rgba(127, 29, 29, 0.3)' : 'rgba(120, 53, 15, 0.3)')
+                                : (notif.status === 'overdue' ? 'rgba(224, 17, 95, 0.05)' : 'rgba(245, 158, 11, 0.05)');
+                            const badgeBgColor = isDark
+                                ? (notif.status === 'overdue' ? '#7f1d1d' : '#78350f')
+                                : statusColor;
+                            const badgeTextColor = isDark ? '#fca5a5' : 'white';
+                            
                             return `
-                                <div class="notification-dropdown-item" style="background: ${notif.status === 'overdue' ? 'rgba(224, 17, 95, 0.05)' : 'rgba(245, 158, 11, 0.05)'};">
+                                <div class="notification-dropdown-item" style="background: ${bgColor};">
                                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
                                         <div style="flex: 1;">
                                             <div style="font-weight: 700; font-size: 14px; color: var(--text-main); margin-bottom: 4px;">${notif.title}</div>
                                             <div style="font-size: 12px; color: var(--text-muted);">${notif.category}${notif.subcategory ? ' / ' + notif.subcategory : ''}</div>
                                         </div>
-                                        <span class="badge" style="background: ${statusColor}; color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; white-space: nowrap; margin-left: 10px;">
+                                        <span class="badge" style="background: ${badgeBgColor}; color: ${badgeTextColor}; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; white-space: nowrap; margin-left: 10px;">
                                             ${statusText}
                                         </span>
                                     </div>
@@ -3941,15 +4140,6 @@ function selectPalette(palette) {
 }
 
 function saveSettings() {
-    // --- NOVA CONDIÇÃO DE BLOQUEIO ---
-    // Verifica se o tema atual é escuro (dark)
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    
-    if (currentTheme === 'dark') {
-        alert('Não é possível salvar alterações no Modo Escuro. Por favor, mude para o Modo Claro antes de salvar.');
-        return; // Interrompe a função aqui
-    }
-    // --------------------------------
 
     const DB = getUserDB();
     if (!DB) return;
@@ -4022,7 +4212,7 @@ function applySettings(settings) {
             sky: { accent: '#0ea5e9', primary: '#0f172a' },
             rose: { accent: '#e11d48', primary: '#0f172a' },
             ocean: { accent: '#0077be', primary: '#001f3f' },
-            sunset: { accent: '#ff5f6d', primary: '#2d1b2d' }
+            sunset: { accent: '#ff6b6b', primary: '#2d1b2d' }
         };
         const palette = palettes[settings.palette] || palettes.ruby;
         document.documentElement.style.setProperty('--accent', palette.accent);
@@ -4030,10 +4220,20 @@ function applySettings(settings) {
     }
 }
         // DASHBOARD E RENDERIZAÇÃO
+        // Função para obter data/hora de Brasília
+        function getBrasiliaDate() {
+            const now = new Date();
+            // UTC-3 (Brasília)
+            const brasiliaOffset = -3 * 60; // -3 horas em minutos
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const brasiliaTime = new Date(utc + (brasiliaOffset * 60000));
+            return brasiliaTime;
+        }
+        
         function getTimeRange() {
             const timeRangeType = document.getElementById('time-range-type');
             if(!timeRangeType) {
-                const now = new Date();
+                const now = getBrasiliaDate();
                 return {
                     start: new Date(now.getFullYear(), now.getMonth(), 1),
                     end: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
@@ -4041,13 +4241,23 @@ function applySettings(settings) {
             }
             
             const type = timeRangeType.value;
-            const now = new Date();
+            const now = getBrasiliaDate();
             
             if(type === 'all') {
                 // Retornar um range muito amplo para pegar todos os dados
                 return {
                     start: new Date(2000, 0, 1),
                     end: new Date(2100, 11, 31, 23, 59, 59)
+                };
+            } else if(type === 'today') {
+                // Período "hoje" usando data/hora de Brasília
+                const today = getBrasiliaDate();
+                today.setHours(0, 0, 0, 0);
+                const endToday = new Date(today);
+                endToday.setHours(23, 59, 59, 999);
+                return {
+                    start: today,
+                    end: endToday
                 };
             } else if(type === 'month') {
                 const filterMonth = document.getElementById('filter-month');
@@ -4101,12 +4311,12 @@ function applySettings(settings) {
             if(dateEndGroup) dateEndGroup.style.display = type === 'custom' ? 'block' : 'none';
             
             if(type === 'month') {
-                const now = new Date();
+                const now = getBrasiliaDate();
                 const filterMonth = document.getElementById('filter-month');
                 if(filterMonth) filterMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             } else if(type === 'year') {
                 const filterYear = document.getElementById('filter-year');
-                if(filterYear) filterYear.value = new Date().getFullYear();
+                if(filterYear) filterYear.value = getBrasiliaDate().getFullYear();
             }
             
             renderAll();
@@ -4128,12 +4338,12 @@ function applySettings(settings) {
             if(transDateEndGroup) transDateEndGroup.style.display = type === 'custom' ? 'block' : 'none';
             
             if(type === 'month') {
-                const now = new Date();
+                const now = getBrasiliaDate();
                 const transFilterMonth = document.getElementById('trans-filter-month');
                 if(transFilterMonth) transFilterMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             } else if(type === 'year') {
                 const transFilterYear = document.getElementById('trans-filter-year');
-                if(transFilterYear) transFilterYear.value = new Date().getFullYear();
+                if(transFilterYear) transFilterYear.value = getBrasiliaDate().getFullYear();
             }
             
             renderTransactions();
@@ -4146,8 +4356,18 @@ function applySettings(settings) {
             const type = transTimeRangeType.value;
             if(type === 'all') return null;
             
-            const now = new Date();
-            if(type === 'month') {
+            const now = getBrasiliaDate();
+            if(type === 'today') {
+                // Período "hoje" usando data/hora de Brasília
+                const today = getBrasiliaDate();
+                today.setHours(0, 0, 0, 0);
+                const endToday = new Date(today);
+                endToday.setHours(23, 59, 59, 999);
+                return {
+                    start: today,
+                    end: endToday
+                };
+            } else if(type === 'month') {
                 const transFilterMonth = document.getElementById('trans-filter-month');
                 const month = transFilterMonth ? transFilterMonth.value : '';
                 if(month) {
@@ -4192,7 +4412,14 @@ function applySettings(settings) {
                     categorySelect.innerHTML = '<option value="">Todas</option>';
                     const DB = getUserDB();
                     if(DB && DB.categories) {
-                        (DB.categories || []).filter(c => c && c.type === filterType).forEach(cat => {
+                        // Ordenar categorias alfabeticamente
+                        const categories = (DB.categories || []).filter(c => c && c.type === filterType).sort((a, b) => {
+                            const nameA = (a.name || '').toLowerCase();
+                            const nameB = (b.name || '').toLowerCase();
+                            return nameA.localeCompare(nameB, 'pt-BR');
+                        });
+                        
+                        categories.forEach(cat => {
                             const opt = document.createElement('option');
                             opt.value = cat.name;
                             opt.textContent = cat.name;
@@ -4227,13 +4454,18 @@ function applySettings(settings) {
                 subcatSelect.innerHTML = '<option value="">Todas</option>';
                 const cat = (DB.categories || []).find(c => c && c.name === catName);
                 if(cat && cat.subcategories && Array.isArray(cat.subcategories)) {
-                    cat.subcategories.forEach(sub => {
-                        if(sub && sub.name) {
-                            const opt = document.createElement('option');
-                            opt.value = sub.name;
-                            opt.textContent = sub.name;
-                            subcatSelect.appendChild(opt);
-                        }
+                    // Ordenar subcategorias alfabeticamente
+                    const sortedSubcats = cat.subcategories.filter(sub => sub && sub.name).sort((a, b) => {
+                        const nameA = (a.name || '').toLowerCase();
+                        const nameB = (b.name || '').toLowerCase();
+                        return nameA.localeCompare(nameB, 'pt-BR');
+                    });
+                    
+                    sortedSubcats.forEach(sub => {
+                        const opt = document.createElement('option');
+                        opt.value = sub.name;
+                        opt.textContent = sub.name;
+                        subcatSelect.appendChild(opt);
                     });
                 }
             } else {
@@ -4254,8 +4486,10 @@ function applySettings(settings) {
     if(!DB.recurring) DB.recurring = [];
     
     const range = getTimeRange();
-    const filterCat = document.getElementById('dashboard-filter-category').value;
-    const filterSubcat = document.getElementById('dashboard-filter-subcategory').value;
+    const filterCatEl = document.getElementById('dashboard-filter-category');
+    const filterSubcatEl = document.getElementById('dashboard-filter-subcategory');
+    const filterCat = filterCatEl ? filterCatEl.value : '';
+    const filterSubcat = filterSubcatEl ? filterSubcatEl.value : '';
     
     let filtered = (DB.transactions || []).filter(t => {
         if(!t || !t.date) return false;
@@ -4313,10 +4547,40 @@ function applySettings(settings) {
     });
     const totalBalance = totalInc - totalExp;
     
-    // Calcular média mensal de gastos (baseado em todas as despesas)
-    const allExpenses = (DB.transactions || []).filter(t => t && t.type === 'expense');
+    // Calcular saldo do período filtrado
+    const periodBalance = inc - exp;
+    
+    // Calcular média mensal de gastos (baseado no ano atual ou filtrado)
+    const timeRangeTypeEl = document.getElementById('time-range-type');
+    const timeRangeType = timeRangeTypeEl ? timeRangeTypeEl.value : 'all';
+    let targetYear = new Date().getFullYear();
+    
+    if(timeRangeType === 'year') {
+        const filterYearEl = document.getElementById('filter-year');
+        targetYear = filterYearEl ? (parseInt(filterYearEl.value) || new Date().getFullYear()) : new Date().getFullYear();
+    } else if(timeRangeType === 'month') {
+        const filterMonthEl = document.getElementById('filter-month');
+        if(filterMonthEl && filterMonthEl.value) {
+            const [year] = filterMonthEl.value.split('-');
+            targetYear = parseInt(year) || new Date().getFullYear();
+        }
+    } else if(timeRangeType === 'custom') {
+        const filterDateStartEl = document.getElementById('filter-date-start');
+        if(filterDateStartEl && filterDateStartEl.value) {
+            const startDate = new Date(filterDateStartEl.value);
+            targetYear = startDate.getFullYear();
+        }
+    }
+    
+    // Filtrar despesas do ano atual ou filtrado
+    const yearExpenses = (DB.transactions || []).filter(t => {
+        if(!t || !t.date || t.type !== 'expense') return false;
+        const txYear = new Date(t.date).getFullYear();
+        return txYear === targetYear;
+    });
+    
     let monthlyExpenses = {};
-    allExpenses.forEach(t => {
+    yearExpenses.forEach(t => {
         if(t && t.date) {
             const monthKey = t.date.substring(0, 7); // YYYY-MM
             monthlyExpenses[monthKey] = (monthlyExpenses[monthKey] || 0) + t.val;
@@ -4326,31 +4590,27 @@ function applySettings(settings) {
     const avgExpense = monthCount > 0 ? Object.values(monthlyExpenses).reduce((a, b) => a + b, 0) / monthCount : 0;
     
     // Atualização do DOM
-    document.getElementById('stat-balance').textContent = `R$ ${totalBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    document.getElementById('stat-income').textContent = `R$ ${inc.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    document.getElementById('stat-avg-expense').textContent = `R$ ${avgExpense.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    document.getElementById('stat-expense').textContent = `R$ ${exp.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    document.getElementById('stat-essential').textContent = `R$ ${essential.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    document.getElementById('stat-nonessential').textContent = `R$ ${nonessential.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    document.getElementById('stat-pending').textContent = `R$ ${pending.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    document.getElementById('stat-overdue').textContent = `R$ ${overdue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    document.getElementById('stat-efficiency').textContent = inc > 0 ? Math.round(((inc-exp)/inc)*100) + '%' : '0%';
-
-    // Atualizar filtros de categoria no dashboard
-    const dashCatSelect = document.getElementById('dashboard-filter-category');
-    if(dashCatSelect) {
-        const currentDashCat = dashCatSelect.value;
-        dashCatSelect.innerHTML = '<option value="">Todas</option>';
-        (DB.categories || []).forEach(cat => {
-            if(cat && cat.name) {
-                const opt = document.createElement('option');
-                opt.value = cat.name;
-                opt.textContent = cat.name;
-                if(opt.value === currentDashCat) opt.selected = true;
-                dashCatSelect.appendChild(opt);
-            }
-        });
-    }
+    const statBalance = document.getElementById('stat-balance');
+    const statPeriodBalance = document.getElementById('stat-period-balance');
+    const statIncome = document.getElementById('stat-income');
+    const statAvgExpense = document.getElementById('stat-avg-expense');
+    const statExpense = document.getElementById('stat-expense');
+    const statEssential = document.getElementById('stat-essential');
+    const statNonessential = document.getElementById('stat-nonessential');
+    const statPending = document.getElementById('stat-pending');
+    const statOverdue = document.getElementById('stat-overdue');
+    const statEfficiency = document.getElementById('stat-efficiency');
+    
+    if(statBalance) statBalance.textContent = `R$ ${totalBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    if(statPeriodBalance) statPeriodBalance.textContent = `R$ ${periodBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    if(statIncome) statIncome.textContent = `R$ ${inc.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    if(statAvgExpense) statAvgExpense.textContent = `R$ ${avgExpense.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    if(statExpense) statExpense.textContent = `R$ ${exp.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    if(statEssential) statEssential.textContent = `R$ ${essential.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    if(statNonessential) statNonessential.textContent = `R$ ${nonessential.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    if(statPending) statPending.textContent = `R$ ${pending.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    if(statOverdue) statOverdue.textContent = `R$ ${overdue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    if(statEfficiency) statEfficiency.textContent = inc > 0 ? Math.round(((inc-exp)/inc)*100) + '%' : '0%';
 
     renderTransactions();
     renderCategories();
@@ -4358,6 +4618,11 @@ function applySettings(settings) {
     if(currentUser && currentUser.role === 'admin') renderUsers();
     updateCharts();
     updateNotifications();
+    // Atualizar tabela de ranking apenas se o elemento existir (dashboard visível)
+    const rankingTableBody = document.getElementById('ranking-table-body');
+    if(rankingTableBody && typeof updateRankingTable === 'function') {
+        updateRankingTable();
+    }
 }
         
         // GRÁFICOS
@@ -4958,14 +5223,21 @@ if (timeRangeType === 'all') {
             } else if(timeRangeType === 'custom') {
                 // Sempre mostrar dias quando for personalizado
                 const current = new Date(start);
-                current.setHours(0, 0, 0, 0);
-                const endDate = new Date(end);
-                endDate.setHours(23, 59, 59, 999);
+                // Usar data/hora de Brasília para evitar problemas de timezone
+                const brasiliaStart = getBrasiliaDate();
+                brasiliaStart.setFullYear(current.getFullYear(), current.getMonth(), current.getDate());
+                brasiliaStart.setHours(0, 0, 0, 0);
+                const currentBrasilia = new Date(brasiliaStart);
                 
-                while(current <= endDate) {
-                    labels.push(String(current.getDate()).padStart(2, '0') + '/' + String(current.getMonth() + 1).padStart(2, '0'));
-                    const dayKey = current.toISOString().split('T')[0];
-                    const currentDateCopy = new Date(current);
+                const endDate = new Date(end);
+                const brasiliaEnd = getBrasiliaDate();
+                brasiliaEnd.setFullYear(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                brasiliaEnd.setHours(23, 59, 59, 999);
+                
+                while(currentBrasilia <= brasiliaEnd) {
+                    labels.push(String(currentBrasilia.getDate()).padStart(2, '0') + '/' + String(currentBrasilia.getMonth() + 1).padStart(2, '0'));
+                    const dayKey = currentBrasilia.toISOString().split('T')[0];
+                    const currentDateCopy = new Date(currentBrasilia);
                     currentDateCopy.setHours(0, 0, 0, 0);
                     const isFuture = currentDateCopy > today;
                     
@@ -4986,7 +5258,7 @@ if (timeRangeType === 'all') {
                         expenseData.push(dayExp);
                         balanceData.push(dayInc - dayExp);
                     }
-                    current.setDate(current.getDate() + 1);
+                    currentBrasilia.setDate(currentBrasilia.getDate() + 1);
                 }
             }
 
@@ -5244,14 +5516,21 @@ if (timeRangeType === 'all') {
                 }
             } else if(essentialTimeRangeType === 'custom') {
                 const essentialCurrent = new Date(start);
-                essentialCurrent.setHours(0, 0, 0, 0);
-                const essentialEndDate = new Date(end);
-                essentialEndDate.setHours(23, 59, 59, 999);
+                // Usar data/hora de Brasília para evitar problemas de timezone
+                const brasiliaStart = getBrasiliaDate();
+                brasiliaStart.setFullYear(essentialCurrent.getFullYear(), essentialCurrent.getMonth(), essentialCurrent.getDate());
+                brasiliaStart.setHours(0, 0, 0, 0);
+                const essentialCurrentBrasilia = new Date(brasiliaStart);
                 
-                while(essentialCurrent <= essentialEndDate) {
-                    essentialLineLabels.push(String(essentialCurrent.getDate()).padStart(2, '0') + '/' + String(essentialCurrent.getMonth() + 1).padStart(2, '0'));
-                    const dayKey = essentialCurrent.toISOString().split('T')[0];
-                    const currentDateCopy = new Date(essentialCurrent);
+                const essentialEndDate = new Date(end);
+                const brasiliaEnd = getBrasiliaDate();
+                brasiliaEnd.setFullYear(essentialEndDate.getFullYear(), essentialEndDate.getMonth(), essentialEndDate.getDate());
+                brasiliaEnd.setHours(23, 59, 59, 999);
+                
+                while(essentialCurrentBrasilia <= brasiliaEnd) {
+                    essentialLineLabels.push(String(essentialCurrentBrasilia.getDate()).padStart(2, '0') + '/' + String(essentialCurrentBrasilia.getMonth() + 1).padStart(2, '0'));
+                    const dayKey = essentialCurrentBrasilia.toISOString().split('T')[0];
+                    const currentDateCopy = new Date(essentialCurrentBrasilia);
                     currentDateCopy.setHours(0, 0, 0, 0);
                     const isFuture = currentDateCopy > today;
                     
@@ -5276,7 +5555,7 @@ if (timeRangeType === 'all') {
                         essentialLineData.push(dayEssential);
                         nonessentialLineData.push(dayNonessential);
                     }
-                    essentialCurrent.setDate(essentialCurrent.getDate() + 1);
+                    essentialCurrentBrasilia.setDate(essentialCurrentBrasilia.getDate() + 1);
                 }
             }
             
@@ -5470,6 +5749,142 @@ const totalIncome = incomeCatData.reduce((a, b) => a + b, 0);
             });
         }
 
+        // RANKING TABLE
+        let rankingCurrentPage = 1;
+        let rankingPageSize = 10;
+        let rankingSortBy = 'value'; // 'value' ou 'quantity'
+        let rankingSortOrder = 'desc'; // 'asc' ou 'desc'
+        
+        function updateRankingTable() {
+            const DB = getUserDB();
+            if(!DB) return;
+            
+            // Verificar se os elementos existem antes de acessá-los
+            const rankingFilterType = document.getElementById('ranking-filter-type');
+            const rankingFilterCategory = document.getElementById('ranking-filter-category');
+            const rankingTableBody = document.getElementById('ranking-table-body');
+            
+            if(!rankingFilterType || !rankingFilterCategory || !rankingTableBody) return;
+            
+            const filterType = rankingFilterType.value || 'expense';
+            const filterCategory = rankingFilterCategory.value || '';
+            
+            // Atualizar lista de categorias baseado no tipo
+            const currentCat = rankingFilterCategory.value;
+            rankingFilterCategory.innerHTML = '<option value="">Nenhum</option>';
+            
+            // Ordenar categorias alfabeticamente
+            const categories = (DB.categories || []).filter(c => c && c.type === filterType).sort((a, b) => {
+                const nameA = (a.name || '').toLowerCase();
+                const nameB = (b.name || '').toLowerCase();
+                return nameA.localeCompare(nameB, 'pt-BR');
+            });
+            
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.name;
+                opt.textContent = cat.name;
+                if(opt.value === currentCat) opt.selected = true;
+                rankingFilterCategory.appendChild(opt);
+            });
+            
+            // Obter transações filtradas
+            const range = getTimeRange();
+            const transactions = (DB.transactions || []).filter(t => {
+                if(!t || !t.date || t.type !== filterType) return false;
+                if(filterCategory && t.cat !== filterCategory) return false;
+                const txDate = new Date(t.date);
+                if(isNaN(txDate.getTime())) return false;
+                if(txDate < range.start || txDate > range.end) return false;
+                return true;
+            });
+            
+            // Agrupar por subcategoria
+            const subcategoryData = {};
+            transactions.forEach(t => {
+                const subcat = t.subcat || 'Sem subcategoria';
+                if(!subcategoryData[subcat]) {
+                    subcategoryData[subcat] = { quantity: 0, value: 0 };
+                }
+                subcategoryData[subcat].quantity += (t.quantity || 1);
+                subcategoryData[subcat].value += t.val;
+            });
+            
+            // Converter para array e ordenar
+            let rankingData = Object.entries(subcategoryData).map(([subcat, data]) => ({
+                subcat,
+                quantity: data.quantity,
+                value: data.value
+            }));
+            
+            // Ordenar
+            rankingData.sort((a, b) => {
+                const aVal = rankingSortBy === 'value' ? a.value : a.quantity;
+                const bVal = rankingSortBy === 'value' ? b.value : b.quantity;
+                return rankingSortOrder === 'desc' ? bVal - aVal : aVal - bVal;
+            });
+            
+            // Paginação
+            const totalPages = Math.ceil(rankingData.length / rankingPageSize);
+            const startIndex = (rankingCurrentPage - 1) * rankingPageSize;
+            const endIndex = startIndex + rankingPageSize;
+            const pageData = rankingData.slice(startIndex, endIndex);
+            
+            // Renderizar tabela
+            if(pageData.length === 0) {
+                rankingTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 40px; color: var(--text-muted);">Nenhum dado encontrado</td></tr>';
+            } else {
+                rankingTableBody.innerHTML = pageData.map(item => `
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 12px; font-weight: 600; color: var(--text-main);">${item.subcat}</td>
+                        <td style="padding: 12px; text-align: right; color: var(--text-main);">${item.quantity}</td>
+                        <td style="padding: 12px; text-align: right; font-weight: 700; color: var(--text-main);">R$ ${item.value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    </tr>
+                `).join('');
+            }
+            
+            // Atualizar controles de paginação
+            const prevBtn = document.getElementById('ranking-prev');
+            const nextBtn = document.getElementById('ranking-next');
+            const pageInfo = document.getElementById('ranking-page-info');
+            
+            if(prevBtn) prevBtn.disabled = rankingCurrentPage === 1;
+            if(nextBtn) nextBtn.disabled = rankingCurrentPage >= totalPages || totalPages === 0;
+            if(pageInfo) pageInfo.textContent = `Página ${rankingCurrentPage} de ${totalPages || 1}`;
+            
+            // Atualizar ícones de ordenação
+            const quantityIcon = document.getElementById('sort-quantity-icon');
+            const valueIcon = document.getElementById('sort-value-icon');
+            
+            if(quantityIcon) {
+                quantityIcon.className = rankingSortBy === 'quantity' 
+                    ? (rankingSortOrder === 'desc' ? 'fa-solid fa-sort-down' : 'fa-solid fa-sort-up')
+                    : 'fa-solid fa-sort';
+            }
+            if(valueIcon) {
+                valueIcon.className = rankingSortBy === 'value'
+                    ? (rankingSortOrder === 'desc' ? 'fa-solid fa-sort-down' : 'fa-solid fa-sort-up')
+                    : 'fa-solid fa-sort';
+            }
+        }
+        
+        function toggleRankingSort(sortBy) {
+            if(rankingSortBy === sortBy) {
+                rankingSortOrder = rankingSortOrder === 'desc' ? 'asc' : 'desc';
+            } else {
+                rankingSortBy = sortBy;
+                rankingSortOrder = 'desc';
+            }
+            rankingCurrentPage = 1;
+            updateRankingTable();
+        }
+        
+        function changeRankingPage(direction) {
+            rankingCurrentPage += direction;
+            if(rankingCurrentPage < 1) rankingCurrentPage = 1;
+            updateRankingTable();
+        }
+        
         // INSTALL PROMPT - Aparece apenas uma vez
         let deferredPrompt;
         let installPromptShown = localStorage.getItem('installPromptShown') === 'true';
