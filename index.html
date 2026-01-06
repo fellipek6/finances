@@ -1099,6 +1099,33 @@ td, th {
 }
 }
 
+/* --- PAGINAÇÃO RESPONSIVA --- */
+@media (max-width: 768px) {
+    /* Ajusta o container da paginação para ocupar a largura total e empilhar se necessário */
+    .table-container td[colspan] div {
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+
+    /* Ajusta os botões de Anterior/Próximo no Mobile */
+    .table-container .btn-secondary {
+        flex: 1 1 !important; /* Faz os botões dividirem o espaço */
+        padding: 10px 5px !important;
+        font-size: 12px !important;
+        min-width: 100px !important;
+        white-space: nowrap;
+    }
+
+    /* Reduz o texto central para economizar espaço */
+    .table-container span[style*="font-size: 13px"] {
+        font-size: 11px !important;
+        text-align: center;
+        min-width: fit-content;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -2154,6 +2181,8 @@ td, th {
         let editingUserId = null;
         let editingRecurringId = null;
         let subcategoryCount = 0;
+        let currentTransPage = 1;
+        let currentRecurPage = 1;
 
         // INICIALIZAÇÃO
         async function init() {
@@ -2842,100 +2871,130 @@ td, th {
 }
 
 
-        function renderTransactions() {
-            const DB = getUserDB();
-            if(!DB) return;
-            
-            // Garantir que todas as propriedades existam
-            if(!DB.transactions) DB.transactions = [];
-            if(!DB.categories) DB.categories = [];
-            
-            const body = document.getElementById('transactions-body');
-            if(!body) return;
-            
-            const filterType = document.getElementById('filter-type')?.value || '';
-            const filterCat = document.getElementById('filter-category')?.value || '';
-            const filterSubcat = document.getElementById('filter-subcategory')?.value || '';
-            const filterPaid = document.getElementById('filter-paid')?.value || '';
-            const timeRange = getTransactionTimeRange();
-            const searchText = normalizeText(document.getElementById('transactions-search')?.value || '');
+function renderTransactions() {
+    const DB = getUserDB();
+    if(!DB) return;
+    
+    if(!DB.transactions) DB.transactions = [];
+    
+    const body = document.getElementById('transactions-body');
+    if(!body) return;
+    
+    // 1. Definição do Limite por Dispositivo
+    const pageSize = window.innerWidth <= 768 ? 20 : 50;
 
-            let filtered = (DB.transactions || []).filter(t => {
-                if(!t || !t.date) return false;
-                if(timeRange) {
-                    const txDate = new Date(t.date + "T00:00:00");
-                    if(txDate < timeRange.start || txDate > timeRange.end) return false;
-                }
-                if(filterType && t.type !== filterType) return false;
-                if(filterCat && t.cat !== filterCat) return false;
-                if(filterSubcat && t.subcat !== filterSubcat) return false;
-                if(filterPaid) {
-                    if(filterPaid === 'paid' && !t.paid) return false;
-                    if(filterPaid === 'unpaid' && t.paid) return false;
-                }
-                if(searchText) {
-                    const searchIn = normalizeText(t.desc) + ' ' + normalizeText(t.cat) + ' ' + normalizeText(t.subcat || '');
-                    if(!searchIn.includes(searchText)) return false;
-                }
-                return true;
-            });
+    const filterType = document.getElementById('filter-type')?.value || '';
+    const filterCat = document.getElementById('filter-category')?.value || '';
+    const filterSubcat = document.getElementById('filter-subcategory')?.value || '';
+    const filterPaid = document.getElementById('filter-paid')?.value || '';
+    const timeRange = getTransactionTimeRange();
+    const searchText = normalizeText(document.getElementById('transactions-search')?.value || '');
 
-            // Ordenar do mais novo para o mais antigo
-            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            body.innerHTML = filtered.map(t => {
-                const status = getTransactionStatus(t);
-                const statusClass = status === 'alert' ? 'alert' : status === 'overdue' ? 'overdue' : '';
-                let statusBadge = '';
-                if(t.type === 'expense') {
-                    if(status === 'paid' || t.paid) {
-                        statusBadge = '<span class="badge badge-paid"><i class="fa-solid fa-check"></i> Pago</span>';
-                    } else if(status === 'overdue') {
-                        statusBadge = '<span class="badge badge-overdue"><i class="fa-solid fa-exclamation-triangle"></i> Atrasado</span>';
-                    } else if(status === 'alert') {
-                        statusBadge = '<span class="badge badge-pending"><i class="fa-solid fa-clock"></i> Pendente</span>';
-                    } else {
-                        statusBadge = '<span class="badge badge-pending"><i class="fa-solid fa-hourglass-half"></i> Pendente</span>';
-                    }
-                } else if(t.type === 'income') {
-                    if(status === 'paid' || t.paid) {
-                        statusBadge = '<span class="badge badge-paid"><i class="fa-solid fa-check"></i> Recebido</span>';
-                    } else if(status === 'overdue') {
-                        statusBadge = '<span class="badge badge-overdue"><i class="fa-solid fa-exclamation-triangle"></i> Atrasado</span>';
-                    } else if(status === 'alert') {
-                        statusBadge = '<span class="badge badge-pending"><i class="fa-solid fa-clock"></i> Pendente</span>';
-                    } else if(t.receiptDate) {
-                        statusBadge = '<span class="badge badge-pending"><i class="fa-solid fa-hourglass-half"></i> Pendente</span>';
-                    }
-                }
-                
-                const dueDateDisplay = t.type === 'expense' ? (t.dueDate ? t.dueDate.split('-').reverse().join('/') : '-') : (t.receiptDate ? t.receiptDate.split('-').reverse().join('/') : '-');
-                const paymentDisplay = t.payment ? `<i class="${getPaymentIcon(t.payment)} payment-icon"></i>${getPaymentLabel(t.payment)}` : '-';
-                
-                return `
-                    <tr class="${statusClass}">
-                        <td>${t.date.split('-').reverse().join('/')}</td>
-                        <td style="font-weight:600">${t.desc}${t.comment ? '<br><small style="color:var(--text-muted)">' + t.comment + '</small>' : ''}</td>
-                        <td>${t.cat}</td>
-                        <td>${t.subcat || '-'}</td>
-                        <td style="font-weight:700">R$ ${t.val.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 3})}</td>
-                        <td><span class="badge ${t.type === 'income' ? 'badge-income' : 'badge-expense'}">${t.type === 'income' ? 'Entrada' : 'Saída'}</span></td>
-                        <td>${paymentDisplay}</td>
-                        <td>${dueDateDisplay}</td>
-                        <td>${statusBadge}</td>
-                        <td>
-                            ${t.type === 'expense' ? `<button class="action-btn ${t.paid ? 'btn-success' : 'btn-secondary'}" onclick="togglePaid(${t.id})" title="${t.paid ? 'Marcar como não pago' : 'Marcar como pago'}"><i class="fa-solid fa-${t.paid ? 'check' : 'clock'}"></i></button>` : ''}
-                            ${t.type === 'income' ? `<button class="action-btn ${t.paid ? 'btn-success' : 'btn-secondary'}" onclick="togglePaid(${t.id})" title="${t.paid ? 'Marcar como não recebida' : 'Marcar como recebida'}"><i class="fa-solid fa-${t.paid ? 'check-circle' : 'clock'}"></i></button>` : ''}
-                            <button class="action-btn btn-edit" onclick="openTransactionModal(${t.id})"><i class="fa-solid fa-edit"></i></button>
-                            <button class="action-btn btn-delete" onclick="deleteTransaction(${t.id})"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            }).join('') || '<tr><td colspan="10" style="text-align:center; padding:40px; color:var(--text-muted)">Nenhuma transação encontrada</td></tr>';
-
-            updateFilterCategories();
+    // 2. Filtragem (Código Original mantido)
+    let filtered = (DB.transactions || []).filter(t => {
+        if(!t || !t.date) return false;
+        if(timeRange) {
+            const txDate = new Date(t.date + "T00:00:00");
+            if(txDate < timeRange.start || txDate > timeRange.end) return false;
         }
+        if(filterType && t.type !== filterType) return false;
+        if(filterCat && t.cat !== filterCat) return false;
+        if(filterSubcat && t.subcat !== filterSubcat) return false;
+        if(filterPaid) {
+            if(filterPaid === 'paid' && !t.paid) return false;
+            if(filterPaid === 'unpaid' && t.paid) return false;
+        }
+        if(searchText) {
+            const searchIn = normalizeText(t.desc) + ' ' + normalizeText(t.cat) + ' ' + normalizeText(t.subcat || '');
+            if(!searchIn.includes(searchText)) return false;
+        }
+        return true;
+    });
 
+    // Ordenar do mais novo para o mais antigo
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // 3. Lógica de Paginação
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / pageSize) || 1;
+    
+    // Garante que a página atual não exceda o total
+    if (currentTransPage > totalPages) currentTransPage = totalPages;
+    if (currentTransPage < 1) currentTransPage = 1;
+
+    const startIndex = (currentTransPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedItems = filtered.slice(startIndex, endIndex);
+
+    // 4. Renderização dos Itens
+    let html = paginatedItems.map(t => {
+        const status = getTransactionStatus(t);
+        const statusClass = status === 'alert' ? 'alert' : status === 'overdue' ? 'overdue' : '';
+        let statusBadge = '';
+        
+        // (Lógica de Badges mantida igual ao original para economizar espaço aqui...)
+        if(t.type === 'expense') {
+            if(status === 'paid' || t.paid) statusBadge = '<span class="badge badge-paid"><i class="fa-solid fa-check"></i> Pago</span>';
+            else if(status === 'overdue') statusBadge = '<span class="badge badge-overdue"><i class="fa-solid fa-exclamation-triangle"></i> Atrasado</span>';
+            else if(status === 'alert') statusBadge = '<span class="badge badge-pending"><i class="fa-solid fa-clock"></i> Pendente</span>';
+            else statusBadge = '<span class="badge badge-pending"><i class="fa-solid fa-hourglass-half"></i> Pendente</span>';
+        } else {
+            if(status === 'paid' || t.paid) statusBadge = '<span class="badge badge-paid"><i class="fa-solid fa-check"></i> Recebido</span>';
+            else if(status === 'overdue') statusBadge = '<span class="badge badge-overdue"><i class="fa-solid fa-exclamation-triangle"></i> Atrasado</span>';
+            else if(status === 'alert') statusBadge = '<span class="badge badge-pending"><i class="fa-solid fa-clock"></i> Pendente</span>';
+            else statusBadge = '<span class="badge badge-pending"><i class="fa-solid fa-hourglass-half"></i> Pendente</span>';
+        }
+        
+        const dueDateDisplay = t.type === 'expense' ? (t.dueDate ? t.dueDate.split('-').reverse().join('/') : '-') : (t.receiptDate ? t.receiptDate.split('-').reverse().join('/') : '-');
+        const paymentDisplay = t.payment ? `<i class="${getPaymentIcon(t.payment)} payment-icon"></i>${getPaymentLabel(t.payment)}` : '-';
+        
+        return `
+            <tr class="${statusClass}">
+                <td>${t.date.split('-').reverse().join('/')}</td>
+                <td style="font-weight:600">${t.desc}${t.comment ? '<br><small style="color:var(--text-muted)">' + t.comment + '</small>' : ''}</td>
+                <td>${t.cat}</td>
+                <td>${t.subcat || '-'}</td>
+                <td style="font-weight:700">R$ ${t.val.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 3})}</td>
+                <td><span class="badge ${t.type === 'income' ? 'badge-income' : 'badge-expense'}">${t.type === 'income' ? 'Entrada' : 'Saída'}</span></td>
+                <td>${paymentDisplay}</td>
+                <td>${dueDateDisplay}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    ${t.type === 'expense' ? `<button class="action-btn ${t.paid ? 'btn-success' : 'btn-secondary'}" onclick="togglePaid(${t.id})" title="${t.paid ? 'Marcar como não pago' : 'Marcar como pago'}"><i class="fa-solid fa-${t.paid ? 'check' : 'clock'}"></i></button>` : ''}
+                    ${t.type === 'income' ? `<button class="action-btn ${t.paid ? 'btn-success' : 'btn-secondary'}" onclick="togglePaid(${t.id})" title="${t.paid ? 'Marcar como não recebida' : 'Marcar como recebida'}"><i class="fa-solid fa-${t.paid ? 'check-circle' : 'clock'}"></i></button>` : ''}
+                    <button class="action-btn btn-edit" onclick="openTransactionModal(${t.id})"><i class="fa-solid fa-edit"></i></button>
+                    <button class="action-btn btn-delete" onclick="deleteTransaction(${t.id})"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    if (totalItems === 0) {
+        html = '<tr><td colspan="10" style="text-align:center; padding:40px; color:var(--text-muted)">Nenhuma transação encontrada</td></tr>';
+    } else {
+        // 5. Adicionar Controles de Paginação (Rodapé da Tabela)
+        html += `
+            <tr style="background: var(--bg);">
+                <td colspan="10" style="padding: 15px;">
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
+                        <button class="btn btn-secondary" onclick="changeTransPage(-1)" ${currentTransPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+                            <i class="fa-solid fa-chevron-left"></i> Anterior
+                        </button>
+                        <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">
+                            Página ${currentTransPage} de ${totalPages} <span style="font-weight:400">(${totalItems} registros)</span>
+                        </span>
+                        <button class="btn btn-secondary" onclick="changeTransPage(1)" ${currentTransPage >= totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+                            Próxima <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    body.innerHTML = html;
+    updateFilterCategories();
+}
         
         function updateTransactionFilters() {
             const filterType = document.getElementById('filter-type').value;
@@ -3369,9 +3428,7 @@ function confirmPublishRecurring(id) {
     const paymentInput = document.getElementById('publish-payment');
     const newPayment = paymentInput ? paymentInput.value : rec.payment;
 
-    // --- CORREÇÃO AQUI: Usa data de Brasília ---
     const today = getBrasiliaISODate();
-    // ------------------------------------------
 
     const tx = {
         id: Date.now(),
@@ -3383,7 +3440,10 @@ function confirmPublishRecurring(id) {
         cat: rec.cat || '',
         subcat: rec.subcat || null,
         payment: rec.type === 'expense' ? newPayment : null,
-        dueDate: rec.type === 'expense' ? today : null,
+        
+        // CORREÇÃO SOLICITADA: Define a data de vencimento como a próxima data agendada
+        dueDate: rec.type === 'expense' ? (rec.nextDate || null) : null,
+        
         receiptDate: rec.type === 'income' ? today : null,
         alertDays: rec.alertDays || null,
         paid: rec.type === 'income' ? true : false,
@@ -3408,7 +3468,6 @@ function confirmPublishRecurring(id) {
     renderRecurring();
     renderAll();
 }
-
 
         function getRecurringStatus(rec) {
             if(!rec.nextDate) return 'ok';
@@ -3580,71 +3639,114 @@ function updateRecurringSubcategoryFilters() {
     }
 }
 
-        function renderRecurring() {
-            const DB = getUserDB();
-            if(!DB) return;
-            
-            if(!DB.recurring) DB.recurring = [];
-            
-            const body = document.getElementById('recurring-body');
-            if(!body) return;
-            
-            const filterType = document.getElementById('recurring-filter-type')?.value || '';
-            const filterCat = document.getElementById('recurring-filter-category')?.value || '';
-            const filterSubcat = document.getElementById('recurring-filter-subcategory')?.value || '';
-            const searchText = normalizeText(document.getElementById('recurring-search')?.value || '');
-            
-            let filtered = (DB.recurring || []).filter(rec => {
-                if(!rec) return false;
-                if(filterType && rec.type !== filterType) return false;
-                if(filterCat && rec.cat !== filterCat) return false;
-                if(filterSubcat && rec.subcat !== filterSubcat) return false;
-                if(searchText) {
-                    const searchIn = normalizeText(rec.desc) + ' ' + normalizeText(rec.cat) + ' ' + normalizeText(rec.subcat || '');
-                    if(!searchIn.includes(searchText)) return false;
-                }
-                return true;
-            });
-            
-            // Ordenar por próxima data (mais próximo primeiro, depois os sem data)
-            filtered.sort((a, b) => {
-                if(!a.nextDate && !b.nextDate) return 0;
-                if(!a.nextDate) return 1; // Sem data vai para o final
-                if(!b.nextDate) return -1; // Sem data vai para o final
-                const dateA = new Date(a.nextDate);
-                const dateB = new Date(b.nextDate);
-                return dateA - dateB;
-            });
-            
-            body.innerHTML = filtered.map(rec => {
-                if(!rec) return '';
-                const status = getRecurringStatus(rec);
-                const statusClass = status === 'alert' ? 'alert' : status === 'overdue' ? 'overdue' : '';
-                const statusBadge = status === 'overdue' ? '<span class="badge badge-unpaid"><i class="fa-solid fa-exclamation-triangle"></i> Atrasado</span>' :
-                                   status === 'alert' ? '<span class="badge" style="background:#fef3c7;color:#92400e;"><i class="fa-solid fa-clock"></i> Alerta</span>' : 
-                                   '<span class="badge badge-income"><i class="fa-solid fa-check"></i> OK</span>';
-                
-                const periodDisplay = rec.period ? `${rec.period} dias` : '-';
-                const nextDateDisplay = rec.nextDate ? rec.nextDate.split('-').reverse().join('/') : '-';
-                
-                return `
-                    <tr class="${statusClass}">
-                        <td style="font-weight:600">${rec.desc}</td>
-                        <td><span class="badge ${rec.type === 'income' ? 'badge-income' : 'badge-expense'}">${rec.type === 'income' ? 'Receita' : 'Despesa'}</span></td>
-                        <td>${rec.cat}</td>
-                        <td style="font-weight:700">R$ ${rec.val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td>${periodDisplay}</td>
-                        <td>${nextDateDisplay}</td>
-                        <td>${statusBadge}</td>
-                        <td>
-                            <button class="action-btn btn-publish" onclick="publishRecurring(${rec.id})" title="Publicar transação"><i class="fa-solid fa-paper-plane"></i></button>
-                            <button class="action-btn btn-edit" onclick="openRecurringModal(${rec.id})"><i class="fa-solid fa-edit"></i></button>
-                            <button class="action-btn btn-delete" onclick="deleteRecurring(${rec.id})"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            }).filter(html => html).join('') || '<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted)">Nenhum registro recorrente encontrado</td></tr>';
+// --- SUBSTITUA A FUNÇÃO renderRecurring COMPLETA POR ESTA ---
+
+function renderRecurring() {
+    const DB = getUserDB();
+    if(!DB) return;
+    
+    if(!DB.recurring) DB.recurring = [];
+    
+    const body = document.getElementById('recurring-body');
+    if(!body) return;
+    
+    // 1. Definição do Limite
+    const pageSize = window.innerWidth <= 768 ? 20 : 50;
+    
+    const filterType = document.getElementById('recurring-filter-type')?.value || '';
+    const filterCat = document.getElementById('recurring-filter-category')?.value || '';
+    const filterSubcat = document.getElementById('recurring-filter-subcategory')?.value || '';
+    const searchText = normalizeText(document.getElementById('recurring-search')?.value || '');
+    
+    // 2. Filtragem
+    let filtered = (DB.recurring || []).filter(rec => {
+        if(!rec) return false;
+        if(filterType && rec.type !== filterType) return false;
+        if(filterCat && rec.cat !== filterCat) return false;
+        if(filterSubcat && rec.subcat !== filterSubcat) return false;
+        if(searchText) {
+            const searchIn = normalizeText(rec.desc) + ' ' + normalizeText(rec.cat) + ' ' + normalizeText(rec.subcat || '');
+            if(!searchIn.includes(searchText)) return false;
         }
+        return true;
+    });
+    
+    // Ordenação
+    filtered.sort((a, b) => {
+        if(!a.nextDate && !b.nextDate) return 0;
+        if(!a.nextDate) return 1;
+        if(!b.nextDate) return -1;
+        const dateA = new Date(a.nextDate);
+        const dateB = new Date(b.nextDate);
+        return dateA - dateB;
+    });
+
+    // 3. Lógica de Paginação
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / pageSize) || 1;
+
+    if (currentRecurPage > totalPages) currentRecurPage = totalPages;
+    if (currentRecurPage < 1) currentRecurPage = 1;
+
+    const startIndex = (currentRecurPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedItems = filtered.slice(startIndex, endIndex);
+    
+    // 4. Renderização
+    let html = paginatedItems.map(rec => {
+        if(!rec) return '';
+        const status = getRecurringStatus(rec);
+        const statusClass = status === 'alert' ? 'alert' : status === 'overdue' ? 'overdue' : '';
+        const statusBadge = status === 'overdue' ? '<span class="badge badge-unpaid"><i class="fa-solid fa-exclamation-triangle"></i> Atrasado</span>' :
+                            status === 'alert' ? '<span class="badge" style="background:#fef3c7;color:#92400e;"><i class="fa-solid fa-clock"></i> Alerta</span>' : 
+                            '<span class="badge badge-income"><i class="fa-solid fa-check"></i> OK</span>';
+        
+        const periodDisplay = rec.period ? `${rec.period} dias` : '-';
+        const nextDateDisplay = rec.nextDate ? rec.nextDate.split('-').reverse().join('/') : '-';
+        
+        return `
+            <tr class="${statusClass}">
+                <td style="font-weight:600">${rec.desc}</td>
+                <td><span class="badge ${rec.type === 'income' ? 'badge-income' : 'badge-expense'}">${rec.type === 'income' ? 'Receita' : 'Despesa'}</span></td>
+                <td>${rec.cat}</td>
+                <td style="font-weight:700">R$ ${rec.val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                <td>${periodDisplay}</td>
+                <td>${nextDateDisplay}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <button class="action-btn btn-publish" onclick="publishRecurring(${rec.id})" title="Publicar transação"><i class="fa-solid fa-paper-plane"></i></button>
+                    <button class="action-btn btn-edit" onclick="openRecurringModal(${rec.id})"><i class="fa-solid fa-edit"></i></button>
+                    <button class="action-btn btn-delete" onclick="deleteRecurring(${rec.id})"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    if (totalItems === 0) {
+        html = '<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted)">Nenhum registro recorrente encontrado</td></tr>';
+    } else {
+        // 5. Adicionar Controles de Paginação
+        html += `
+            <tr style="background: var(--bg);">
+                <td colspan="8" style="padding: 15px;">
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
+                        <button class="btn btn-secondary" onclick="changeRecurPage(-1)" ${currentRecurPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+                            <i class="fa-solid fa-chevron-left"></i> Anterior
+                        </button>
+                        <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">
+                            Página ${currentRecurPage} de ${totalPages} <span style="font-weight:400">(${totalItems} registros)</span>
+                        </span>
+                        <button class="btn btn-secondary" onclick="changeRecurPage(1)" ${currentRecurPage >= totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+                            Próxima <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+    
+    body.innerHTML = html;
+}
 
         // ORÇAMENTO
         let budgetSelectedItems = [];
@@ -6240,7 +6342,11 @@ function resetDashboardFilters() {
 }
 
 // Reset de Filtros de Transações
+// Reset de Filtros de Transações
 function resetTransactionFilters() {
+    // Reseta para a primeira página ao limpar filtros
+    currentTransPage = 1; 
+
     const now = getBrasiliaDate();
     const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
@@ -6258,11 +6364,46 @@ function resetTransactionFilters() {
 
 // Reset de Filtros de Recorrentes
 function resetRecurringFilters() {
+    // Reseta para a primeira página ao limpar filtros
+    currentRecurPage = 1;
+
     if(document.getElementById('recurring-filter-type')) document.getElementById('recurring-filter-type').value = '';
     if(document.getElementById('recurring-filter-category')) document.getElementById('recurring-filter-category').value = '';
     if(document.getElementById('recurring-filter-subcategory')) document.getElementById('recurring-filter-subcategory').value = '';
     if(document.getElementById('recurring-search')) document.getElementById('recurring-search').value = '';
 
+    updateRecurringFilters();
+}
+
+
+function changeTransPage(direction) {
+    currentTransPage += direction;
+    renderTransactions();
+    document.querySelector('#transactions-view .table-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function changeRecurPage(direction) {
+    currentRecurPage += direction;
+    renderRecurring();
+    document.querySelector('#recurring-view .table-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// --- IMPORTANTE: ATUALIZE AS FUNÇÕES DE RESET DE FILTRO ---
+// Adicione o reset da página para 1 dentro das funções existentes:
+
+// 1. Modifique a função resetTransactionFilters() existente:
+function resetTransactionFilters() {
+    currentTransPage = 1; // <--- ADICIONE ISSO
+    // ... (seu código existente de limpar inputs) ...
+    // ...
+    updateTransactionTimeRange();
+    updateTransactionFilters();
+}
+
+// 2. Modifique a função resetRecurringFilters() existente:
+function resetRecurringFilters() {
+    currentRecurPage = 1; // <--- ADICIONE ISSO
+    // ... (seu código existente de limpar inputs) ...
     updateRecurringFilters();
 }
 
