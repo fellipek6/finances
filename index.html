@@ -234,6 +234,140 @@
     }
 }
 
+/* --- TRANSFORMAÇÃO EM CARDS (MOBILE) --- *//* --- LAYOUT MOBILE PREMIUM (CARDS REFATORADOS) --- */
+@media (max-width: 768px) {
+    
+    /* 1. Reset de Estrutura para Cards Modernos */
+    #transactions-view table, #transactions-view tbody, #transactions-view tr, #transactions-view td,
+    #recurring-view table, #recurring-view tbody, #recurring-view tr, #recurring-view td {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    #transactions-view thead, #recurring-view thead {
+        display: none !important; /* Remove cabeçalhos de tabela */
+    }
+
+    /* 2. Design do Card Premium */
+    #transactions-view tbody tr,
+    #recurring-view tbody tr {
+        background: var(--card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 16px !important; /* Bordas mais suaves */
+        margin-bottom: 16px !important;
+        padding: 16px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important; /* Sombra sutil */
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px !important;
+        position: relative;
+        transition: transform 0.2s ease;
+    }
+
+    /* 3. Estilização de Células e Tipografia */
+    #transactions-view td,
+    #recurring-view td {
+        border: none !important;
+        padding: 0 !important;
+        font-size: 13px !important;
+        color: var(--text-muted) !important;
+        display: flex !important;
+        align-items: center !important;
+        min-height: 20px !important;
+    }
+
+    /* --- TRANSAÇÕES PREMIUM --- */
+    
+    /* Título/Descrição em Destaque */
+    #transactions-view td:nth-child(2) {
+        grid-column: 1 / -1 !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: var(--text-main) !important;
+        margin-bottom: 4px !important;
+        order: -2;
+    }
+
+    /* Subcategoria com Estilo "Tag" */
+    #transactions-view td:nth-child(4) {
+        grid-column: 1 / -1 !important;
+        font-size: 11px !important;
+        background: var(--bg);
+        width: fit-content !important;
+        padding: 2px 8px !important;
+        border-radius: 4px !important;
+        margin-top: -8px !important;
+        margin-bottom: 8px !important;
+        order: -1;
+    }
+    #transactions-view td:nth-child(4)::before { content: '🏷️ '; }
+
+    /* Valor com Fonte Monetária */
+    #transactions-view td:nth-child(5) {
+        grid-column: 1 / span 1 !important;
+        font-size: 15px !important;
+        font-weight: 800 !important;
+        color: var(--text-main) !important;
+        letter-spacing: -0.5px;
+    }
+
+    /* Status (Badge) Alinhado à Direita */
+    #transactions-view td:nth-child(9) {
+        grid-column: 2 / span 1 !important;
+        justify-content: flex-end !important;
+    }
+
+    /* Rodapé de Ações Limpo */
+    #transactions-view td:last-child {
+        grid-column: 1 / -1 !important;
+        margin-top: 12px !important;
+        padding-top: 12px !important;
+        border-top: 1px solid var(--border) !important;
+        justify-content: flex-end !important;
+        gap: 12px !important;
+    }
+
+    /* --- RECORRENTES PREMIUM --- */
+    
+    #recurring-view td:nth-child(1) {
+        grid-column: 1 / -1 !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: var(--text-main) !important;
+        margin-bottom: 4px !important;
+    }
+
+    #recurring-view td:nth-child(4) {
+        font-size: 15px !important;
+        font-weight: 800 !important;
+        color: var(--text-main) !important;
+    }
+
+    #recurring-view td:nth-child(7) {
+        justify-content: flex-end !important;
+    }
+
+    #recurring-view td:last-child {
+        grid-column: 1 / -1 !important;
+        margin-top: 12px !important;
+        padding-top: 12px !important;
+        border-top: 1px solid var(--border) !important;
+        justify-content: flex-end !important;
+        gap: 12px !important;
+    }
+
+    /* Rótulos Visuais Elegantes (Emoji/Ícones) */
+    #transactions-view td:nth-child(1)::before { content: '🗓️ '; margin-right: 6px; }
+    #transactions-view td:nth-child(3)::before { content: '📁 '; margin-right: 6px; }
+    #transactions-view td:nth-child(8)::before { content: '⌛ '; margin-right: 6px; }
+    
+    #recurring-view td:nth-child(3)::before { content: '📁 '; margin-right: 6px; }
+    #recurring-view td:nth-child(5)::before { content: '🔄 '; margin-right: 6px; }
+    #recurring-view td:nth-child(6)::before { content: '📅 '; margin-right: 6px; }
+}
+
+
+
         .logo { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 40px; width: 100%; }
         .logo i { background: var(--accent); color: white; padding: 8px; border-radius: 8px; }
         .logo span { flex: 1; }
@@ -760,6 +894,209 @@ td, th {
     min-width: auto !important;      /* Remove a obrigação de 130px */
     text-align: left !important;    /* Alinha números à direita */
     white-space: nowrap !important;
+}
+
+/* --- CORREÇÃO DEFINITIVA: BOTÕES RECORRENTES MOBILE --- */
+@media (max-width: 768px) {
+    
+    /* 1. Zera o container pai (.table-header) */
+    #recurring-view .table-header {
+        display: block !important; /* Remove o flex do pai para evitar conflitos */
+        padding: 10px !important;
+        border-bottom: none !important;
+    }
+
+    /* 2. Oculta o título "Registros Recorrentes" (H3) */
+    #recurring-view .table-header h3 {
+        display: none !important;
+    }
+
+    /* 3. Seleciona a DIV exata que segura os botões */
+    /* Como ela não tem classe, usamos o seletor de filho direto (>) */
+    #recurring-view .table-header > div {
+        display: flex !important;
+        flex-direction: column !important; /* OBRIGATÓRIO: Um abaixo do outro */
+        gap: 12px !important;            /* Espaço vertical entre eles */
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    /* 4. Estica os botões para largura total */
+    #recurring-view .table-header button {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 15px !important; /* Botão mais alto para facilitar o toque */
+        justify-content: center !important; /* Centraliza o texto/ícone */
+        font-size: 14px !important;
+    }
+    
+    /* Ajuste fino: Remove margens extras se houver */
+    #recurring-view .table-header button i {
+        margin-right: 8px;
+    }
+}
+/* --- GESTÃO DE CATEGORIAS: MOBILE PREMIUM (Cards) --- */
+@media (max-width: 768px) {
+    /* 1. Reset de Estrutura para a tela de Categorias */
+    #categories-view table, 
+    #categories-view tbody, 
+    #categories-view tr, 
+    #categories-view td {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    /* Oculta cabeçalho da tabela */
+    #categories-view thead {
+        display: none !important;
+    }
+
+    /* 2. Design do Card de Categoria */
+    #categories-body tr {
+        background: var(--card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 16px !important;
+        margin-bottom: 16px !important;
+        padding: 16px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px !important;
+        position: relative;
+    }
+
+    /* 3. Estilização das informações internas */
+    #categories-body td {
+        border: none !important;
+        padding: 0 !important;
+        font-size: 13px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    /* Nome da Categoria (Destaque principal) */
+    #categories-body td:nth-child(1) {
+        grid-column: 1 / -1 !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: var(--text-main) !important;
+        margin-bottom: 4px !important;
+    }
+
+    /* Tipo (Badge Receita/Despesa) */
+    #categories-body td:nth-child(2) {
+        grid-column: 1 / span 1 !important;
+        justify-content: flex-start !important;
+    }
+
+    /* Status Essencial/Não Essencial */
+    #categories-body td:nth-child(3) {
+        grid-column: 2 / span 1 !important;
+        justify-content: flex-end !important;
+    }
+
+    /* Lista de Subcategorias (Container de Destaque) */
+    #categories-body td:nth-child(4) {
+        grid-column: 1 / -1 !important;
+        font-size: 12px !important;
+        color: var(--text-muted) !important;
+        background: var(--bg);
+        padding: 10px !important;
+        border-radius: 8px !important;
+        white-space: normal !important; /* Permite ver os nomes completos no mobile */
+        margin-top: 4px !important;
+    }
+    #categories-body td:nth-child(4)::before { 
+        content: '📂 '; 
+        margin-right: 6px;
+    }
+
+    /* Botões de Ação (Rodapé do Card) */
+    #categories-body td:last-child {
+        grid-column: 1 / -1 !important;
+        margin-top: 12px !important;
+        padding-top: 12px !important;
+        border-top: 1px solid var(--border) !important;
+        justify-content: flex-end !important;
+        gap: 12px !important;
+    }
+}
+
+/* --- CORREÇÃO DEFINITIVA RESPONSIVIDADE RANKING --- */
+@media (max-width: 768px) {
+
+/* 1. Zera container pai para não forçar largura */
+#dashboard-view .chart-box, 
+#dashboard-view .table-container {
+    padding: 5px 0 !important;
+    overflow-x: hidden !important; /* Remove rolagem forçada */
+    width: 100% !important;
+    border: none !important;
+}
+
+/* 2. Força a tabela a respeitar os limites da tela */
+#dashboard-view table {
+    width: 100% !important;
+    min-width: 0px !important;      /* OBRIGATÓRIO: Mata a regra global que causa rolagem */
+    table-layout: fixed !important; /* Trava as colunas nas larguras definidas abaixo */
+    margin: 0 !important;
+}
+
+/* 3. Estilo das células "espremidas" */
+#dashboard-view th, 
+#ranking-table-body td {
+    padding: 6px 1px !important;   /* Quase zero de espaço lateral */
+    font-size: 11px !important;    /* Fonte pequena */
+    line-height: 1.1 !important;
+    vertical-align: middle !important;
+}
+
+/* --- COLUNA 1: SUBCATEGORIA (60%) --- */
+/* Texto quebra linha para caber */
+#dashboard-view th:nth-child(1),
+#ranking-table-body td:nth-child(1) {
+    width: 60% !important; 
+    white-space: normal !important;   /* Permite quebra de linha */
+    word-wrap: break-word !important; /* Quebra palavras longas se necessário */
+    text-align: left !important;
+    padding-left: 2px !important;
+}
+
+/* --- COLUNA 2: QTD (10%) --- */
+/* Espaço mínimo apenas para o número */
+#dashboard-view th:nth-child(2),
+#ranking-table-body td:nth-child(2) {
+    width: 10% !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    background: rgba(0,0,0,0.02); /* Fundo sutil para separar visualmente */
+}
+
+/* --- COLUNA 3: VALOR (30%) --- */
+/* Alinhado à direita, sem quebra */
+#dashboard-view th:nth-child(3),
+#ranking-table-body td:nth-child(3) {
+    width: 30% !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+    padding-right: 2px !important;
+    font-weight: 700;
+    letter-spacing: -0.5px; /* Junta um pouco os números */
+}
+
+/* Ajuste do cabeçalho para não ocupar muito espaço */
+#dashboard-view thead th {
+    font-size: 9px !important;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    color: var(--text-muted);
+}
+
+/* Esconde setas de ordenação no mobile */
+#sort-quantity-icon, 
+#sort-value-icon {
+    display: none !important;
+}
 }
 
     </style>
@@ -5601,7 +5938,11 @@ function updateSecondaryCharts(filtered, labels, timeRangeType, DB, filterCat, f
         function updateRankingTable() {
     const DB = getUserDB();
     if(!DB) return;
-    
+    if (window.innerWidth <= 768) {
+        rankingPageSize = 5; // Mobile: 3 itens
+    } else {
+        rankingPageSize = 6; // Desktop: 6 itens
+    }
     // Verificar se os elementos existem antes de acessá-los
     const rankingFilterType = document.getElementById('ranking-filter-type');
     const rankingFilterCategory = document.getElementById('ranking-filter-category');
