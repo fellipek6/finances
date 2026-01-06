@@ -2978,13 +2978,12 @@ function renderTransactions() {
                 <td colspan="10" style="padding: 15px;">
                     <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
                         <button class="btn btn-secondary" onclick="changeTransPage(-1)" ${currentTransPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
-                            <i class="fa-solid fa-chevron-left"></i> Anterior
+                            <i class="fa-solid fa-chevron-left"></i>
                         </button>
                         <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">
-                            Página ${currentTransPage} de ${totalPages} <span style="font-weight:400">(${totalItems} registros)</span>
+                            Página ${currentTransPage} de ${totalPages}  <span style="font-weight:400"></span>
                         </span>
-                        <button class="btn btn-secondary" onclick="changeTransPage(1)" ${currentTransPage >= totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
-                            Próxima <i class="fa-solid fa-chevron-right"></i>
+                        <button class="btn btn-secondary" onclick="changeTransPage(1)" ${currentTransPage >= totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}><i class="fa-solid fa-chevron-right"></i>
                         </button>
                     </div>
                 </td>
