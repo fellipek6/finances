@@ -6561,40 +6561,6 @@ function resetDashboardFilters() {
     updateTimeRange(); // Esta função já chama o renderAll()
 }
 
-// Reset de Filtros de Transações
-// Reset de Filtros de Transações
-function resetTransactionFilters() {
-    // Reseta para a primeira página ao limpar filtros
-    currentTransPage = 1; 
-
-    const now = getBrasiliaDate();
-    const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
-    if(document.getElementById('trans-time-range-type')) document.getElementById('trans-time-range-type').value = 'all';
-    if(document.getElementById('trans-filter-month')) document.getElementById('trans-filter-month').value = monthStr;
-    if(document.getElementById('filter-type')) document.getElementById('filter-type').value = '';
-    if(document.getElementById('filter-category')) document.getElementById('filter-category').value = '';
-    if(document.getElementById('filter-subcategory')) document.getElementById('filter-subcategory').value = '';
-    if(document.getElementById('filter-paid')) document.getElementById('filter-paid').value = '';
-    if(document.getElementById('transactions-search')) document.getElementById('transactions-search').value = '';
-
-    updateTransactionTimeRange();
-    updateTransactionFilters();
-}
-
-// Reset de Filtros de Recorrentes
-function resetRecurringFilters() {
-    // Reseta para a primeira página ao limpar filtros
-    currentRecurPage = 1;
-
-    if(document.getElementById('recurring-filter-type')) document.getElementById('recurring-filter-type').value = '';
-    if(document.getElementById('recurring-filter-category')) document.getElementById('recurring-filter-category').value = '';
-    if(document.getElementById('recurring-filter-subcategory')) document.getElementById('recurring-filter-subcategory').value = '';
-    if(document.getElementById('recurring-search')) document.getElementById('recurring-search').value = '';
-
-    updateRecurringFilters();
-}
-
 
 function changeTransPage(direction) {
     currentTransPage += direction;
@@ -6612,18 +6578,45 @@ function changeRecurPage(direction) {
 // Adicione o reset da página para 1 dentro das funções existentes:
 
 // 1. Modifique a função resetTransactionFilters() existente:
+// Reset de Filtros de Transações
 function resetTransactionFilters() {
-    currentTransPage = 1; // <--- ADICIONE ISSO
-    // ... (seu código existente de limpar inputs) ...
-    // ...
-    updateTransactionTimeRange();
-    updateTransactionFilters();
+    // 1. Reseta para a primeira página
+    currentTransPage = 1; 
+
+    const now = getBrasiliaDate();
+    const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    // 2. Reseta Filtros de Tempo e limpa datas personalizadas
+    if(document.getElementById('trans-time-range-type')) document.getElementById('trans-time-range-type').value = 'all';
+    if(document.getElementById('trans-filter-month')) document.getElementById('trans-filter-month').value = monthStr;
+    if(document.getElementById('trans-filter-year')) document.getElementById('trans-filter-year').value = now.getFullYear();
+    if(document.getElementById('trans-filter-date-start')) document.getElementById('trans-filter-date-start').value = '';
+    if(document.getElementById('trans-filter-date-end')) document.getElementById('trans-filter-date-end').value = '';
+
+    // 3. Reseta Filtros de Categoria, Status e busca
+    if(document.getElementById('filter-type')) document.getElementById('filter-type').value = '';
+    if(document.getElementById('filter-category')) document.getElementById('filter-category').value = '';
+    if(document.getElementById('filter-subcategory')) document.getElementById('filter-subcategory').value = '';
+    if(document.getElementById('filter-paid')) document.getElementById('filter-paid').value = '';
+    if(document.getElementById('transactions-search')) document.getElementById('transactions-search').value = '';
+
+    // 4. Força a atualização da interface para esconder campos desnecessários e renderizar
+    updateTransactionTimeRange(); // Esconde campos de mês/ano/custom
+    updateTransactionFilters();   // Esconde campos de categoria/subcategoria e renderiza a tabela
 }
 
-// 2. Modifique a função resetRecurringFilters() existente:
+// Reset de Filtros de Recorrentes
 function resetRecurringFilters() {
-    currentRecurPage = 1; // <--- ADICIONE ISSO
-    // ... (seu código existente de limpar inputs) ...
+    // 1. Reseta para a primeira página
+    currentRecurPage = 1;
+
+    // 2. Limpa todos os campos de seleção e busca
+    if(document.getElementById('recurring-filter-type')) document.getElementById('recurring-filter-type').value = '';
+    if(document.getElementById('recurring-filter-category')) document.getElementById('recurring-filter-category').value = '';
+    if(document.getElementById('recurring-filter-subcategory')) document.getElementById('recurring-filter-subcategory').value = '';
+    if(document.getElementById('recurring-search')) document.getElementById('recurring-search').value = '';
+
+    // 3. Atualiza os filtros para limpar as listas suspensas dependentes e renderizar
     updateRecurringFilters();
 }
 
