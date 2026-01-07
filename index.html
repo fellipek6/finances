@@ -2953,6 +2953,7 @@ td, th {
             const tx = (DB.transactions || []).find(t => t && t.id === id);
             if(tx) {
                 tx.paid = !tx.paid;
+                if(tx.paid) { tx.date = getBrasiliaISODate(); }
                 saveUserDB(DB);
                 renderAll();
             }
@@ -3007,7 +3008,7 @@ function renderTransactions() {
             const txDate = new Date(t.date + "T00:00:00");
             if(txDate < timeRange.start || txDate > timeRange.end) return false;
         }
-        if(filterType && t.type !== filterType) return false;
+        if(filterType && t.type !== filterType) return false; 
         if(filterCat && t.cat !== filterCat) return false;
         if(filterSubcat && t.subcat !== filterSubcat) return false;
         if(filterPaid) {
@@ -5250,6 +5251,7 @@ function getBrasiliaISODate() {
         const txDate = new Date(t.date + "T00:00:00");
         if(isNaN(txDate.getTime())) return false;
         if(txDate < range.start || txDate > range.end) return false;
+        if(!t.paid) return false; if(!t.paid) return false; 
         if(filterCat && t.cat !== filterCat) return false;
         if(filterSubcat && t.subcat !== filterSubcat) return false;
         return true;
@@ -5809,6 +5811,7 @@ function getBrasiliaISODate() {
             if (t.date !== todayStr) return false;
         }
 
+        if(!t.paid) return false; if(!t.paid) return false; 
         if(filterCat && t.cat !== filterCat) return false;
         if(filterSubcat && t.subcat !== filterSubcat) return false;
         return true;
@@ -5881,7 +5884,8 @@ function getBrasiliaISODate() {
         
         const loopData = (DB.transactions || []).filter(t => {
             if(!t || !t.date) return false;
-            if(filterCat && t.cat !== filterCat) return false;
+            if(!t.paid) return false; if(!t.paid) return false; 
+        if(filterCat && t.cat !== filterCat) return false;
             if(filterSubcat && t.subcat !== filterSubcat) return false;
             return true;
         });
@@ -6279,7 +6283,8 @@ function updateSecondaryCharts(filtered, labels, timeRangeType, DB, filterCat, f
     
     // Identificar quais categorias possuem transações no período e tipo selecionados
     const activeTransactions = (DB.transactions || []).filter(t => {
-        if(!t || !t.date || t.type !== filterType) return false;
+        if(!t || !t.date || t.type !== filterType) return false; 
+        if(!t.paid) return false; if(!t.paid) return false;
         const txDate = new Date(t.date + "T00:00:00");
         return !isNaN(txDate.getTime()) && txDate >= range.start && txDate <= range.end;
     });
@@ -6638,6 +6643,8 @@ function confirmAndTogglePaid(id) {
     </script>
 </body>
 </html>
+
+
 
 
 
