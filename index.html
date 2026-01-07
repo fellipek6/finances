@@ -5803,13 +5803,7 @@ function getBrasiliaISODate() {
         const txDate = new Date(t.date + "T00:00:00");
         if(isNaN(txDate.getTime())) return false;
         
-        if(timeRangeType !== 'all' && timeRangeType !== 'year' && timeRangeType !== 'today') {
-             if(txDate < range.start || txDate > range.end) return false;
-        }
-        if (timeRangeType === 'today') {
-            const todayStr = getBrasiliaISODate();
-            if (t.date !== todayStr) return false;
-        }
+        if(txDate < range.start || txDate > range.end) return false;
 
         if(!t.paid) return false; if(!t.paid) return false; 
         if(filterCat && t.cat !== filterCat) return false;
