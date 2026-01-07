@@ -253,10 +253,10 @@
     #recurring-view tbody tr {
         background: var(--card) !important;
         border: 1px solid var(--border) !important;
-        border-radius: 16px !important; /* Bordas mais suaves */
+        border-radius: 16px !important;
         margin-bottom: 16px !important;
         padding: 16px !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important; /* Sombra sutil */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
         gap: 12px !important;
@@ -264,13 +264,56 @@
         transition: transform 0.2s ease;
     }
 
+    /* --- CORREÇÃO: Cores para Status Pendente e Atrasado (Mobile) --- */
+    
+    /* Pendente (Amarelo) */
+    #transactions-view tbody tr.alert,
+    #recurring-view tbody tr.alert {
+        background-color: #fef3c7 !important;
+        border-color: #fcd34d !important;
+    }
+    /* Texto mais escuro no card amarelo para leitura */
+    #transactions-view tbody tr.alert td,
+    #recurring-view tbody tr.alert td {
+        color: #92400e !important; 
+    }
+
+    /* Atrasado (Vermelho) */
+    #transactions-view tbody tr.overdue,
+    #recurring-view tbody tr.overdue {
+        background-color: #fee2e2 !important;
+        border-color: #fca5a5 !important;
+    }
+    /* Texto mais escuro no card vermelho para leitura */
+    #transactions-view tbody tr.overdue td,
+    #recurring-view tbody tr.overdue td {
+        color: #b91c1c !important; 
+    }
+
+    /* Ajuste para Modo Escuro (Dark Mode) */
+    [data-theme="dark"] #transactions-view tbody tr.alert,
+    [data-theme="dark"] #recurring-view tbody tr.alert {
+        background-color: #451a03 !important; /* Marrom escuro */
+        border-color: #78350f !important;
+    }
+    [data-theme="dark"] #transactions-view tbody tr.alert td { color: #fef3c7 !important; }
+
+    [data-theme="dark"] #transactions-view tbody tr.overdue,
+    [data-theme="dark"] #recurring-view tbody tr.overdue {
+        background-color: #450a0a !important; /* Vermelho escuro */
+        border-color: #7f1d1d !important;
+    }
+    [data-theme="dark"] #transactions-view tbody tr.overdue td { color: #fee2e2 !important; }
+
+    /* ------------------------------------------------------------------ */
+
     /* 3. Estilização de Células e Tipografia */
     #transactions-view td,
     #recurring-view td {
         border: none !important;
         padding: 0 !important;
         font-size: 13px !important;
-        color: var(--text-muted) !important;
+        color: var(--text-muted) !important; /* Cor padrão (será sobrescrita pelos status acima se necessário) */
         display: flex !important;
         align-items: center !important;
         min-height: 20px !important;
@@ -278,7 +321,7 @@
 
     /* --- TRANSAÇÕES PREMIUM --- */
     
-    /* Título/Descrição em Destaque */
+    /* Título em Destaque */
     #transactions-view td:nth-child(2) {
         grid-column: 1 / -1 !important;
         font-size: 16px !important;
@@ -288,11 +331,17 @@
         order: -2;
     }
 
+    /* CORREÇÃO: Oculta a descrição detalhada (small) e quebras de linha no card */
+    #transactions-view td:nth-child(2) small,
+    #transactions-view td:nth-child(2) br {
+        display: none !important;
+    }
+
     /* Subcategoria com Estilo "Tag" */
     #transactions-view td:nth-child(4) {
         grid-column: 1 / -1 !important;
         font-size: 11px !important;
-        background: var(--bg);
+        background: rgba(0,0,0,0.05); /* Fundo sutil transparente para funcionar em cards coloridos */
         width: fit-content !important;
         padding: 2px 8px !important;
         border-radius: 4px !important;
@@ -307,7 +356,7 @@
         grid-column: 1 / span 1 !important;
         font-size: 15px !important;
         font-weight: 800 !important;
-        color: var(--text-main) !important;
+        color: inherit !important; /* Herda a cor do contexto (importante para cards vermelhos/amarelos) */
         letter-spacing: -0.5px;
     }
 
@@ -322,9 +371,28 @@
         grid-column: 1 / -1 !important;
         margin-top: 12px !important;
         padding-top: 12px !important;
-        border-top: 1px solid var(--border) !important;
+        border-top: 1px solid rgba(0,0,0,0.1) !important; /* Borda sutil */
         justify-content: flex-end !important;
         gap: 12px !important;
+    }
+
+    /* CORREÇÃO: Força tamanho fixo e anula o estilo da paginação */
+    #transactions-view td:last-child button {
+        width: 35px !important;
+        height: 35px !important;
+        min-width: 35px !important;
+        max-width: 35px !important;
+        flex: 0 0 35px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 8px !important;
+    }
+
+    #transactions-view td:last-child button i {
+        font-size: 14px !important;
+        margin: 0 !important;
     }
 
     /* --- RECORRENTES PREMIUM --- */
@@ -340,7 +408,7 @@
     #recurring-view td:nth-child(4) {
         font-size: 15px !important;
         font-weight: 800 !important;
-        color: var(--text-main) !important;
+        color: inherit !important;
     }
 
     #recurring-view td:nth-child(7) {
@@ -351,7 +419,7 @@
         grid-column: 1 / -1 !important;
         margin-top: 12px !important;
         padding-top: 12px !important;
-        border-top: 1px solid var(--border) !important;
+        border-top: 1px solid rgba(0,0,0,0.1) !important;
         justify-content: flex-end !important;
         gap: 12px !important;
     }
@@ -1124,6 +1192,48 @@ td, th {
         text-align: center;
         min-width: fit-content;
     }
+}
+
+/* --- AÇÕES DA NOTIFICAÇÃO --- */
+.notification-actions {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: flex-end;
+}
+
+[data-theme="dark"] .notification-actions {
+    border-top-color: rgba(255,255,255,0.1);
+}
+
+.btn-notif-action {
+    width: 100%;
+    padding: 8px;
+    font-size: 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: filter 0.2s;
+}
+
+.btn-notif-pay {
+    background-color: var(--success);
+    color: white;
+}
+
+.btn-notif-publish {
+    background-color: var(--accent);
+    color: white;
+}
+
+.btn-notif-action:hover {
+    filter: brightness(0.9);
 }
 
     </style>
@@ -2912,7 +3022,14 @@ function renderTransactions() {
     });
 
     // Ordenar do mais novo para o mais antigo
-    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+    filtered.sort((a, b) => {
+        if (a.paid !== b.paid) {
+            return a.paid ? 1 : -1;
+        }
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateB - dateA;
+    });
 
     // 3. Lógica de Paginação
     const totalItems = filtered.length;
@@ -3445,7 +3562,7 @@ function confirmPublishRecurring(id) {
         
         receiptDate: rec.type === 'income' ? today : null,
         alertDays: rec.alertDays || null,
-        paid: rec.type === 'income' ? true : false,
+        paid: true,
         comment: rec.comment || null
     };
 
@@ -3730,13 +3847,11 @@ function renderRecurring() {
                 <td colspan="8" style="padding: 15px;">
                     <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
                         <button class="btn btn-secondary" onclick="changeRecurPage(-1)" ${currentRecurPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
-                            <i class="fa-solid fa-chevron-left"></i> Anterior
-                        </button>
+                            <i class="fa-solid fa-chevron-left"></i></button>
                         <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">
-                            Página ${currentRecurPage} de ${totalPages} <span style="font-weight:400">(${totalItems} registros)</span>
+                            Página ${currentRecurPage} de ${totalPages} <span style="font-weight:400"></span>
                         </span>
-                        <button class="btn btn-secondary" onclick="changeRecurPage(1)" ${currentRecurPage >= totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
-                            Próxima <i class="fa-solid fa-chevron-right"></i>
+                        <button class="btn btn-secondary" onclick="changeRecurPage(1)" ${currentRecurPage >= totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}><i class="fa-solid fa-chevron-right"></i>
                         </button>
                     </div>
                 </td>
@@ -4068,66 +4183,91 @@ function renderRecurring() {
         }
 
         function toggleNotificationsDropdown() {
-            const dropdown = document.getElementById('notifications-dropdown');
-            if(!dropdown) return;
-            
-            const isActive = dropdown.classList.contains('active');
-            
-            if(isActive) {
-                dropdown.classList.remove('active');
+    const dropdown = document.getElementById('notifications-dropdown');
+    if(!dropdown) return;
+    
+    const isActive = dropdown.classList.contains('active');
+    
+    if(isActive) {
+        dropdown.classList.remove('active');
+    } else {
+        const notifications = updateNotifications();
+        const container = document.getElementById('notifications-dropdown-content');
+        
+        if(container) {
+            if(notifications.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Nenhuma notificação no momento.</p>';
             } else {
-                const notifications = updateNotifications();
-                const container = document.getElementById('notifications-dropdown-content');
-                
-                if(container) {
-                    if(notifications.length === 0) {
-                        container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Nenhuma notificação no momento.</p>';
-                    } else {
-                        container.innerHTML = notifications.map(notif => {
-                            const statusColor = notif.status === 'overdue' ? 'var(--danger)' : 'var(--warning)';
-                            const statusText = notif.status === 'overdue' ? 'Atrasado' : 'Alerta';
-                            const dateDisplay = notif.date ? notif.date.split('-').reverse().join('/') : '-';
-                            
-                            // Cores compatíveis com modo noturno
-                            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                            const bgColor = isDark 
-                                ? (notif.status === 'overdue' ? 'rgba(127, 29, 29, 0.3)' : 'rgba(120, 53, 15, 0.3)')
-                                : (notif.status === 'overdue' ? 'rgba(224, 17, 95, 0.05)' : 'rgba(245, 158, 11, 0.05)');
-                            const badgeBgColor = isDark
-                                ? (notif.status === 'overdue' ? '#7f1d1d' : '#78350f')
-                                : statusColor;
-                            const badgeTextColor = isDark ? '#fca5a5' : 'white';
-                            
-                            return `
-                                <div class="notification-dropdown-item" style="background: ${bgColor};">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                                        <div style="flex: 1;">
-                                            <div style="font-weight: 700; font-size: 14px; color: var(--text-main); margin-bottom: 4px;">${notif.title}</div>
-                                            <div style="font-size: 12px; color: var(--text-muted);">${notif.category}${notif.subcategory ? ' / ' + notif.subcategory : ''}</div>
-                                        </div>
-                                        <span class="badge" style="background: ${badgeBgColor}; color: ${badgeTextColor}; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; white-space: nowrap; margin-left: 10px;">
-                                            ${statusText}
-                                        </span>
-                                    </div>
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
-                                        <div>
-                                            <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 2px;">Valor</div>
-                                            <div style="font-weight: 700; color: var(--text-main); font-size: 13px;">R$ ${notif.value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-                                        </div>
-                                        <div>
-                                            <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 2px;">Data</div>
-                                            <div style="font-weight: 600; color: var(--text-main); font-size: 13px;">${dateDisplay}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('');
+                container.innerHTML = notifications.map(notif => {
+                    const statusColor = notif.status === 'overdue' ? 'var(--danger)' : 'var(--warning)';
+                    const statusText = notif.status === 'overdue' ? 'Atrasado' : 'Alerta';
+                    const dateDisplay = notif.date ? notif.date.split('-').reverse().join('/') : '-';
+                    
+                    // Cores compatíveis com modo noturno
+                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                    const bgColor = isDark 
+                        ? (notif.status === 'overdue' ? 'rgba(127, 29, 29, 0.3)' : 'rgba(120, 53, 15, 0.3)')
+                        : (notif.status === 'overdue' ? 'rgba(224, 17, 95, 0.05)' : 'rgba(245, 158, 11, 0.05)');
+                    const badgeBgColor = isDark
+                        ? (notif.status === 'overdue' ? '#7f1d1d' : '#78350f')
+                        : statusColor;
+                    const badgeTextColor = isDark ? '#fca5a5' : 'white';
+                    
+                    // --- LÓGICA DO BOTÃO DE AÇÃO ---
+                    let actionButtonHtml = '';
+                    
+                    if (notif.type === 'transaction') {
+                        // Se for transação (atrasada ou alerta), mostra botão "Marcar Pago"
+                        actionButtonHtml = `
+                            <div class="notification-actions">
+                                <button class="btn-notif-action btn-notif-pay" onclick="confirmAndTogglePaid(${notif.id})">
+                                    <i class="fa-solid fa-check"></i> Marcar como Pago
+                                </button>
+                            </div>
+                        `;
+                    } else if (notif.type === 'recurring') {
+                        // Se for recorrente, mostra botão "Publicar"
+                        // Nota: publishRecurring já abre o modal de confirmação, então chamamos direto
+                        actionButtonHtml = `
+                            <div class="notification-actions">
+                                <button class="btn-notif-action btn-notif-publish" onclick="publishRecurring(${notif.id}); document.getElementById('notifications-dropdown').classList.remove('active');">
+                                    <i class="fa-solid fa-paper-plane"></i> Publicar Transação
+                                </button>
+                            </div>
+                        `;
                     }
-                }
-                
-                dropdown.classList.add('active');
+
+                    return `
+                        <div class="notification-dropdown-item" style="background: ${bgColor};">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 700; font-size: 14px; color: var(--text-main); margin-bottom: 4px;">${notif.title}</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">${notif.category}${notif.subcategory ? ' / ' + notif.subcategory : ''}</div>
+                                </div>
+                                <span class="badge" style="background: ${badgeBgColor}; color: ${badgeTextColor}; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; white-space: nowrap; margin-left: 10px;">
+                                    ${statusText}
+                                </span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+                                <div>
+                                    <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 2px;">Valor</div>
+                                    <div style="font-weight: 700; color: var(--text-main); font-size: 13px;">R$ ${notif.value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 2px;">Data</div>
+                                    <div style="font-weight: 600; color: var(--text-main); font-size: 13px;">${dateDisplay}</div>
+                                </div>
+                            </div>
+                            ${actionButtonHtml}
+                        </div>
+                    `;
+                }).join('');
             }
         }
+        
+        dropdown.classList.add('active');
+    }
+}
 
         function updateCategoryEssentialField() {
             const catType = document.getElementById('cat-type');
@@ -5661,7 +5801,6 @@ function getBrasiliaISODate() {
         const txDate = new Date(t.date + "T00:00:00");
         if(isNaN(txDate.getTime())) return false;
         
-        // Verifica range apenas se não for 'all' ou 'year' ou 'today' (pois esses têm loops específicos)
         if(timeRangeType !== 'all' && timeRangeType !== 'year' && timeRangeType !== 'today') {
              if(txDate < range.start || txDate > range.end) return false;
         }
@@ -5679,22 +5818,44 @@ function getBrasiliaISODate() {
     const incomeData = [];
     const expenseData = [];
     const balanceData = [];
+    
+    // --- NOVOS ARRAYS PARA O GRÁFICO ESSENCIAL (TEMPO) ---
+    const essentialData = [];
+    const nonEssentialData = [];
+    
     const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     const nowBrasilia = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+
+    // Função auxiliar para checar se é essencial
+    const checkEssential = (t) => {
+        if (t.type !== 'expense') return false;
+        const cat = DB.categories.find(c => c.name === t.cat);
+        if (!cat) return false;
+        // Verifica se tem subcategoria e se ela define a essencialidade, senão usa a da categoria
+        if (t.subcat) {
+            const sub = cat.subcategories.find(s => s.name === t.subcat);
+            return sub && sub.essential !== undefined ? sub.essential : cat.essential;
+        }
+        return cat.essential;
+    };
 
     // --- LÓGICA DE PREENCHIMENTO DOS DADOS ---
 
     if (timeRangeType === 'today') {
-        // Lógica de HORAS para o gráfico de hoje
         const currentHour = nowBrasilia.getHours();
         
-        let todayInc = 0, todayExp = 0;
-        // Calcula o total do dia ANTES do loop para acumular corretamente
-        // Nota: Se quiser gráfico hora a hora real, precisaria de timestamp na transação.
-        // Como só tem data, mostramos o valor acumulado do dia repetido até a hora atual.
+        // Acumuladores do dia inteiro (para simular gráfico acumulativo horario)
+        let todayInc = 0, todayExp = 0, todayEss = 0, todayNonEss = 0;
+        
         filtered.forEach(t => {
-            if (t.type === 'income') todayInc += (parseFloat(t.val) || 0);
-            else if (t.type === 'expense') todayExp += (parseFloat(t.val) || 0);
+            const val = parseFloat(t.val) || 0;
+            if (t.type === 'income') {
+                todayInc += val;
+            } else if (t.type === 'expense') {
+                todayExp += val;
+                if (checkEssential(t)) todayEss += val;
+                else todayNonEss += val;
+            }
         });
 
         for (let h = 0; h <= 23; h++) {
@@ -5704,10 +5865,14 @@ function getBrasiliaISODate() {
                 incomeData.push(todayInc);
                 expenseData.push(todayExp);
                 balanceData.push(todayInc - todayExp);
+                essentialData.push(todayEss);
+                nonEssentialData.push(todayNonEss);
             } else {
                 incomeData.push(null);
                 expenseData.push(null);
                 balanceData.push(null);
+                essentialData.push(null);
+                nonEssentialData.push(null);
             }
         }
 
@@ -5733,19 +5898,29 @@ function getBrasiliaISODate() {
                 incomeData.push(null);
                 expenseData.push(null);
                 balanceData.push(null);
+                essentialData.push(null);
+                nonEssentialData.push(null);
             } else {
-                let monthInc = 0, monthExp = 0;
+                let monthInc = 0, monthExp = 0, monthEss = 0, monthNonEss = 0;
                 const monthKey = `${targetYear}-${String(m + 1).padStart(2, '0')}`;
                 
                 loopData.forEach(t => {
                     if (t.date.substring(0, 7) === monthKey) {
-                        if (t.type === 'income') monthInc += (parseFloat(t.val) || 0);
-                        else if (t.type === 'expense') monthExp += (parseFloat(t.val) || 0);
+                        const val = parseFloat(t.val) || 0;
+                        if (t.type === 'income') {
+                            monthInc += val;
+                        } else if (t.type === 'expense') {
+                            monthExp += val;
+                            if (checkEssential(t)) monthEss += val;
+                            else monthNonEss += val;
+                        }
                     }
                 });
                 incomeData.push(monthInc);
                 expenseData.push(monthExp);
                 balanceData.push(monthInc - monthExp);
+                essentialData.push(monthEss);
+                nonEssentialData.push(monthNonEss);
             }
         }
 
@@ -5764,19 +5939,29 @@ function getBrasiliaISODate() {
                 incomeData.push(null);
                 expenseData.push(null);
                 balanceData.push(null);
+                essentialData.push(null);
+                nonEssentialData.push(null);
             } else {
-                let dayInc = 0, dayExp = 0;
+                let dayInc = 0, dayExp = 0, dayEss = 0, dayNonEss = 0;
                 const dayKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 
                 filtered.forEach(t => {
                     if(t.date === dayKey) {
-                        if(t.type === 'income') dayInc += (parseFloat(t.val) || 0);
-                        else if(t.type === 'expense') dayExp += (parseFloat(t.val) || 0);
+                        const val = parseFloat(t.val) || 0;
+                        if(t.type === 'income') {
+                            dayInc += val;
+                        } else if(t.type === 'expense') {
+                            dayExp += val;
+                            if (checkEssential(t)) dayEss += val;
+                            else dayNonEss += val;
+                        }
                     }
                 });
                 incomeData.push(dayInc);
                 expenseData.push(dayExp);
                 balanceData.push(dayInc - dayExp);
+                essentialData.push(dayEss);
+                nonEssentialData.push(dayNonEss);
             }
         }
 
@@ -5798,22 +5983,32 @@ function getBrasiliaISODate() {
                 incomeData.push(null);
                 expenseData.push(null);
                 balanceData.push(null);
+                essentialData.push(null);
+                nonEssentialData.push(null);
             } else {
                 const y = current.getFullYear();
                 const m = String(current.getMonth()+1).padStart(2,'0');
                 const d = String(current.getDate()).padStart(2,'0');
                 const manualKey = `${y}-${m}-${d}`;
 
-                let dayInc = 0, dayExp = 0;
+                let dayInc = 0, dayExp = 0, dayEss = 0, dayNonEss = 0;
                 filtered.forEach(t => {
                     if(t.date === manualKey) {
-                        if(t.type === 'income') dayInc += (parseFloat(t.val) || 0);
-                        else if(t.type === 'expense') dayExp += (parseFloat(t.val) || 0);
+                        const val = parseFloat(t.val) || 0;
+                        if(t.type === 'income') {
+                            dayInc += val;
+                        } else if(t.type === 'expense') {
+                            dayExp += val;
+                            if (checkEssential(t)) dayEss += val;
+                            else dayNonEss += val;
+                        }
                     }
                 });
                 incomeData.push(dayInc);
                 expenseData.push(dayExp);
                 balanceData.push(dayInc - dayExp);
+                essentialData.push(dayEss);
+                nonEssentialData.push(dayNonEss);
             }
             current.setDate(current.getDate() + 1);
         }
@@ -5821,7 +6016,7 @@ function getBrasiliaISODate() {
 
     // --- ATUALIZAÇÃO DOS GRÁFICOS ---
     
-    // Principal (Linha)
+    // 1. Principal (Receitas vs Despesas)
     if(mainChart) {
         mainChart.data.labels = labels.length > 0 ? labels : ['Sem dados'];
         mainChart.data.datasets = [
@@ -5847,7 +6042,33 @@ function getBrasiliaISODate() {
         mainChart.update('active');
     }
 
-    // Eficiência (Usa datasets[0] que agora existe graças ao initCharts corrigido)
+    // 2. Essenciais vs Não Essenciais (Tempo) - CORRIGIDO
+    if(essentialLineChart) {
+        essentialLineChart.data.labels = labels.length > 0 ? labels : ['Sem dados'];
+        essentialLineChart.data.datasets = [
+            { 
+                label: 'Essenciais', 
+                data: essentialData.length > 0 ? essentialData : [0], 
+                borderColor: '#f59e0b', // Cor Laranja/Amarelo
+                backgroundColor: 'rgba(245, 158, 11, 0.1)', 
+                tension: 0.4, 
+                fill: true,
+                spanGaps: true 
+            },
+            { 
+                label: 'Não Essenciais', 
+                data: nonEssentialData.length > 0 ? nonEssentialData : [0], 
+                borderColor: '#3730a3', // Cor Indigo
+                backgroundColor: 'rgba(55, 48, 163, 0.1)', 
+                tension: 0.4, 
+                fill: true,
+                spanGaps: true
+            }
+        ];
+        essentialLineChart.update('active');
+    }
+
+    // 3. Eficiência
     if(efficiencyChart) {
         const efficiencyData = [];
         labels.forEach((_, i) => {
@@ -5870,7 +6091,7 @@ function getBrasiliaISODate() {
         }
     }
 
-    // Saldo (Usa datasets[0] que agora existe graças ao initCharts corrigido)
+    // 4. Saldo
     if(balanceChart) {
         balanceChart.data.labels = labels.length > 0 ? labels : ['Sem dados'];
         if(balanceChart.data.datasets[0]) {
@@ -6404,6 +6625,21 @@ function resetRecurringFilters() {
     currentRecurPage = 1; // <--- ADICIONE ISSO
     // ... (seu código existente de limpar inputs) ...
     updateRecurringFilters();
+}
+
+function confirmAndTogglePaid(id) {
+    if(confirm("Deseja confirmar o pagamento desta transação agora?")) {
+        // Chama a função existente que marca como pago no banco
+        togglePaid(id);
+        
+        // Fecha o dropdown para atualizar a interface
+        const dropdown = document.getElementById('notifications-dropdown');
+        if(dropdown) dropdown.classList.remove('active');
+        
+        // Atualiza o contador de notificações
+        updateNotifications();
+        
+    }
 }
 
     </script>
