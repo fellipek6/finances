@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -2954,7 +2954,7 @@ td, th {
             if(tx) {
                 tx.paid = !tx.paid;
                 saveUserDB(DB);
-                renderTransactions();
+                renderAll();
             }
         }
 
@@ -5258,7 +5258,7 @@ function getBrasiliaISODate() {
     let inc = 0, exp = 0, essential = 0, nonessential = 0, pending = 0, overdue = 0;
 
     filtered.forEach(t => {
-        if(t.type === 'income') {
+        if(!t.paid) return; if(t.type === 'income') {
             inc += t.val;
         } else {
             exp += t.val;
@@ -5290,7 +5290,7 @@ function getBrasiliaISODate() {
 
     let totalInc = 0, totalExp = 0;
     (DB.transactions || []).forEach(t => {
-        if(t && t.type === 'income') totalInc += t.val;
+        if(!t || !t.paid) return; if(t && t.type === 'income') totalInc += t.val;
         else if(t && t.type === 'expense') totalExp += t.val;
     });
     const totalBalance = totalInc - totalExp;
@@ -5313,7 +5313,7 @@ function getBrasiliaISODate() {
     
     const yearExpenses = (DB.transactions || []).filter(t => {
         if(!t || !t.date || t.type !== 'expense') return false;
-        const txYear = new Date(t.date + "T00:00:00").getFullYear();
+        if(!t.paid) return false; const txYear = new Date(t.date + "T00:00:00").getFullYear();
         return txYear === targetYear;
     });
     
@@ -6638,3 +6638,6 @@ function confirmAndTogglePaid(id) {
     </script>
 </body>
 </html>
+
+
+
