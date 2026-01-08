@@ -4164,68 +4164,86 @@ filtered.sort((a, b) => {
 
         // NOTIFICAÇÕES
         function updateNotifications() {
-            const DB = getUserDB();
-            if(!DB) return;
-            
-            if(!DB.transactions) DB.transactions = [];
-            if(!DB.recurring) DB.recurring = [];
-            
-            const notifications = [];
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            // Verificar transações
-            (DB.transactions || []).forEach(tx => {
-                if(!tx) return;
-                const status = getTransactionStatus(tx);
-                if(status === 'alert' || status === 'overdue') {
-                    const targetDate = tx.type === 'expense' ? new Date(tx.dueDate) : new Date(tx.receiptDate);
-                    notifications.push({
-                        type: 'transaction',
-                        id: tx.id,
-                        title: tx.desc || 'Sem título',
-                        desc: tx.desc || '',
-                        value: tx.val || 0,
-                        date: tx.type === 'expense' ? tx.dueDate : tx.receiptDate,
-                        status: status,
-                        category: tx.cat || '',
-                        subcategory: tx.subcat || ''
-                    });
-                }
+    const DB = getUserDB();
+
+    if (!DB) return;
+
+    if (!DB.transactions) DB.transactions = [];
+    if (!DB.recurring) DB.recurring = [];
+
+    const notifications = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Verificar transações
+    (DB.transactions || []).forEach(tx => {
+        if (!tx) return;
+        const status = getTransactionStatus(tx);
+        if (status === 'alert' || status === 'overdue') {
+            notifications.push({
+                type: 'transaction',
+                id: tx.id,
+                title: tx.desc || 'Sem título',
+                desc: tx.desc || '',
+                value: tx.val || 0,
+                date: tx.type === 'expense' ? tx.dueDate : tx.receiptDate,
+                status: status,
+                category: tx.cat || '',
+                subcategory: tx.subcat || ''
             });
-            
-            // Verificar recorrentes
-            (DB.recurring || []).forEach(rec => {
-                if(!rec) return;
-                const status = getRecurringStatus(rec);
-                if(status === 'alert' || status === 'overdue') {
-                    notifications.push({
-                        type: 'recurring',
-                        id: rec.id,
-                        title: rec.desc || 'Sem título',
-                        desc: rec.desc || '',
-                        value: rec.val || 0,
-                        date: rec.nextDate || '',
-                        status: status,
-                        category: rec.cat || '',
-                        subcategory: rec.subcat || ''
-                    });
-                }
-            });
-            
-            // Atualizar badge
-            const badge = document.getElementById('notification-badge');
-            if(badge) {
-                if(notifications.length > 0) {
-                    badge.textContent = notifications.length > 99 ? '99+' : notifications.length;
-                    badge.style.display = 'flex';
-                } else {
-                    badge.style.display = 'none';
-                }
-            }
-            
-            return notifications;
         }
+    });
+
+    // Verificar recorrentes
+    (DB.recurring || []).forEach(rec => {
+        if (!rec) return;
+        const status = getRecurringStatus(rec);
+        if (status === 'alert' || status === 'overdue') {
+            notifications.push({
+                type: 'recurring',
+                id: rec.id,
+                title: rec.desc || 'Sem título',
+                desc: rec.desc || '',
+                value: rec.val || 0,
+                date: rec.nextDate || '',
+                status: status,
+                category: rec.cat || '',
+                subcategory: rec.subcat || ''
+            });
+        }
+    });
+
+    // --- LÓGICA DE ORDENAÇÃO CORRIGIDA ---
+    notifications.sort((a, b) => {
+        // 1. Prioridade por Status (Atrasado > Alerta)
+        const getWeight = (n) => (n.status === 'overdue' ? 2 : 1);
+        const weightA = getWeight(a);
+        const weightB = getWeight(b);
+
+        if (weightA !== weightB) {
+            return weightB - weightA; // Maior peso (overdue) primeiro
+        }
+
+        // 2. Ordem Crescente por Data (Mais antiga/vencida primeiro)
+        const dateA = new Date(a.date + "T00:00:00");
+        const dateB = new Date(b.date + "T00:00:00");
+
+        return dateA - dateB;
+    });
+
+    // Atualizar badge
+    const badge = document.getElementById('notification-badge');
+    if (badge) {
+        if (notifications.length > 0) {
+            badge.textContent = notifications.length > 99 ? '99+' : notifications.length;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    return notifications;
+}
 
         function toggleNotificationsDropdown() {
     const dropdown = document.getElementById('notifications-dropdown');
