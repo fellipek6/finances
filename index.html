@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <!-- Firebase SDK - Realtime Database -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -5456,6 +5457,19 @@ function getBrasiliaISODate() {
 
         // GRÁFICOS
         function initCharts() {
+    // Configuração comum para formatar as porcentagens
+    const percentageConfig = {
+        color: '#fff',
+        font: { weight: 'bold', size: 12 },
+        formatter: (value, ctx) => {
+            let sum = 0;
+            let dataArr = ctx.chart.data.datasets[0].data;
+            dataArr.map(data => { sum += data; });
+            let percentage = (value * 100 / sum).toFixed(1) + "%";
+            return (percentage === "0.0%" || sum === 0) ? null : percentage;
+        }
+    };
+
     // 1. Gráfico Principal (Receitas vs Despesas)
     const ctxMain = document.getElementById('mainChart').getContext('2d');
     mainChart = new Chart(ctxMain, {
@@ -5467,15 +5481,14 @@ function getBrasiliaISODate() {
             resizeDelay: 0,
             plugins: { 
                 legend: { display: true, position: 'top' },
-                tooltip: { mode: 'index', intersect: false }
+                tooltip: { mode: 'index', intersect: false },
+                datalabels: { display: false } // Desativado para gráficos de linha
             },
             scales: { 
                 y: { beginAtZero: true },
                 x: { display: true }
             },
-            layout: {
-                padding: { top: 10, bottom: 10, left: 10, right: 10 }
-            }
+            layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
         }
     });
 
@@ -5483,6 +5496,7 @@ function getBrasiliaISODate() {
     const ctxPie = document.getElementById('pieChart').getContext('2d');
     pieChart = new Chart(ctxPie, {
         type: 'doughnut',
+        plugins: [ChartDataLabels],
         data: { labels: ['Entradas', 'Saídas'], datasets: [{ data: [0, 0], backgroundColor: ['#10b981', '#E0115F'] }] },
         options: { 
             maintainAspectRatio: false,
@@ -5490,11 +5504,10 @@ function getBrasiliaISODate() {
             resizeDelay: 0,
             plugins: { 
                 legend: { display: true, position: 'bottom' },
+                datalabels: percentageConfig,
                 tooltip: { enabled: true }
             },
-            layout: {
-                padding: { top: 10, bottom: 10, left: 10, right: 10 }
-            }
+            layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
         }
     });
 
@@ -5509,15 +5522,14 @@ function getBrasiliaISODate() {
             resizeDelay: 0,
             plugins: { 
                 legend: { display: true, position: 'top' },
-                tooltip: { mode: 'index', intersect: false }
+                tooltip: { mode: 'index', intersect: false },
+                datalabels: { display: false }
             },
             scales: { 
                 y: { beginAtZero: true },
                 x: { display: true }
             },
-            layout: {
-                padding: { top: 10, bottom: 10, left: 10, right: 10 }
-            }
+            layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
         }
     });
 
@@ -5525,6 +5537,7 @@ function getBrasiliaISODate() {
     const ctxEssential = document.getElementById('essentialChart').getContext('2d');
     essentialChart = new Chart(ctxEssential, {
         type: 'doughnut',
+        plugins: [ChartDataLabels],
         data: { labels: ['Essenciais', 'Não Essenciais'], datasets: [{ data: [0, 0], backgroundColor: ['#f59e0b', '#E0115F'] }] },
         options: { 
             maintainAspectRatio: false,
@@ -5532,11 +5545,10 @@ function getBrasiliaISODate() {
             resizeDelay: 0,
             plugins: { 
                 legend: { display: true, position: 'bottom' },
+                datalabels: percentageConfig,
                 tooltip: { enabled: true }
             },
-            layout: {
-                padding: { top: 10, bottom: 10, left: 10, right: 10 }
-            }
+            layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
         }
     });
 
@@ -5552,15 +5564,14 @@ function getBrasiliaISODate() {
             resizeDelay: 0,
             plugins: { 
                 legend: { display: false },
-                tooltip: { enabled: true }
+                tooltip: { enabled: true },
+                datalabels: { display: false }
             },
             scales: { 
                 x: { beginAtZero: true },
                 y: { display: true }
             },
-            layout: {
-                padding: { top: 10, bottom: 10, left: 10, right: 10 }
-            }
+            layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
         }
     });
 
@@ -5576,19 +5587,18 @@ function getBrasiliaISODate() {
             resizeDelay: 0,
             plugins: { 
                 legend: { display: false },
-                tooltip: { enabled: true }
+                tooltip: { enabled: true },
+                datalabels: { display: false }
             },
             scales: { 
                 x: { beginAtZero: true },
                 y: { display: true }
             },
-            layout: {
-                padding: { top: 10, bottom: 10, left: 10, right: 10 }
-            }
+            layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
         }
     });
 
-    // 7. Gráfico Eficiência (CORRIGIDO)
+    // 7. Gráfico Eficiência
     const ctxEfficiency = document.getElementById('efficiencyChart').getContext('2d');
     efficiencyChart = new Chart(ctxEfficiency, {
         type: 'line',
@@ -5609,22 +5619,22 @@ function getBrasiliaISODate() {
             resizeDelay: 0,
             plugins: { 
                 legend: { display: true, position: 'top' },
-                tooltip: { mode: 'index', intersect: false }
+                tooltip: { mode: 'index', intersect: false },
+                datalabels: { display: false }
             },
             scales: { 
                 y: { beginAtZero: true },
                 x: { display: true }
             },
-            layout: {
-                padding: { top: 10, bottom: 10, left: 10, right: 10 }
-            }
+            layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
         }
     });
 
-    // 8. Gráfico Pagamentos
+    // 8. Gráfico Pagamentos (Pizza)
     const ctxPayment = document.getElementById('paymentChart').getContext('2d');
     paymentChart = new Chart(ctxPayment, {
         type: 'pie',
+        plugins: [ChartDataLabels],
         data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
         options: { 
             maintainAspectRatio: false,
@@ -5632,15 +5642,14 @@ function getBrasiliaISODate() {
             resizeDelay: 0,
             plugins: { 
                 legend: { display: true, position: 'bottom' },
+                datalabels: percentageConfig,
                 tooltip: { enabled: true }
             },
-            layout: {
-                padding: { top: 10, bottom: 10, left: 10, right: 10 }
-            }
+            layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
         }
     });
 
-    // 9. Gráfico Saldo (CORRIGIDO)
+    // 9. Gráfico Saldo
     const ctxBalance = document.getElementById('balanceChart').getContext('2d');
     balanceChart = new Chart(ctxBalance, {
         type: 'line',
@@ -5661,15 +5670,14 @@ function getBrasiliaISODate() {
             resizeDelay: 0,
             plugins: { 
                 legend: { display: true, position: 'top' },
-                tooltip: { mode: 'index', intersect: false }
+                tooltip: { mode: 'index', intersect: false },
+                datalabels: { display: false }
             },
             scales: { 
                 y: { beginAtZero: false },
                 x: { display: true }
             },
-            layout: {
-                padding: { top: 10, bottom: 10, left: 10, right: 10 }
-            }
+            layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
         }
     });
 }
