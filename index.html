@@ -432,6 +432,35 @@
     #recurring-view td:nth-child(3)::before { content: '📁 '; margin-right: 6px; }
     #recurring-view td:nth-child(5)::before { content: '🔄 '; margin-right: 6px; }
     #recurring-view td:nth-child(6)::before { content: '📅 '; margin-right: 6px; }
+
+
+}
+
+@media (max-width: 768px) {
+    /* Aplica o ícone apenas se a célula NÃO for uma mensagem de sistema (colspan) */
+    #transactions-view td:nth-child(1):not([colspan])::before { 
+        content: '🗓️ '; 
+        margin-right: 6px; 
+    }
+
+    /* Força a centralização e remove estilos de card da mensagem "Vazio" */
+    #transactions-view td[colspan], 
+    #recurring-view td[colspan], 
+    #categories-view td[colspan] {
+        display: block !important;
+        width: 100% !important;
+        text-align: center !important;
+        padding: 40px 20px !important;
+        background: transparent !important;
+        border: none !important;
+        grid-column: 1 / -1 !important; /* Garante que ocupe toda a largura no grid */
+    }
+    
+    /* Remove o pseudo-elemento especificamente para a célula de 'não encontrado' */
+    #transactions-view td[colspan]::before,
+    #recurring-view td[colspan]::before {
+        content: none !important;
+    }
 }
 
 
@@ -3119,7 +3148,7 @@ filtered.sort((a, b) => {
     }).join('');
 
     if (totalItems === 0) {
-        html = '<tr><td colspan="10" style="text-align:center; padding:40px; color:var(--text-muted)">Nenhuma transação encontrada</td></tr>';
+        html = '<tr><td colspan="10" style="text-align:center; padding:40px; color:var(--text-muted); width: 100%;">Nenhuma transação encontrada</td></tr>';
     } else {
         // 5. Adicionar Controles de Paginação (Rodapé da Tabela)
         html += `
@@ -3884,7 +3913,7 @@ filtered.sort((a, b) => {
     }).join('');
 
     if (totalItems === 0) {
-        html = '<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted)">Nenhum registro recorrente encontrado</td></tr>';
+        html = '<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted); width: 100%;">Nenhum registro recorrente encontrado</td></tr>';
     } else {
         // 5. Adicionar Controles de Paginação
         html += `
