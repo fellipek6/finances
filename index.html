@@ -2456,23 +2456,29 @@ td, th {
         if (firebaseAvailable && window.firebaseDatabase && window.db) {
             const userRef = window.firebaseDatabase.ref(window.db, `users/${currentUser.user}`);
             
-            // Usamos onValue em vez de get para escutar alterações em tempo real
+            // Usamos onValue para escutar alterações em tempo real no banco de dados
             window.firebaseDatabase.onValue(userRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     
-                    // Garantir que as propriedades essenciais existam
+                    // Garantir que as propriedades essenciais existam no objeto de dados
                     if (!data.transactions) data.transactions = [];
                     if (!data.recurring) data.recurring = [];
                     if (!data.categories) data.categories = [];
+
+                    // --- CORREÇÃO DE APARÊNCIA IMEDIATA ---
+                    // Se existirem configurações salvas no Firebase, aplica-as imediatamente
+                    if (data.settings) {
+                        applySettings(data.settings);
+                    }
 
                     const key = `fpro_${currentUser.user}`;
                     const newDataStr = JSON.stringify(data);
                     const oldDataStr = localStorage.getItem(key);
 
-                    // SÓ atualiza e renderiza se houver mudança real nos dados
+                    // SÓ atualiza o storage e a interface se houver mudança real nos dados
                     if (newDataStr !== oldDataStr) {
-                        // Salvar no localStorage como backup
+                        // Salvar no localStorage como backup local
                         localStorage.setItem(key, newDataStr);
 
                         // Forçar atualização da interface e gráficos
@@ -2488,7 +2494,7 @@ td, th {
             });
         }
     } catch (error) {
-        // Tratamendo de erros de permissão ou conexão
+        // Tratamento de erros de permissão ou conexão
         const errorMessage = error.message || '';
         const errorCode = error.code || '';
         
@@ -2547,89 +2553,101 @@ td, th {
 
         // LOGIN
         async function handleLogin() {
-            if(isLocked) return;
+    if (isLocked) return;
 
-            let u = document.getElementById('user-input').value;
-            const p = document.getElementById('pass-input').value;
-            
-            // Forçar letras minúsculas, sem caracteres especiais e sem espaços no login
-            u = u.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/\s/g, '');
-            document.getElementById('user-input').value = u;
-            const box = document.getElementById('login-box');
+    let u = document.getElementById('user-input').value;
+    const p = document.getElementById('pass-input').value;
 
-            // Carregar usuários do Firebase primeiro
-            let users = [];
+    // Normalização do login
+    u = u.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/\s/g, '');
+    document.getElementById('user-input').value = u;
+    const box = document.getElementById('login-box');
+
+    // Carregar lista de credenciais
+    let users = [];
+    try {
+        users = await loadUsersFromFirebase();
+    } catch (error) {
+        console.warn('Erro ao carregar usuários do Firebase, usando localStorage:', error);
+        users = JSON.parse(localStorage.getItem('fpro_users')) || [];
+    }
+
+    if (users.length === 0) {
+        users = JSON.parse(localStorage.getItem('fpro_users')) || [];
+    }
+
+    const user = users.find(usr => usr.user === u && usr.pass === p);
+
+    if (user) {
+        currentUser = user;
+
+        // --- CORREÇÃO DE APARÊNCIA IMEDIATA ---
+        // 1. Tenta pegar os dados locais primeiro para carregar o tema instantaneamente
+        const localData = localStorage.getItem(`fpro_${u}`);
+        if (localData) {
             try {
-                users = await loadUsersFromFirebase();
-            } catch (error) {
-                console.warn('Erro ao carregar usuários do Firebase, usando localStorage:', error);
-                users = JSON.parse(localStorage.getItem('fpro_users')) || [];
-            }
-            
-            // Se não houver usuários do Firebase, usar localStorage
-            if (users.length === 0) {
-                users = JSON.parse(localStorage.getItem('fpro_users')) || [];
-            }
-            
-            const user = users.find(usr => usr.user === u && usr.pass === p);
-
-            if(user) {
-                currentUser = user;
-                document.getElementById('login-screen').style.display = 'none';
-                const app = document.getElementById('app');
-                if(app) {
-                    app.style.display = 'flex';
-                    app.classList.add('active');
+                const parsed = JSON.parse(localData);
+                if (parsed.settings) {
+                    // Aplica cores e nome do site antes mesmo de abrir o app
+                    applySettings(parsed.settings);
+                    if (parsed.settings.theme) {
+                        document.documentElement.setAttribute('data-theme', parsed.settings.theme);
+                    }
                 }
-                const adminName = document.getElementById('admin-name');
-                if(adminName) adminName.textContent = user.name;
-                const adminNameMobile = document.getElementById('admin-name-mobile');
-                if(adminNameMobile) adminNameMobile.textContent = user.name;
-                
-                if(user.role === 'admin') {
-                    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
-                } else {
-                    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-                }
-
-                // Aplicar configurações do usuário após login
-                const userDB = getUserDB();
-                const settings = userDB && userDB.settings ? userDB.settings : {
-                    siteName: 'Finance PRO',
-                    icon: 'fa-vault',
-                    palette: 'ruby'
-                };
-                applySettings(settings);
-
-                initCharts();
-                // Sincronizar com Firebase após login
-                if (useFirebase) {
-                    syncWithFirebase().then(() => {
-                        // Aguardar um pouco para garantir que os gráficos foram inicializados
-                        setTimeout(() => {
-                            renderAll();
-                        }, 100);
-                    }).catch(() => {
-                        setTimeout(() => {
-                            renderAll();
-                        }, 100);
-                    });
-                } else {
-                    // Aguardar um pouco para garantir que os gráficos foram inicializados
-                    setTimeout(() => {
-                        renderAll();
-                    }, 100);
-                }
-            } else {
-                attempts++;
-                box.classList.add('shake');
-                setTimeout(() => box.classList.remove('shake'), 400);
-
-                if(attempts >= 5) {
-                    startLockout();
-                }
-            }
+            } catch (e) { console.error("Erro ao carregar tema local:", e); }
         }
+
+        // Interface: Transição de telas
+        document.getElementById('login-screen').style.display = 'none';
+        const app = document.getElementById('app');
+        if (app) {
+            app.style.display = 'flex';
+            app.classList.add('active');
+        }
+
+        // Preencher dados do perfil
+        const adminName = document.getElementById('admin-name');
+        if (adminName) adminName.textContent = user.name;
+        const adminNameMobile = document.getElementById('admin-name-mobile');
+        if (adminNameMobile) adminNameMobile.textContent = user.name;
+
+        // Permissões de Admin
+        if (user.role === 'admin') {
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
+        } else {
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        }
+
+        // Inicializar componentes visuais
+        initCharts();
+
+        // Sincronização e Renderização Final
+        if (useFirebase) {
+            syncWithFirebase().then(() => {
+                // Após sincronizar, as configurações podem ter mudado no Firebase
+                const userDB = getUserDB();
+                if (userDB && userDB.settings) {
+                    applySettings(userDB.settings);
+                }
+                setTimeout(() => { renderAll(); }, 100);
+            }).catch(() => {
+                setTimeout(() => { renderAll(); }, 100);
+            });
+        } else {
+            setTimeout(() => { renderAll(); }, 100);
+        }
+
+    } else {
+        // Erro de login
+        attempts++;
+        box.classList.add('shake');
+        setTimeout(() => box.classList.remove('shake'), 400);
+
+        if (attempts >= 5) {
+            startLockout();
+        }
+    }
+}
 
         function logout() {
             // Limpar todas as informações do usuário
@@ -4991,17 +5009,24 @@ function saveSettings() {
 }
 
 function applySettings(settings) {
-    // 1. Aplicar nome do site
+    if (!settings) return;
+
+    // 1. Aplicar Tema (Dark/Light)
+    if (settings.theme) {
+        document.documentElement.setAttribute('data-theme', settings.theme);
+    }
+
+    // 2. Aplicar nome do site
     const logoSpan = document.querySelector('.logo span');
     if (logoSpan) logoSpan.textContent = settings.siteName || 'Finance PRO';
 
-    // 2. Aplicar ícone
+    // 3. Aplicar ícone
     const logoIcon = document.querySelector('.logo i');
     if (logoIcon && settings.icon) {
         logoIcon.className = `fa-solid ${settings.icon}`;
     }
     
-    // 3. Aplicar nome e ícone na tela de login
+    // 4. Aplicar nome e ícone na tela de login
     const loginIcon = document.getElementById('login-icon');
     const loginTitle = document.getElementById('login-title');
     if (loginIcon && settings.icon) {
@@ -5011,7 +5036,7 @@ function applySettings(settings) {
         loginTitle.textContent = settings.siteName || 'Finance PRO';
     }
 
-    // 4. Definição das Paletas
+    // 5. Definição das Paletas
     const palettes = {
         blue: { accent: '#2563eb', primary: '#0f172a' },
         green: { accent: '#00ee9f', primary: '#0f172a' },
@@ -5038,20 +5063,15 @@ function applySettings(settings) {
     const palette = palettes[settings.palette] || palettes.ruby;
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
-    // 5. Aplicação das cores (Independente do tema)
-    // A cor de destaque (--accent) deve mudar sempre para atualizar botões e ícones
+    // 6. Aplicação das cores via CSS Variables
     document.documentElement.style.setProperty('--accent', palette.accent);
 
-    // A cor primária (--primary) é usada para textos e elementos escuros
     if (!isDark) {
-        // No modo claro, usamos a cor da paleta
         document.documentElement.style.setProperty('--primary', palette.primary);
     } else {
-        // No modo escuro, forçamos o texto a ser claro (#f1f5f9) para manter o contraste
         document.documentElement.style.setProperty('--primary', '#f1f5f9');
     }
 }
-
 
 
 // DASHBOARD E RENDERIZAÇÃO
