@@ -5901,7 +5901,17 @@ function getBrasiliaISODate() {
         }
 
         // CORRIGIR GRÁFICOS - GARANTIR QUE DADOS ESTÃO CORRETOS
-        function updateCharts() {
+            // FunÃ§Ã£o auxiliar para calcular mÃ©dia ignorando nulos
+    function calculateAverage(data) {
+        if (!data || data.length === 0) return 0;
+        const validData = data.filter(v => v !== null && v !== undefined);
+        if (validData.length === 0) return 0;
+        const sum = validData.reduce((a, b) => a + b, 0);
+        return sum / validData.length;
+    }
+
+    // CORRIGIR GRÃFICOS - GARANTIR QUE DADOS ESTÃƒO CORRETOS
+    function updateCharts() {
     const DB = getUserDB();
     if(!DB) return;
     
@@ -6133,27 +6143,60 @@ function getBrasiliaISODate() {
 
     // --- ATUALIZAÇÃO DOS GRÁFICOS ---
     
-    // 1. Principal (Receitas vs Despesas)
-    if(mainChart) {
+    // --- ATUALIZAÃ‡ÃƒO DOS GRÃFICOS ---
+
+// Calcular mÃ©dias
+const avgIncome = calculateAverage(incomeData);
+const avgExpense = calculateAverage(expenseData);
+const avgBalance = calculateAverage(balanceData);
+const avgEssential = calculateAverage(essentialData);
+const avgNonEssential = calculateAverage(nonEssentialData);
+
+const avgIncomeData = labels.map(() => avgIncome);
+const avgExpenseData = labels.map(() => avgExpense);
+const avgBalanceData = labels.map(() => avgBalance);
+const avgEssentialData = labels.map(() => avgEssential);
+const avgNonEssentialData = labels.map(() => avgNonEssential);
+if(mainChart) {
         mainChart.data.labels = labels.length > 0 ? labels : ['Sem dados'];
         mainChart.data.datasets = [
-            { 
+            {
                 label: 'Receitas', 
-                data: incomeData.length > 0 ? incomeData : [0], 
+                data: incomeData.length > 0 ? incomeData : [0],
                 borderColor: '#10b981', 
-                backgroundColor: 'rgba(16, 185, 129, 0.1)', 
-                tension: 0.4, 
-                fill: true,
-                spanGaps: true 
-            },
-            { 
-                label: 'Despesas', 
-                data: expenseData.length > 0 ? expenseData : [0], 
-                borderColor: '#E0115F', 
-                backgroundColor: 'rgba(224, 17, 95, 0.1)', 
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
                 tension: 0.4, 
                 fill: true,
                 spanGaps: true
+            },
+            {
+                label: 'Média Rec.',
+                data: avgIncomeData,
+                borderColor: 'rgba(16, 185, 129, 0.5)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                borderWidth: 1,
+                fill: false
+            },
+            {
+                label: 'Despesas',
+                data: expenseData.length > 0 ? expenseData : [0],
+                borderColor: '#E0115F', 
+                backgroundColor: 'rgba(224, 17, 95, 0.1)',
+                tension: 0.4, 
+                fill: true,
+                spanGaps: true
+            },
+            {
+                label: 'Média Desp.',
+                data: avgExpenseData,
+                borderColor: 'rgba(224, 17, 95, 0.5)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                borderWidth: 1,
+                fill: false
             }
         ];
         mainChart.update('active');
@@ -6163,23 +6206,43 @@ function getBrasiliaISODate() {
     if(essentialLineChart) {
         essentialLineChart.data.labels = labels.length > 0 ? labels : ['Sem dados'];
         essentialLineChart.data.datasets = [
-            { 
-                label: 'Essenciais', 
-                data: essentialData.length > 0 ? essentialData : [0], 
+            {
+                label: 'Essenciais',
+                data: essentialData.length > 0 ? essentialData : [0],
                 borderColor: '#f59e0b', // Cor Laranja/Amarelo
-                backgroundColor: 'rgba(245, 158, 11, 0.1)', 
-                tension: 0.4, 
-                fill: true,
-                spanGaps: true 
-            },
-            { 
-                label: 'Não Essenciais', 
-                data: nonEssentialData.length > 0 ? nonEssentialData : [0], 
-                borderColor: '#3730a3', // Cor Indigo
-                backgroundColor: 'rgba(55, 48, 163, 0.1)', 
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
                 tension: 0.4, 
                 fill: true,
                 spanGaps: true
+            },
+            {
+                label: 'Média Ess.',
+                data: avgEssentialData,
+                borderColor: 'rgba(245, 158, 11, 0.5)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                borderWidth: 1,
+                fill: false
+            },
+            {
+                label: 'Não Essenciais',
+                data: nonEssentialData.length > 0 ? nonEssentialData : [0],
+                borderColor: '#3730a3', // Cor Indigo
+                backgroundColor: 'rgba(55, 48, 163, 0.1)',
+                tension: 0.4,
+                fill: true,
+                spanGaps: true
+            },
+            {
+                label: 'Média Não Ess.',
+                data: avgNonEssentialData,
+                borderColor: 'rgba(55, 48, 163, 0.5)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                borderWidth: 1,
+                fill: false
             }
         ];
         essentialLineChart.update('active');
@@ -6211,11 +6274,27 @@ function getBrasiliaISODate() {
     // 4. Saldo
     if(balanceChart) {
         balanceChart.data.labels = labels.length > 0 ? labels : ['Sem dados'];
-        if(balanceChart.data.datasets[0]) {
-            balanceChart.data.datasets[0].data = balanceData.length > 0 ? balanceData : [0];
-            balanceChart.update('active');
-        }
-    }
+        balanceChart.data.datasets = [
+            {
+                label: 'Saldo Acumulado',
+                data: balanceData.length > 0 ? balanceData : [0],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Média Saldo',
+                data: avgBalanceData,
+                borderColor: 'rgba(16, 185, 129, 0.5)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                borderWidth: 1,
+                fill: false
+            }
+        ];
+        balanceChart.update('active'); }
     
     // Atualiza gráficos estáticos (Pizza, Barras)
     updateSecondaryCharts(filtered, labels, timeRangeType, DB, filterCat, filterSubcat, new Date());
@@ -6756,6 +6835,17 @@ function confirmAndTogglePaid(id) {
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
 
 
 
