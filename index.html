@@ -2005,7 +2005,7 @@ td, th {
                     <option value="credito">Crédito</option>
                     <option value="debito">Débito</option>
                     <option value="vista">À vista</option>
-                    <option value="vista">Boleto</option>
+                    <option value="boleto">Boleto</option>
                 </select>
             </div>
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -2862,7 +2862,8 @@ td, th {
                 'pix': 'fa-brands fa-pix',
                 'credito': 'fa-solid fa-credit-card',
                 'debito': 'fa-solid fa-money-bill',
-                'vista': 'fa-solid fa-money-bill-wave'
+                'vista': 'fa-solid fa-money-bill-wave',
+                'boleto': 'fa-solid fa-barcode'
             };
             return icons[payment] || 'fa-solid fa-money-bill';
         }
@@ -2872,7 +2873,8 @@ td, th {
                 'pix': 'Pix',
                 'credito': 'Crédito',
                 'debito': 'Débito',
-                'vista': 'À vista'
+                'vista': 'À vista',
+                'boleto': 'Boleto'
             };
             return labels[payment] || payment;
         }
